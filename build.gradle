@@ -1,0 +1,18 @@
+apply plugin: "application"
+
+dependencies {
+    testCompile "junit:junit:4.11"
+}
+
+mainClassName = 'de.upb.swtpra05.shipsink.server.ServerMain'
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ["java"]
+        }
+        resources {
+            srcDirs = ["resources"]
+        }
+    }
+}
