@@ -4,7 +4,7 @@ dependencies {
     testCompile "junit:junit:4.11"
 }
 
-mainClassName = 'de.upb.swtpra05.shipsink.server.ServerMain'
+mainClassName = 'de.upb.codingpirates.battleships.server.ServerMain'
 
 sourceSets {
     main {
