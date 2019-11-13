@@ -15,7 +15,7 @@ dependencies {
 targetCompatibility = '1.8'
 sourceCompatibility = '1.8'
 
-mainClassName = 'de.upb.codingpirates.battleships.server.ServerMain'
+mainClassName = 'de.upb.codingpirates.battleships.server.BattleshipsServerApplication'
 
 sourceSets {
     main {
