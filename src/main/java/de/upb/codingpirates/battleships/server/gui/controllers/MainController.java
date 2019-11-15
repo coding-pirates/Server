@@ -204,7 +204,7 @@ public final class MainController extends AbstractController<BorderPane> {
                 new String(Files.readAllBytes(importPath), StandardCharsets.UTF_8);
             } catch (final IOException exception) {
                 final String contentText =
-                    String.format(resourceBundle.getString("configuration.import.exceptionAlert.labelText"), target);
+                    String.format(resourceBundle.getString("configuration.import.exceptionAlert.contentText"), target);
 
                 LOGGER.error(exception);
 
