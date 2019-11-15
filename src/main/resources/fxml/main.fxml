@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.Integer?>
+<?import java.lang.Long?>
+<?import java.util.ArrayList?>
+
+<?import javafx.scene.control.ButtonBar?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
+
+<?import de.upb.codingpirates.battleships.server.gui.control.LongSpinnerValueFactory?>
+<?import de.upb.codingpirates.battleships.server.gui.control.LongSecondsSuffixedStringConverter?>
+
+<BorderPane
+    xmlns:fx="http://javafx.com/fxml"
+    fx:id="root"
+    stylesheets="@/css/main.css">
+  <center>
+    <VBox id="center-box">
+      <GridPane>
+        <fx:define>
+          <Integer fx:id="INT_MAX_VALUE"  fx:constant="MAX_VALUE"/>
+          <Long    fx:id="LONG_MAX_VALUE" fx:constant="MAX_VALUE"/>
+        </fx:define>
+
+        <!-- Row 0 -->
+        <Label
+          GridPane.columnIndex="0"
+          GridPane.rowIndex="0"
+          text="%configuration.maxPlayerCount.label"/>
+        <Spinner
+          fx:id="maxPlayerCountSpinner"
+          GridPane.columnIndex="1"
+          GridPane.rowIndex="0"
+          editable="true"
+          initialValue="4"
+          min="2"
+          max="$INT_MAX_VALUE"/>
+
+        <!-- Row 1 -->
+        <Label
+          GridPane.columnIndex="0"
+          GridPane.rowIndex="1"
+          text="%configuration.shotCount.label"/>
+        <Spinner
+          fx:id="shotCountSpinner"
+          GridPane.columnIndex="1"
+          GridPane.rowIndex="1"
+          editable="true"
+          initialValue="1"
+          min="1"
+          max="$INT_MAX_VALUE"/>
+
+        <!-- Row 2 -->
+        <Label
+          GridPane.columnIndex="0"
+          GridPane.rowIndex="2"
+          text="%configuration.hitPoints.label"/>
+        <Spinner
+          fx:id="hitPointsSpinner"
+          GridPane.columnIndex="1"
+          GridPane.rowIndex="2"
+          editable="true"
+          initialValue="1"
+          min="1"
+          max="$INT_MAX_VALUE"/>
+
+        <!-- Row 3 -->
+        <Label
+          GridPane.columnIndex="0"
+          GridPane.rowIndex="3"
+          text="%configuration.sunkPoints.label"/>
+        <Spinner
+          fx:id="sunkPointsSpinner"
+          GridPane.columnIndex="1"
+          GridPane.rowIndex="3"
+          editable="true"
+          initialValue="5"
+          min="1"
+          max="$INT_MAX_VALUE"/>
+
+        <!-- Row 4 -->
+        <Label
+          GridPane.columnIndex="0"
+          GridPane.rowIndex="4"
+          text="%configuration.roundTime.label"/>
+        <Spinner
+            fx:id="roundTimeSpinner"
+            GridPane.columnIndex="1"
+            GridPane.rowIndex="4"
+            editable="true">
+          <valueFactory>
+            <LongSpinnerValueFactory
+                initialValue="10"
+                min="1"
+                max="$LONG_MAX_VALUE">
+              <converter>
+                <LongSecondsSuffixedStringConverter/>
+              </converter>
+            </LongSpinnerValueFactory>
+          </valueFactory>
+        </Spinner>
+
+        <!-- Row 5 -->
+        <Label
+          GridPane.columnIndex="0"
+          GridPane.rowIndex="5"
+          text="%configuration.visualizationTime.label"/>
+        <Spinner
+            fx:id="visualizationTimeSpinner"
+            GridPane.columnIndex="1"
+            GridPane.rowIndex="5"
+            editable="true">
+          <valueFactory>
+            <LongSpinnerValueFactory
+                initialValue="10"
+                min="1"
+                max="$LONG_MAX_VALUE">
+              <converter>
+                <LongSecondsSuffixedStringConverter/>
+              </converter>
+            </LongSpinnerValueFactory>
+          </valueFactory>
+        </Spinner>
+
+        <!-- Row 6 -->
+        <TitledPane
+            GridPane.columnIndex="0"
+            GridPane.columnSpan="2"
+            GridPane.rowIndex="6"
+            text="%configuration.playingField.header">
+          <GridPane>
+            <!-- Row 0 -->
+            <Label
+              GridPane.columnIndex="0"
+              GridPane.rowIndex="0"
+              text="%configuration.playingField.height.label"/>
+            <Spinner
+              fx:id="heightSpinner"
+              GridPane.columnIndex="1"
+              GridPane.rowIndex="0"
+              editable="true"
+              initialValue="10"
+              min="2"
+              max="$INT_MAX_VALUE"/>
+
+            <!-- Row 1 -->
+            <Label
+              GridPane.columnIndex="0"
+              GridPane.rowIndex="1"
+              text="%configuration.playingField.width.label"/>
+            <Spinner
+              fx:id="widthSpinner"
+              GridPane.columnIndex="1"
+              GridPane.rowIndex="1"
+              editable="true"
+              initialValue="10"
+              min="2"
+              max="$INT_MAX_VALUE"/>
+          </GridPane>
+        </TitledPane>
+
+        <!-- Row 7 -->
+        <TitledPane
+            GridPane.columnIndex="0"
+            GridPane.columnSpan="2"
+            GridPane.rowIndex="7"
+            text="%configuration.penalty.header">
+          <GridPane>
+            <!-- Row 0 -->
+            <Label
+              GridPane.columnIndex="0"
+              GridPane.rowIndex="0"
+              text="%configuration.penalty.penaltyKind.label"/>
+            <ComboBox
+              fx:id="penaltyKindComboBox"
+              GridPane.columnIndex="1"
+              GridPane.rowIndex="0"/>
+
+            <!-- Row 1 -->
+            <Label
+              fx:id="penaltyMinusPointsLabel"
+              GridPane.columnIndex="0"
+              GridPane.rowIndex="1"
+              text="%configuration.penalty.penaltyMinusPoints.label"/>
+            <Spinner
+              fx:id="penaltyMinusPointsSpinner"
+              GridPane.columnIndex="1"
+              GridPane.rowIndex="1"
+              editable="true"
+              initialValue="10"
+              min="1"
+              max="$INT_MAX_VALUE"/>
+          </GridPane>
+        </TitledPane>
+        <fx:define>
+          <!--
+            The 'Parent tag has no default property' errors appear to be an IDE bug and can
+            safely be ignored.
+          -->
+          <ArrayList fx:id="spinners">
+            <fx:reference source="maxPlayerCountSpinner"/>
+            <fx:reference source="shotCountSpinner"/>
+            <fx:reference source="hitPointsSpinner"/>
+            <fx:reference source="sunkPointsSpinner"/>
+            <fx:reference source="roundTimeSpinner"/>
+            <fx:reference source="visualizationTimeSpinner"/>
+            <fx:reference source="heightSpinner"/>
+            <fx:reference source="widthSpinner"/>
+            <fx:reference source="penaltyMinusPointsSpinner"/>
+          </ArrayList>
+        </fx:define>
+      </GridPane>
+      <ButtonBar>
+        <buttons>
+          <Button
+            ButtonBar.buttonData="LEFT"
+            onAction="#onImportButtonAction"
+            text="%configuration.import.button.text"/>
+          <Button
+            ButtonBar.buttonData="LEFT"
+            onAction="#onExportButtonAction"
+            text="%configuration.export.button.text"/>
+          <Button
+            ButtonBar.buttonData="RIGHT"
+            onAction="#onStartNewGameButtonAction"
+            text="%game.startNew.button.text"/>
+        </buttons>
+      </ButtonBar>
+    </VBox>
+  </center>
+  <bottom>
+  </bottom>
+</BorderPane>

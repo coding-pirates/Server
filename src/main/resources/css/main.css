@@ -1,0 +1,17 @@
+GridPane {
+    -fx-hgap: 10;
+    -fx-vgap: 10;
+}
+
+TitledPane {
+    -fx-collapsible: false;
+}
+
+#center-box {
+    -fx-alignment: center;
+    -fx-padding: 10;
+}
+
+#center-box > * {
+    -fx-padding: 5;
+}
