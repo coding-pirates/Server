@@ -31,6 +31,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import de.upb.codingpirates.battleships.logic.util.Configuration;
+import de.upb.codingpirates.battleships.logic.util.PenaltyType;
 import de.upb.codingpirates.battleships.server.gui.control.Alerts;
 import de.upb.codingpirates.battleships.server.gui.event.EventUtils;
 
@@ -51,7 +53,7 @@ public final class MainController extends AbstractController<BorderPane> {
 
     private ExtensionFilter configurationExtensionFilter;
 
-    // <editor-fold desc="Configuration">
+    // <editor-fold desc="Configuration controls">
     @FXML
     private Spinner<Integer> maxPlayerCountSpinner;
 
@@ -139,15 +141,15 @@ public final class MainController extends AbstractController<BorderPane> {
 
     /**
      * Setup bindings on the {@link Node#disableProperty()} of both {@link #penaltyMinusPointsLabel}
-     * and {@link #penaltyMinusPointsSpinner} to disable them as long as {@link Object} is not selected
-     * inside of {@link #penaltyKindComboBox}.
+     * and {@link #penaltyMinusPointsSpinner} to disable them as long as {@link PenaltyType#POINTLOSS}
+     * is not selected inside of {@link #penaltyKindComboBox}.
      */
     private void setupPenaltyMinusPointsBindings() {
         final ObservableValue<Boolean> isPenaltyKindNotPointloss =
                 penaltyKindComboBox
                         .getSelectionModel()
                         .selectedItemProperty()
-                        .isNotEqualTo(new Object());
+                        .isNotEqualTo(PenaltyType.POINTLOSS);
 
         penaltyMinusPointsLabel
                 .disableProperty()
