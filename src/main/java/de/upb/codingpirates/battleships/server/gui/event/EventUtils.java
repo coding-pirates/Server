@@ -6,6 +6,9 @@ import javafx.stage.Window;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * @author Andre Blanke
+ */
 public final class EventUtils {
 
     private EventUtils() {

@@ -92,6 +92,12 @@ public final class MainController extends AbstractController<BorderPane> {
     @FXML
     private Collection<Spinner<? extends Number>> spinners;
 
+    /**
+     * The default amount of {@link Rectangle}s contained within each row and column of the
+     * {@link #shipConfigurationContainer}.
+     *
+     * @see #setupShipConfigurationContainer()
+     */
     private static final int DEFAULT_SHIP_CONFIGURATION_GRID_SIZE = 5;
 
     private static final Logger LOGGER = LogManager.getLogger();

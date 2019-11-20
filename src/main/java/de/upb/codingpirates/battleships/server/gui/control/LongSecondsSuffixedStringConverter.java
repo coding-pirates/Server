@@ -7,6 +7,9 @@ import javafx.util.StringConverter;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * @author Andre Blanke
+ */
 public final class LongSecondsSuffixedStringConverter extends StringConverter<Long> {
 
     private static final Pattern SECONDS_SUFFIX_PATTERN = Pattern.compile("^(?<seconds>[1-9][0-9]*)s$");

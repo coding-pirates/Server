@@ -10,6 +10,9 @@ import com.google.common.base.Throwables;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * @author Andre Blanke
+ */
 public final class Alerts {
 
     private Alerts() {
