@@ -19,6 +19,9 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
@@ -81,10 +84,15 @@ public final class MainController extends AbstractController<BorderPane> {
 
     @FXML
     private Spinner<Integer> penaltyMinusPointsSpinner;
+
+    @FXML
+    private GridPane shipConfigurationContainer;
     // </editor-fold>
 
     @FXML
     private Collection<Spinner<? extends Number>> spinners;
+
+    private static final int DEFAULT_SHIP_CONFIGURATION_GRID_SIZE = 5;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -108,6 +116,18 @@ public final class MainController extends AbstractController<BorderPane> {
                 .setTextFormatter(formatter);
 
             factory.valueProperty().bindBidirectional(formatter.valueProperty());
+        }
+    }
+
+    private void setupShipConfigurationContainer() {
+        for (int x = 0; x < DEFAULT_SHIP_CONFIGURATION_GRID_SIZE; ++x) {
+            for (int y = 0; y < DEFAULT_SHIP_CONFIGURATION_GRID_SIZE; ++y) {
+                final Rectangle rectangle = new Rectangle(30, 30);
+
+                rectangle.setFill(Color.RED);
+
+                shipConfigurationContainer.add(rectangle, x, y);
+            }
         }
     }
 
@@ -143,6 +163,7 @@ public final class MainController extends AbstractController<BorderPane> {
         );
         initializeSpinners();
 
+        setupShipConfigurationContainer();
         setupPenaltyMinusPointsBindings();
     }
 

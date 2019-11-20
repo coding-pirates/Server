@@ -93,7 +93,6 @@ public final class BattleshipsServerApplication extends Application {
 
     @Override
     public void start(@NotNull final Stage stage) throws Exception {
-        stage.setResizable(false);
         stage.setScene(new Scene(loadView("main", new MainController())));
         stage.setTitle(TITLE);
         stage.show();

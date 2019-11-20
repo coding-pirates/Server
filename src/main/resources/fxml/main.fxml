@@ -17,6 +17,7 @@
 <?import de.upb.codingpirates.battleships.server.gui.control.LongSpinnerValueFactory?>
 <?import de.upb.codingpirates.battleships.server.gui.control.LongSecondsSuffixedStringConverter?>
 
+<?import javafx.scene.layout.HBox?>
 <BorderPane
     xmlns:fx="http://javafx.com/fxml"
     fx:id="root"
@@ -134,6 +135,19 @@
             GridPane.columnIndex="0"
             GridPane.columnSpan="2"
             GridPane.rowIndex="6"
+            text="%configuration.ships.header">
+          <HBox alignment="CENTER">
+            <GridPane
+              fx:id="shipConfigurationContainer"
+              id="ship-configuration-container"/>
+          </HBox>
+        </TitledPane>
+
+        <!-- Row 7 -->
+        <TitledPane
+            GridPane.columnIndex="0"
+            GridPane.columnSpan="2"
+            GridPane.rowIndex="7"
             text="%configuration.playingField.header">
           <GridPane>
             <!-- Row 0 -->
@@ -166,11 +180,11 @@
           </GridPane>
         </TitledPane>
 
-        <!-- Row 7 -->
+        <!-- Row 8 -->
         <TitledPane
             GridPane.columnIndex="0"
             GridPane.columnSpan="2"
-            GridPane.rowIndex="7"
+            GridPane.rowIndex="8"
             text="%configuration.penalty.header">
           <GridPane>
             <!-- Row 0 -->
