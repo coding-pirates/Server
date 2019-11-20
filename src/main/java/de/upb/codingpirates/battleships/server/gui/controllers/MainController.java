@@ -6,6 +6,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.ResourceBundle;
 
@@ -88,6 +89,9 @@ public final class MainController extends AbstractController<BorderPane> {
     private Spinner<Integer> penaltyMinusPointsSpinner;
 
     @FXML
+    private Spinner<Integer> shipTypeCountSpinner;
+
+    @FXML
     private GridPane shipConfigurationContainer;
     // </editor-fold>
 
@@ -144,12 +148,22 @@ public final class MainController extends AbstractController<BorderPane> {
      * and {@link #penaltyMinusPointsSpinner} to disable them as long as {@link PenaltyType#POINTLOSS}
      * is not selected inside of {@link #penaltyKindComboBox}.
      */
-    private void setupPenaltyMinusPointsBindings() {
+    private void setupPenaltyMinusPointsControls() {
         final ObservableValue<Boolean> isPenaltyKindNotPointloss =
                 penaltyKindComboBox
                         .getSelectionModel()
                         .selectedItemProperty()
                         .isNotEqualTo(PenaltyType.POINTLOSS);
+
+        penaltyKindComboBox
+            .getItems()
+            .setAll(Arrays.asList(PenaltyType.values()));
+        penaltyKindComboBox
+            .getSelectionModel()
+            .select(PenaltyType.POINTLOSS);
+        penaltyKindComboBox
+            .minWidthProperty()
+            .bind(penaltyMinusPointsSpinner.widthProperty());
 
         penaltyMinusPointsLabel
                 .disableProperty()
@@ -172,7 +186,7 @@ public final class MainController extends AbstractController<BorderPane> {
         initializeSpinners();
 
         setupShipConfigurationContainer();
-        setupPenaltyMinusPointsBindings();
+        setupPenaltyMinusPointsControls();
     }
 
     // <editor-fold desc="Configuration import and export">
