@@ -6,11 +6,14 @@ import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.MessageHandler;
 import de.upb.codingpirates.battleships.network.message.request.ServerJoinRequest;
-import de.upb.codingpirates.battleships.server.network.ClientManager;
+import de.upb.codingpirates.battleships.server.ClientManager;
+import de.upb.codingpirates.battleships.server.GameManager;
 
 public class ServerJoinRequestHandler implements MessageHandler<ServerJoinRequest> {
     @Inject
     private ClientManager clientManager;
+    @Inject
+    private GameManager gameManager;
 
     @Override
     public void handle(ServerJoinRequest message, Id connectionId) throws InvalidActionException {

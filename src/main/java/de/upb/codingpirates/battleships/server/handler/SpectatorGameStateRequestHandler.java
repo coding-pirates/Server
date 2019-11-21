@@ -5,11 +5,14 @@ import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.MessageHandler;
 import de.upb.codingpirates.battleships.network.message.request.SpectatorGameStateRequest;
-import de.upb.codingpirates.battleships.server.network.ClientManager;
+import de.upb.codingpirates.battleships.server.ClientManager;
+import de.upb.codingpirates.battleships.server.GameManager;
 
 public class SpectatorGameStateRequestHandler implements MessageHandler<SpectatorGameStateRequest> {
     @Inject
     private ClientManager clientManager;
+    @Inject
+    private GameManager gameManager;
 
     @Override
     public void handle(SpectatorGameStateRequest message, Id connectionId) {

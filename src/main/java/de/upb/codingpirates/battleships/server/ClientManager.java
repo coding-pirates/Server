@@ -1,4 +1,4 @@
-package de.upb.codingpirates.battleships.server.network;
+package de.upb.codingpirates.battleships.server;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -12,16 +12,20 @@ import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.id.IntId;
 import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.notification.ErrorNotification;
+import de.upb.codingpirates.battleships.server.network.ServerApplication;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import java.util.stream.Collectors;
 
+/**
+ * handles all client related tasks
+ * <p>
+ * get an instance with {@link ServerApplication#getClientManager()}
+ */
 public class ClientManager implements ConnectionHandler {
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -94,7 +98,7 @@ public class ClientManager implements ConnectionHandler {
         }
     }
 
-    private void sendMessageTo(Message message, Collection<Id> clients) {
+    public void sendMessageToIds(Message message, Collection<Id> clients) {
         try {
             for (Id client : clients) {
                 this.connectionManager.send(client, message);
@@ -104,18 +108,28 @@ public class ClientManager implements ConnectionHandler {
         }
     }
 
-    public void sendMessageTo(Message message, Client... clients) {
-        this.sendMessageTo(message, Arrays.stream(clients).map(client -> new IntId(client.getId())).collect(Collectors.toList()));
+    public void sendMessageToClients(Message message, Collection<Client> clients) {
+        try {
+            for (Client client : clients) {
+                this.connectionManager.send(new IntId(client.getId()), message);
+            }
+        } catch (IOException e) {
+            LOGGER.error("could not send message", e);
+        }
     }
 
-    public void sendMessageTo(Message message, Id... clients) {
-        this.sendMessageTo(message, Lists.newArrayList(clients));
+    public void sendMessageToClient(Message message, Client... clients) {
+        this.sendMessageToClients(message, Lists.newArrayList(clients));
+    }
+
+    public void sendMessageToId(Message message, Id... clients) {
+        this.sendMessageToIds(message, Lists.newArrayList(clients));
     }
 
     @Override
     public void handleBattleshipException(BattleshipException e) {
         if (e.getConnectionId() != null) {
-            this.sendMessageTo(new ErrorNotification(e.getErrorType(), e.getMessageId(), e.getMessage()), e.getConnectionId());
+            this.sendMessageToId(new ErrorNotification(e.getErrorType(), e.getMessageId(), e.getMessage()), e.getConnectionId());
         } else {
             LOGGER.warn("could not send ErrorNotification. Could not identify source client");
         }

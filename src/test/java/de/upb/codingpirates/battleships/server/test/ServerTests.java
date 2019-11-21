@@ -10,6 +10,5 @@ public class ServerTests {
     private static final Logger LOGGER = LogManager.getLogger();
     @Test
     public void test(){
-        LOGGER.info("test started");
     }
 }
