@@ -120,7 +120,7 @@
             editable="true">
           <valueFactory>
             <LongSpinnerValueFactory
-                initialValue="10"
+                initialValue="3"
                 min="1"
                 max="$LONG_MAX_VALUE">
               <converter>
