@@ -18,6 +18,7 @@
 <?import de.upb.codingpirates.battleships.server.gui.control.LongSpinnerValueFactory?>
 <?import de.upb.codingpirates.battleships.server.gui.control.LongSecondsSuffixedStringConverter?>
 
+<?import javafx.scene.layout.HBox?>
 <BorderPane
     xmlns:fx="http://javafx.com/fxml"
     fx:id="root"
@@ -136,13 +137,13 @@
             GridPane.columnSpan="2"
             GridPane.rowIndex="6"
             text="%configuration.ships.header">
-          <VBox>
+          <HBox alignment="CENTER">
             <GridPane>
               <!-- Row 0 -->
               <Label
                 GridPane.columnIndex="0"
                 GridPane.rowIndex="0"
-                text="%configuration.ships.typeCount.labelText"/>
+                text="%configuration.ships.type.count.labelText"/>
               <Spinner
                 fx:id="shipTypeCountSpinner"
                 GridPane.columnIndex="1"
@@ -151,12 +152,59 @@
                 initialValue="5"
                 min="1"
                 max="$INT_MAX_VALUE"/>
+
+              <!-- Row 1 -->
+              <Label
+                GridPane.columnIndex="0"
+                GridPane.rowIndex="1"
+                text="%configuration.ships.type.editing.labelText"/>
+              <ComboBox
+                fx:id="shipTypeEditingComboBox"
+                GridPane.columnIndex="1"
+                GridPane.rowIndex="1"/>
+
+              <!-- Row 2 -->
+              <Separator
+                GridPane.columnIndex="0"
+                GridPane.columnSpan="2"
+                GridPane.rowIndex="2"/>
+
+              <!-- Row 3 -->
+              <Label
+                GridPane.columnIndex="0"
+                GridPane.rowIndex="3"
+                text="%configuration.ships.type.height"/>
+              <Spinner
+                GridPane.columnIndex="1"
+                GridPane.rowIndex="3"/>
+
+              <!-- Row 4 -->
+              <Label
+                GridPane.columnIndex="0"
+                GridPane.rowIndex="4"
+                text="%configuration.ships.type.width"/>
+              <Spinner
+                GridPane.columnIndex="1"
+                GridPane.rowIndex="4"/>
+
+              <!-- Row 5 -->
+              <Separator
+                GridPane.columnIndex="0"
+                GridPane.columnSpan="2"
+                GridPane.rowIndex="5"/>
+
+              <!-- Row 6 -->
+              <HBox
+                  GridPane.columnIndex="0"
+                  GridPane.columnSpan="2"
+                  GridPane.rowIndex="6"
+                  alignment="CENTER">
+                <GridPane
+                  fx:id="shipConfigurationContainer"
+                  id="ship-configuration-container"/>
+              </HBox>
             </GridPane>
-            <Separator/>
-            <GridPane
-              fx:id="shipConfigurationContainer"
-              id="ship-configuration-container"/>
-          </VBox>
+          </HBox>
         </TitledPane>
 
         <!-- Row 7 -->

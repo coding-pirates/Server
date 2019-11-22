@@ -9,7 +9,9 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.stream.IntStream;
 
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
@@ -37,6 +39,8 @@ import org.jetbrains.annotations.NotNull;
 import de.upb.codingpirates.battleships.logic.util.Configuration;
 import de.upb.codingpirates.battleships.logic.util.PenaltyType;
 import de.upb.codingpirates.battleships.server.gui.control.Alerts;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * @author Andre Blanke
@@ -93,6 +97,9 @@ public final class MainController extends AbstractController<BorderPane> {
     private Spinner<Integer> shipTypeCountSpinner;
 
     @FXML
+    private ComboBox<String> shipTypeEditingComboBox;
+
+    @FXML
     private GridPane shipConfigurationContainer;
     // </editor-fold>
 
@@ -138,7 +145,45 @@ public final class MainController extends AbstractController<BorderPane> {
         }
     }
 
+    private static final int LATIN_ALPHABET_LENGTH = 26;
+    @NotNull
+    private String toShipTypeLabel(int n) {
+        final StringBuilder shipTypeLabelBuilder = new StringBuilder();
+
+        for (; n >= 0; n = (n / LATIN_ALPHABET_LENGTH) - 1) {
+            int rem = n % LATIN_ALPHABET_LENGTH;
+
+            shipTypeLabelBuilder.insert(0, (char) ('A' + rem));
+        }
+        return shipTypeLabelBuilder.toString();
+    }
+
+    private void populateShipTypeEditingComboBox() {
+        final List<String> shipTypeLabels =
+                IntStream
+                    .range(0, shipTypeCountSpinner.getValue())
+                    .boxed()
+                    .map(this::toShipTypeLabel)
+                    .collect(toList());
+
+        shipTypeEditingComboBox
+                .getItems()
+                .setAll(shipTypeLabels);
+    }
+
     private void setupShipConfigurationContainer() {
+        populateShipTypeEditingComboBox();
+
+        shipTypeEditingComboBox
+            .getSelectionModel()
+            .select(0);
+        shipTypeEditingComboBox
+            .minWidthProperty()
+            .bind(shipTypeCountSpinner.widthProperty());
+        shipTypeCountSpinner
+            .valueProperty()
+            .addListener(((observableValue, oldValue, newValue) -> populateShipTypeEditingComboBox()));
+
         for (int x = 0; x < DEFAULT_SHIP_CONFIGURATION_GRID_SIZE; ++x) {
             for (int y = 0; y < DEFAULT_SHIP_CONFIGURATION_GRID_SIZE; ++y) {
                 final Rectangle rectangle = new Rectangle(30, 30);
