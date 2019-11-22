@@ -8,10 +8,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.ResourceBundle;
 
 import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
@@ -26,6 +26,8 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
+import com.google.gson.Gson;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,7 +37,6 @@ import org.jetbrains.annotations.NotNull;
 import de.upb.codingpirates.battleships.logic.util.Configuration;
 import de.upb.codingpirates.battleships.logic.util.PenaltyType;
 import de.upb.codingpirates.battleships.server.gui.control.Alerts;
-import de.upb.codingpirates.battleships.server.gui.event.EventUtils;
 
 /**
  * @author Andre Blanke
@@ -47,8 +48,8 @@ public final class MainController extends AbstractController<BorderPane> {
      *
      * It needs to be appended to the {@link File} object returned by a {@link FileChooser}.
      * 
-     * @see #onImportButtonAction(ActionEvent)
-     * @see #onExportButtonAction(ActionEvent) 
+     * @see #onImportButtonAction()
+     * @see #onExportButtonAction()
      */
     private String          configurationFileExtension;
 
@@ -80,7 +81,7 @@ public final class MainController extends AbstractController<BorderPane> {
     private Spinner<Integer> widthSpinner;
 
     @FXML
-    private ComboBox<Object> penaltyKindComboBox;
+    private ComboBox<PenaltyType> penaltyTypeComboBox;
 
     @FXML
     private Label penaltyMinusPointsLabel;
@@ -98,6 +99,8 @@ public final class MainController extends AbstractController<BorderPane> {
     @FXML
     private Collection<Spinner<? extends Number>> spinners;
 
+    private final Gson gson;
+
     /**
      * The default amount of {@link Rectangle}s contained within each row and column of the
      * {@link #shipConfigurationContainer}.
@@ -107,6 +110,10 @@ public final class MainController extends AbstractController<BorderPane> {
     private static final int DEFAULT_SHIP_CONFIGURATION_GRID_SIZE = 5;
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    public MainController(@NotNull final Gson gson) {
+        this.gson = gson;
+    }
 
     /**
      * Initializes all {@link Spinner}s which are part of the {@link #spinners} collection as
@@ -146,22 +153,22 @@ public final class MainController extends AbstractController<BorderPane> {
     /**
      * Setup bindings on the {@link Node#disableProperty()} of both {@link #penaltyMinusPointsLabel}
      * and {@link #penaltyMinusPointsSpinner} to disable them as long as {@link PenaltyType#POINTLOSS}
-     * is not selected inside of {@link #penaltyKindComboBox}.
+     * is not selected inside of {@link #penaltyTypeComboBox}.
      */
     private void setupPenaltyMinusPointsControls() {
         final ObservableValue<Boolean> isPenaltyKindNotPointloss =
-                penaltyKindComboBox
+                penaltyTypeComboBox
                         .getSelectionModel()
                         .selectedItemProperty()
                         .isNotEqualTo(PenaltyType.POINTLOSS);
 
-        penaltyKindComboBox
+        penaltyTypeComboBox
             .getItems()
             .setAll(Arrays.asList(PenaltyType.values()));
-        penaltyKindComboBox
+        penaltyTypeComboBox
             .getSelectionModel()
             .select(PenaltyType.POINTLOSS);
-        penaltyKindComboBox
+        penaltyTypeComboBox
             .minWidthProperty()
             .bind(penaltyMinusPointsSpinner.widthProperty());
 
@@ -201,70 +208,159 @@ public final class MainController extends AbstractController<BorderPane> {
         return fileChooser;
     }
 
+    /**
+     * Creates a new {@link Configuration} object from the JavaFX controls associated with the
+     * configuration properties.
+     *
+     * The counterpart of this method is {@link #setControlsFromConfiguration(Configuration)}
+     * which sets the JavaFX controls to the appropriate values for each configuration property.
+     *
+     * @return A new {@link Configuration} based on the current state of the GUI controls used
+     *         for configuring it.
+     *
+     * @see #setControlsFromConfiguration(Configuration)
+     */
+    @NotNull
+    @Contract(" -> new")
+    private Configuration getConfigurationFromControls() {
+        return new Configuration(
+            maxPlayerCountSpinner.getValue(),
+            heightSpinner.getValue(),
+            widthSpinner.getValue(),
+            shotCountSpinner.getValue(),
+            hitPointsSpinner.getValue(),
+            sunkPointsSpinner.getValue(),
+            roundTimeSpinner.getValue(),
+            visualizationTimeSpinner.getValue(),
+            new HashMap<>(),
+            penaltyMinusPointsSpinner.getValue(),
+            penaltyTypeComboBox.getSelectionModel().getSelectedItem()
+        );
+    }
+
+    /**
+     * @see #getConfigurationFromControls()
+     */
     @FXML
-    private void onExportButtonAction(@NotNull final ActionEvent event) {
+    @SuppressWarnings("unused")
+    private void onExportButtonAction() {
         final FileChooser chooser =
             newConfigurationFileChooser(resourceBundle.getString("configuration.export.dialog.title"));
 
-        final File target = chooser.showSaveDialog(EventUtils.getWindowFromTarget(event));
-        if (target != null) {
-            final Path exportPath = target.toPath().resolveSibling(configurationFileExtension);
+        final File target = chooser.showSaveDialog(root.getScene().getWindow());
+        if (target == null)
+            return;
 
-            try {
-                LOGGER.info("Exporting configuration to '{}.", target);
+        final Path exportPath = target.toPath().resolveSibling(target.getName() + configurationFileExtension);
 
-                Files.write(exportPath, "".getBytes(StandardCharsets.UTF_8));
-            } catch (final IOException exception) {
-                final String contentText =
-                    String.format(resourceBundle.getString("configuration.export.exceptionAlert.contentText"), target);
+        try {
+            final String configurationJson = gson.toJson(getConfigurationFromControls());
 
-                LOGGER.error(exception);
+            LOGGER.info("Exporting configuration to '{}.", exportPath);
 
-                Alerts
-                    .exceptionAlert(
-                        resourceBundle.getString("configuration.export.exceptionAlert.title"),
-                        resourceBundle.getString("configuration.export.exceptionAlert.headerText"),
-                        contentText,
-                        resourceBundle.getString("configuration.export.exceptionAlert.labelText"),
-                        exception)
-                    .showAndWait();
-            }
+            Files.write(exportPath, configurationJson.getBytes(StandardCharsets.UTF_8));
+        } catch (final IOException exception) {
+            final String contentText =
+                String.format(resourceBundle.getString("configuration.export.exceptionAlert.contentText"), exportPath);
+
+            LOGGER.error(exception);
+
+            Alerts
+                .exceptionAlert(
+                    resourceBundle.getString("configuration.export.exceptionAlert.title"),
+                    resourceBundle.getString("configuration.export.exceptionAlert.headerText"),
+                    contentText,
+                    resourceBundle.getString("configuration.export.exceptionAlert.labelText"),
+                    exception)
+                .showAndWait();
         }
     }
 
+    /**
+     * Sets the JavaFX controls associated with configuration properties to the appropriate values
+     * based on the provided {@code configuration}.
+     *
+     * The counterpart of this method is {@link #getConfigurationFromControls()} which creates a
+     * new {@link Configuration} object based on the state of the associated JavaFX controls.
+     *
+     * @param configuration The {@link Configuration} whose properties should be used to determine
+     *                      the new state of the GUI controls.
+     *
+     * @see #getConfigurationFromControls()
+     */
+    private void setControlsFromConfiguration(@NotNull final Configuration configuration) {
+        maxPlayerCountSpinner
+            .getValueFactory()
+            .setValue(configuration.getMaxPlayerCount());
+        heightSpinner
+            .getValueFactory()
+            .setValue(configuration.getHeight());
+        widthSpinner
+            .getValueFactory()
+            .setValue(configuration.getWidth());
+        shotCountSpinner
+            .getValueFactory()
+            .setValue(configuration.getShotCount());
+        hitPointsSpinner
+            .getValueFactory()
+            .setValue(configuration.getHitPoints());
+        sunkPointsSpinner
+            .getValueFactory()
+            .setValue(configuration.getSunkPoints());
+        roundTimeSpinner
+            .getValueFactory()
+            .setValue(configuration.getRoundTime());
+        visualizationTimeSpinner
+            .getValueFactory()
+            .setValue(configuration.getVisualizationTime());
+        penaltyMinusPointsSpinner
+            .getValueFactory()
+            .setValue(configuration.getPenaltyMinusPoints());
+
+        penaltyTypeComboBox
+            .getSelectionModel()
+            .select(configuration.getPenaltyKind());
+    }
+
+    /**
+     * @see #setControlsFromConfiguration(Configuration) 
+     */
     @FXML
-    private void onImportButtonAction(@NotNull final ActionEvent event) {
+    @SuppressWarnings("unused")
+    private void onImportButtonAction() {
         final FileChooser chooser =
             newConfigurationFileChooser(resourceBundle.getString("configuration.import.dialog.title"));
 
-        final File target = chooser.showOpenDialog(EventUtils.getWindowFromTarget(event));
-        if (target != null) {
-            final Path importPath = target.toPath().resolveSibling(configurationFileExtension);
+        final File target = chooser.showOpenDialog(root.getScene().getWindow());
+        if (target == null)
+            return;
 
-            try {
-                LOGGER.info("Importing configuration from '{}'.", target);
+        try {
+            LOGGER.info("Importing configuration from '{}'.", target);
 
-                new String(Files.readAllBytes(importPath), StandardCharsets.UTF_8);
-            } catch (final IOException exception) {
-                final String contentText =
-                    String.format(resourceBundle.getString("configuration.import.exceptionAlert.contentText"), target);
+            final String configurationJson = new String(Files.readAllBytes(target.toPath()), StandardCharsets.UTF_8);
 
-                LOGGER.error(exception);
+            setControlsFromConfiguration(gson.fromJson(configurationJson, Configuration.class));
+        } catch (final IOException exception) {
+            final String contentText =
+                String.format(resourceBundle.getString("configuration.import.exceptionAlert.contentText"), target);
 
-                Alerts
-                    .exceptionAlert(
-                        resourceBundle.getString("configuration.import.exceptionAlert.title"),
-                        resourceBundle.getString("configuration.import.exceptionAlert.headerText"),
-                        contentText,
-                        resourceBundle.getString("configuration.import.exceptionAlert.labelText"),
-                        exception)
-                    .showAndWait();
-            }
+            LOGGER.error(exception);
+
+            Alerts
+                .exceptionAlert(
+                    resourceBundle.getString("configuration.import.exceptionAlert.title"),
+                    resourceBundle.getString("configuration.import.exceptionAlert.headerText"),
+                    contentText,
+                    resourceBundle.getString("configuration.import.exceptionAlert.labelText"),
+                    exception)
+                .showAndWait();
         }
     }
     // </editor-fold>
 
     @FXML
+    @SuppressWarnings("unused")
     private void onStartNewGameButtonAction() {
     }
 }

@@ -4,11 +4,14 @@ import java.io.IOException;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import com.google.gson.GsonBuilder;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+
+import com.google.gson.Gson;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -93,7 +96,12 @@ public final class BattleshipsServerApplication extends Application {
 
     @Override
     public void start(@NotNull final Stage stage) throws Exception {
-        stage.setScene(new Scene(loadView("main", new MainController())));
+        final MainController controller = new MainController(
+            new GsonBuilder()
+                .setPrettyPrinting()
+                .create());
+
+        stage.setScene(new Scene(loadView("main", controller)));
         stage.setTitle(TITLE);
         stage.show();
     }

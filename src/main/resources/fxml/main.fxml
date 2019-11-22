@@ -207,9 +207,9 @@
             <Label
               GridPane.columnIndex="0"
               GridPane.rowIndex="0"
-              text="%configuration.penalty.penaltyKind.label"/>
+              text="%configuration.penalty.penaltyType.label"/>
             <ComboBox
-              fx:id="penaltyKindComboBox"
+              fx:id="penaltyTypeComboBox"
               GridPane.columnIndex="1"
               GridPane.rowIndex="0"/>
 
