@@ -2,20 +2,20 @@ package de.upb.codingpirates.battleships.server.handler;
 
 import com.google.inject.Inject;
 import de.upb.codingpirates.battleships.network.id.Id;
+import de.upb.codingpirates.battleships.network.message.ExceptionMessageHandler;
 import de.upb.codingpirates.battleships.network.message.Message;
-import de.upb.codingpirates.battleships.network.message.MessageHandler;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 
-public class ShotsRequestHandler implements MessageHandler<ShotsRequest> {
+public class ShotsRequestHandler extends ExceptionMessageHandler<ShotsRequest> {
     @Inject
     private ClientManager clientManager;
     @Inject
     private GameManager gameManager;
 
     @Override
-    public void handle(ShotsRequest message, Id connectionId) {
+    public void handleMessage(ShotsRequest message, Id connectionId) {
 
     }
 

@@ -1,22 +1,31 @@
 package de.upb.codingpirates.battleships.server.handler;
 
 import com.google.inject.Inject;
+import de.upb.codingpirates.battleships.logic.ClientType;
+import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
+import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.Id;
+import de.upb.codingpirates.battleships.network.message.ExceptionMessageHandler;
 import de.upb.codingpirates.battleships.network.message.Message;
-import de.upb.codingpirates.battleships.network.message.MessageHandler;
 import de.upb.codingpirates.battleships.network.message.request.SpectatorGameStateRequest;
+import de.upb.codingpirates.battleships.network.message.response.SpectatorGameStateResponse;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
+import de.upb.codingpirates.battleships.server.game.GameHandler;
 
-public class SpectatorGameStateRequestHandler implements MessageHandler<SpectatorGameStateRequest> {
+public class SpectatorGameStateRequestHandler extends ExceptionMessageHandler<SpectatorGameStateRequest> {
     @Inject
     private ClientManager clientManager;
     @Inject
     private GameManager gameManager;
 
     @Override
-    public void handle(SpectatorGameStateRequest message, Id connectionId) {
-
+    public void handleMessage(SpectatorGameStateRequest message, Id connectionId) throws GameException {
+        GameHandler handler = gameManager.getGameHandlerForClientId(connectionId.getInt());
+        if (!clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.SPECTATOR)) {
+            throw new NotAllowedException("You are not a Spectator");
+        }
+        clientManager.sendMessageToId(new SpectatorGameStateResponse(handler.getPlayer(), handler.getShots(), handler.getStartShip(), handler.getGame().getState()), connectionId);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package de.upb.codingpirates.battleships.server.handler;
 
 import com.google.inject.Inject;
+import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.MessageHandler;
@@ -18,14 +19,15 @@ public class ConnectionClosedReportHandler implements MessageHandler<ConnectionC
     private GameManager gameManager;
 
     @Override
-    public void handle(ConnectionClosedReport message, Id connectionId) {
-        this.clientManager.disconnect(connectionId);//TODO test
-        GameHandler handler = gameManager.getGameManagerForClientId(connectionId);
-        clientManager.sendMessageToClients(new LeaveNotification((int) connectionId.getRaw()), handler.getAllClients());
+    public void handle(ConnectionClosedReport message, Id connectionId) throws InvalidActionException {
+        this.clientManager.disconnect(connectionId.getInt());//TODO test
+        gameManager.removeClientFromGame(connectionId.getInt());
+        GameHandler handler = gameManager.getGameHandlerForClientId(connectionId.getInt());
+        clientManager.sendMessageToClients(new LeaveNotification(connectionId.getInt()), handler.getAllClients());
     }
 
     @Override
     public boolean canHandle(Message message) {
-        return false;
+        return message instanceof ConnectionClosedReport;
     }
 }

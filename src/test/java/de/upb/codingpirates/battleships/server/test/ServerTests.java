@@ -8,7 +8,8 @@ import org.junit.jupiter.api.Test;
 public class ServerTests {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
     @Test
-    public void test(){
+    public void test() {
     }
 }
