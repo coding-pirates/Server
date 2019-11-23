@@ -3,13 +3,13 @@ package de.upb.codingpirates.battleships.server.game;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.logic.*;
+import de.upb.codingpirates.battleships.network.message.notification.*;
+import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
+import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.IntId;
-import de.upb.codingpirates.battleships.network.message.notification.*;
-import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
-import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.Properties;
 
 import javax.annotation.Nonnull;
@@ -29,7 +29,6 @@ public class GameHandler {
      * if game owned by tournament
      */
     private boolean tournament;
-
     /**
      * maps client id to player
      */
