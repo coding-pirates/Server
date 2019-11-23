@@ -41,7 +41,7 @@ public class GameManager {
 
     public int createGame(@Nonnull Configuration configuration, String name, boolean tournament) {
         int id = this.idManager.generate().getInt();
-        games.putIfAbsent(id, new GameHandler(name, id, configuration, tournament));
+        games.putIfAbsent(id, new GameHandler(name, id, configuration, tournament, clientManager));
         return id;
     }
 
