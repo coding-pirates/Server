@@ -12,93 +12,101 @@ import de.upb.codingpirates.battleships.network.message.request.PlaceShipsReques
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.Properties;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class GameHandler {
 
+    @Nonnull
     private ClientManager clientManager;
-
     /**
      * game properties
      */
+    @Nonnull
     private Game game;
     /**
      * if game owned by tournament
      */
     private boolean tournament;
+
     /**
      * maps client id to player
      */
-    private Map<Integer, Client> player = Maps.newHashMap();
+    private final Map<Integer, Client> player = Maps.newHashMap();
     /**
      * maps client id to spectator
      */
-    private Map<Integer, Client> spectator = Maps.newHashMap();
+    private final Map<Integer, Client> spectator = Maps.newHashMap();
     /**
      * maps player id to his field
      */
-    private Map<Integer, Field> fields = Maps.newHashMap();
+    private final Map<Integer, Field> fields = Maps.newHashMap();
     /**
      * maps client id to shots
      */
-    private Map<Integer, Collection<Shot>> shots = Maps.newHashMap();
+    private final Map<Integer, Collection<Shot>> shots = Maps.newHashMap();
     /**
      * maps player id to players ships
      */
-    private Map<Integer, Map<Integer,Ship>> ships = Maps.newHashMap();
+    private final Map<Integer, Map<Integer, Ship>> ships = Maps.newHashMap();
     /**
      * maps player id to players ship placement
      */
-    private Map<Integer, Map<Integer, PlacementInfo>> startShip = Maps.newHashMap();
+    private final Map<Integer, Map<Integer, PlacementInfo>> startShip = Maps.newHashMap();
     /**
      * maps player id to players score
      */
-    private Map<Integer, Integer> score = Maps.newHashMap();
+    private final Map<Integer, Integer> score = Maps.newHashMap();
     /**
      * list of all hit shots
      */
-    private List<Shot> hitShots = Lists.newArrayList();
+    private final List<Shot> hitShots = Lists.newArrayList();
     /**
      * list of all missed shots
      */
-    private List<Shot> missedShots = Lists.newArrayList();
-
-    private List<Ship> sunkenShips = Lists.newArrayList();
-
+    private final List<Shot> missedShots = Lists.newArrayList();
     /**
-     * ship to shots that hit the ship
+     * list of all shots that result in a sunken ship
      */
-    private Map<Ship, List<Shot>> shipToShots = Maps.newHashMap();
+    private final List<Shot> sunkShots = Lists.newArrayList();
+    /**
+     * list of all sunken ships
+     */
+    private final List<Ship> sunkenShips = Lists.newArrayList();
+    /**
+     * maps from ship to shots that hit the ship
+     */
+    private final Map<Ship, List<Shot>> shipToShots = Maps.newHashMap();
 
-    public GameHandler(String name, int id, Configuration config, boolean tournament, ClientManager clientManager) {
+    public GameHandler(@Nonnull String name, int id, @Nonnull Configuration config, boolean tournament, @Nonnull ClientManager clientManager) {
         this.game = new Game(name, id, GameState.LOBBY, config, tournament);
         this.tournament = tournament;
         this.clientManager = clientManager;
     }
 
     /**
-     * @return {@code true} if client was added
+     * adds the client as the spectator or player to the game
+     * @throws InvalidActionException if game is full
      */
-    public boolean addClient(ClientType type, Client client) {
+    public void addClient(@Nonnull ClientType type, @Nonnull Client client) throws InvalidActionException {
         switch (type) {
             case PLAYER:
                 if (player.size() >= game.getConfig().MAXPLAYERCOUNT)
-                    return false;
+                    throw new InvalidActionException("The game is full");
                 player.putIfAbsent(client.getId(), client);
                 fields.putIfAbsent(client.getId(), new Field(game.getConfig().HEIGHT, game.getConfig().WIDTH));
                 game.addPlayer();
-                return true;
             case SPECTATOR:
                 if (player.size() >= Properties.MAXSPECTATOR)
-                    return false;
+                    throw new InvalidActionException("The game is full");
                 spectator.putIfAbsent(client.getId(), client);
-                return true;
-            default:
-                return false;
         }
     }
 
+    /**
+     * removes from the game including all statistics
+     */
     public void removeClient(int client) {
         if (this.player.containsKey(client)) {
             player.remove(client);
@@ -111,6 +119,9 @@ public class GameHandler {
         spectator.remove(client);
     }
 
+    /**
+     * @return all clients participating in the game or viewing the game. (player, spectator)
+     */
     public List<Client> getAllClients() {
         List<Client> clients = Lists.newArrayList();
         clients.addAll(this.player.values());
@@ -118,49 +129,86 @@ public class GameHandler {
         return clients;
     }
 
+    /**
+     * @return all players
+     */
     public Collection<Client> getPlayer() {
         return player.values();
     }
 
+    /**
+     * @return the {@link Game} object
+     */
+    @Nonnull
     public Game getGame() {
         return game;
     }
 
-    public Configuration getConfiguration() {
+    /**
+     * @return the {@link Configuration} from the {@link Game} object
+     */
+    private Configuration getConfiguration() {
         return game.getConfig();
     }
 
+    /**
+     * @return all shots that hit a ship
+     */
     public List<Shot> getHitShots() {
         return hitShots;
     }
 
+    /**
+     * @return all shots that doesn't hit a target
+     */
     public List<Shot> getMissedShots() {
         return missedShots;
     }
 
-    public Map<Ship, List<Shot>> getShipToShots() {
-        return shipToShots;
+    /**
+     * @return all shots that hit a ship if the ship is already sunken
+     */
+    public List<Shot> getSunkShots(){
+        return sunkShots;
     }
 
+    /**
+     * @return all shots
+     */
     public List<Shot> getShots() {
         List<Shot> shots = Lists.newArrayList(this.hitShots);
         shots.addAll(missedShots);
         return shots;
     }
 
+    /**
+     * @return the ship placements for every player
+     */
     public Map<Integer, Map<Integer, PlacementInfo>> getStartShip() {
         return startShip;
     }
 
+    /**
+     * @return the score
+     */
     public Map<Integer, Integer> getScore() {
         return score;
     }
 
+    /**
+     * @return all sunken ships
+     */
     public List<Ship> getSunkenShips() {
         return sunkenShips;
     }
 
-    public void addShipPlacement(int clientId, Map<Integer,PlacementInfo> ships) throws GameException {
+    /**
+     * adds a ship placement configuration for a player
+     * @param clientId id of the player
+     * @param ships map from ship id to placementinfo
+     * @throws GameException if to many ships have been placed or the ships for the player has already been placed
+     */
+    public void addShipPlacement(int clientId, Map<Integer, PlacementInfo> ships) throws GameException {
         if(ships.size() > getConfiguration().getShips().size()){
             throw new NotAllowedException("You have set to many ships");
         }
@@ -169,6 +217,12 @@ public class GameHandler {
         }
     }
 
+    /**
+     * adds shots placement for a player
+     * @param clientId id of the player
+     * @param shots all shots from the player
+     * @throws GameException if to many shots have been placed or the shots for the player has already been placed
+     */
     public void addShotPlacement(int clientId, Collection<Shot> shots) throws GameException {
         if(shots.size() > getConfiguration().SHOTCOUNT){
             throw new NotAllowedException("Your have shot to many times");
@@ -187,9 +241,24 @@ public class GameHandler {
 
     /**
      * main method, called every tick
+     * only run when {@link Game} has {@link GameState#IN_PROGRESS}
+     * <p>
+     * {@link GameStage#START}:
+     * does everything which should be done beforehand.<p>
+     * {@link GameStage#PLACESHIPS}:
+     * waits for round timer & waits for {@link PlaceShipsRequest}'s <p>
+     * {@link GameStage#SHOTS}:
+     * waits for round timer & waits for {@link de.upb.codingpirates.battleships.network.message.request.ShotsRequest}'s.
+     * then calculates all shots <p>
+     * {@link GameStage#VISUALIZATION}:
+     * waits for visualization round timer.
+     * and send {@link PlayerUpdateNotification} & {@link SpectatorUpdateNotification}.
+     * then checks is more than one player has ships left<p>
+     * {@link GameStage#FINISHED}:
+     * sends {@link FinishNotification} and sets gameState to {@link GameState#FINISHED}
      */
     public void run() {
-        if(game.getState().equals(GameState.FINISHED) || game.getState().equals(GameState.LOBBY) || game.getState().equals(GameState.PAUSED))return;
+        if(!game.getState().equals(GameState.IN_PROGRESS))return;
         switch (this.stage) {
             case START:
                 this.startGame();
@@ -206,6 +275,8 @@ public class GameHandler {
                     clientManager.sendMessageToClients(new RoundStartNotification(), getAllClients());
                     this.stage = GameStage.SHOTS;
                     this.timeStamp = System.currentTimeMillis();
+                    this.clientManager.sendMessageToClients(new PlayerUpdateNotification(hitShots, this.score, this.sunkShots), player.values());
+                    this.clientManager.sendMessageToClients(new SpectatorUpdateNotification(hitShots,score,this.sunkShots,missedShots),spectator.values());
                 }
                 if(ships.size() <= 1){
                     this.stage = GameStage.FINISHED;
@@ -213,13 +284,9 @@ public class GameHandler {
                 break;
             case SHOTS:
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().ROUNDTIME) {
-                    List<Ship> sunkShips = this.performShots();
-                    List<Shot> sunkShots = Lists.newArrayList();
-                    sunkShips.forEach(ship -> sunkShots.addAll(this.shipToShots.get(ship)));
+                    this.performShots();
                     this.timeStamp = System.currentTimeMillis();
                     this.stage = GameStage.VISUALIZATION;
-                    this.clientManager.sendMessageToClients(new PlayerUpdateNotification(hitShots, this.score, sunkShots), player.values());
-                    this.clientManager.sendMessageToClients(new SpectatorUpdateNotification(hitShots,score,sunkShots,missedShots),spectator.values());
                 }
                 break;
             case FINISHED:
@@ -236,6 +303,9 @@ public class GameHandler {
         }
     }
 
+    /**
+     * set games state to {@link GameState#IN_PROGRESS} & stage to {@link GameStage#START}
+     */
     public void launchGame() {
         if (this.game.getState() == GameState.LOBBY) {
             this.game.setState(GameState.IN_PROGRESS);
@@ -243,7 +313,10 @@ public class GameHandler {
         }
     }
 
-    public void startGame() {
+    /**
+     * sets game stage to {@link GameStage#PLACESHIPS} & sends {@link GameInitNotification} & start round
+     */
+    private void startGame() {
         if (this.stage.equals(GameStage.START)) {
             this.startShip.clear();
             this.stage = GameStage.PLACESHIPS;
@@ -252,6 +325,9 @@ public class GameHandler {
         }
     }
 
+    /**
+     * saves remaining time of the round and pauses the game
+     */
     public void pauseGame() {
         if (this.game.getState() == GameState.IN_PROGRESS) {
             this.game.setState(GameState.PAUSED);
@@ -269,6 +345,9 @@ public class GameHandler {
         }
     }
 
+    /**
+     * uses saved remain time to return to game
+     */
     public void continueGame() {
         if (this.game.getState() == GameState.PAUSED) {
             this.game.setState(GameState.IN_PROGRESS);
@@ -276,6 +355,9 @@ public class GameHandler {
         }
     }
 
+    /**
+     * places all ships in {@link #startShip} and removes all player that didn't placed there ships
+     */
     private void placeShips() {
         List<Integer> clients = Lists.newArrayList();
         Map<Integer, ShipType> ships = getConfiguration().getShips();
@@ -293,7 +375,10 @@ public class GameHandler {
         this.removeInactivePlayer(clients1);
     }
 
-    private List<Ship> performShots() {
+    /**
+     * perform all shots in {@link #shots}
+     */
+    private void performShots() {
         List<Ship> sunkShips = Lists.newArrayList();
         Map<HitType,Map<Shot, List<Integer>>> hitToPoint = Maps.newHashMap();
             for (Map.Entry<Integer, Collection<Shot>> entry : shots.entrySet()) {
@@ -355,16 +440,23 @@ public class GameHandler {
                 this.ships.remove(clientId);
             }
         }));
+        sunkShips.forEach((ship -> this.sunkShots.addAll(this.shipToShots.get(ship))));
         this.shots.clear();
-        return sunkShips;
     }
 
+    /**
+     * removes player that didn't placed their ships
+     */
     private void removeInactivePlayer(Collection<Client> clients) {
         clientManager.sendMessageToClients(new ErrorNotification(ErrorType.INVALID_ACTION, PlaceShipsRequest.MESSAGE_ID, "No ships were placed"), clients);
         clients.forEach(client -> this.removeClient(client.getId()));
         clients.forEach(client -> clientManager.sendMessageToClients(new LeaveNotification(client.getId()), clients));
     }
 
+    /**
+     * @return remaining round time
+     * @throws InvalidActionException if there is no round running
+     */
     public long getRemainingTime() throws InvalidActionException{
         if(!this.game.getState().equals(GameState.IN_PROGRESS) && !this.game.getState().equals(GameState.PAUSED))throw new InvalidActionException("there is no timer active");
         if(this.game.getState().equals(GameState.PAUSED))return this.pauseTimeCache;
