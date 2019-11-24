@@ -46,9 +46,7 @@ public class GameManager {
 
     public void addClientToGame(int gameId, Client client, ClientType clientType) throws InvalidActionException {
         if (games.containsKey(gameId)) {
-            if (!games.get(gameId).addClient(clientType, client)) {
-                throw new InvalidActionException("The game is full");
-            }
+            games.get(gameId).addClient(clientType, client);
             clientToGame.putIfAbsent(client.getId(), gameId);
         } else {
             throw new InvalidActionException("The game does not exist");
