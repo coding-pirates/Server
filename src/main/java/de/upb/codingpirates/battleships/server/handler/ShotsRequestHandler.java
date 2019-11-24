@@ -1,6 +1,7 @@
 package de.upb.codingpirates.battleships.server.handler;
 
 import com.google.inject.Inject;
+import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.ExceptionMessageHandler;
@@ -17,7 +18,7 @@ public class ShotsRequestHandler extends ExceptionMessageHandler<ShotsRequest> {
     private GameManager gameManager;
 
     @Override
-    public void handleMessage(ShotsRequest message, Id connectionId) throws InvalidActionException {
+    public void handleMessage(ShotsRequest message, Id connectionId) throws GameException {
         GameHandler gamehandler = gameManager.getGameHandlerForClientId(connectionId.getInt());
         if (gamehandler == null) {
             throw new InvalidActionException("You are not part of a game");

@@ -64,6 +64,8 @@ public class GameHandler {
      */
     private List<Shot> missedShots = Lists.newArrayList();
 
+    private List<Ship> sunkenShips = Lists.newArrayList();
+
     /**
      * ship to shots that hit the ship
      */
@@ -102,6 +104,9 @@ public class GameHandler {
             player.remove(client);
             fields.remove(client);
             game.removePlayer();
+            score.remove(client);
+            ships.remove(client);
+            startShip.remove(client);
         }
         spectator.remove(client);
     }
@@ -133,6 +138,10 @@ public class GameHandler {
         return missedShots;
     }
 
+    public Map<Ship, List<Shot>> getShipToShots() {
+        return shipToShots;
+    }
+
     public List<Shot> getShots() {
         List<Shot> shots = Lists.newArrayList(this.hitShots);
         shots.addAll(missedShots);
@@ -145,6 +154,10 @@ public class GameHandler {
 
     public Map<Integer, Integer> getScore() {
         return score;
+    }
+
+    public List<Ship> getSunkenShips() {
+        return sunkenShips;
     }
 
     public void addShipPlacement(int clientId, Map<Integer,PlacementInfo> ships) throws GameException {
@@ -206,6 +219,7 @@ public class GameHandler {
                     this.timeStamp = System.currentTimeMillis();
                     this.stage = GameStage.VISUALIZATION;
                     this.clientManager.sendMessageToClients(new PlayerUpdateNotification(hitShots, this.score, sunkShots), player.values());
+                    this.clientManager.sendMessageToClients(new SpectatorUpdateNotification(hitShots,score,sunkShots,missedShots),spectator.values());
                 }
                 break;
             case FINISHED:
@@ -269,7 +283,10 @@ public class GameHandler {
             clients.add(clientEntry.getKey());
             Field field = this.fields.get(clientEntry.getKey());
             for (Map.Entry<Integer, PlacementInfo> shipEntry : clientEntry.getValue().entrySet()) {
-                this.ships.computeIfAbsent(clientEntry.getKey(), id -> Maps.newHashMap()).putIfAbsent(shipEntry.getKey(), field.placeShip(ships.get(shipEntry.getKey()), shipEntry.getValue()));
+                Ship ship = field.placeShip(ships.get(shipEntry.getKey()), shipEntry.getValue());
+                if(ship != null) {//TODO ship can't be placed
+                    this.ships.computeIfAbsent(clientEntry.getKey(), id -> Maps.newHashMap()).putIfAbsent(shipEntry.getKey(), ship);
+                }
             }
         }
         List<Client> clients1 = player.entrySet().stream().filter(integerClientEntry -> !clients.contains(integerClientEntry.getKey())).map(Map.Entry::getValue).collect(Collectors.toList());
@@ -346,5 +363,19 @@ public class GameHandler {
         clientManager.sendMessageToClients(new ErrorNotification(ErrorType.INVALID_ACTION, PlaceShipsRequest.MESSAGE_ID, "No ships were placed"), clients);
         clients.forEach(client -> this.removeClient(client.getId()));
         clients.forEach(client -> clientManager.sendMessageToClients(new LeaveNotification(client.getId()), clients));
+    }
+
+    public long getRemainingTime() throws InvalidActionException{
+        if(!this.game.getState().equals(GameState.IN_PROGRESS) && !this.game.getState().equals(GameState.PAUSED))throw new InvalidActionException("there is no timer active");
+        if(this.game.getState().equals(GameState.PAUSED))return this.pauseTimeCache;
+        switch (stage){
+            case PLACESHIPS:
+            case SHOTS:
+                return System.currentTimeMillis() - this.timeStamp - getConfiguration().ROUNDTIME;
+            case VISUALIZATION:
+                return System.currentTimeMillis() - this.timeStamp - getConfiguration().VISUALIZATIONTIME;
+            default:
+                throw new InvalidActionException("there is no timer active");
+        }
     }
 }
