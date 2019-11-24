@@ -3,17 +3,16 @@ package de.upb.codingpirates.battleships.server.game;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.logic.*;
+import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
+import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
+import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
+import de.upb.codingpirates.battleships.network.id.IntId;
 import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.Properties;
-import de.upb.codingpirates.battleships.server.game.actions.Action;
-import de.upb.codingpirates.battleships.server.game.actions.PlaceShipAction;
-import de.upb.codingpirates.battleships.server.game.actions.ShotsAction;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class GameHandler {
@@ -41,13 +40,13 @@ public class GameHandler {
      */
     private Map<Integer, Field> fields = Maps.newHashMap();
     /**
-     * maps actionType to map from client id to action
+     * maps client id to shots
      */
-    private Map<ActionType, Map<Integer, Action>> actions = Maps.newHashMap();
+    private Map<Integer, Collection<Shot>> shots = Maps.newHashMap();
     /**
      * maps player id to players ships
      */
-    private Map<Integer, List<Ship>> ships = Maps.newHashMap();
+    private Map<Integer, Map<Integer,Ship>> ships = Maps.newHashMap();
     /**
      * maps player id to players ship placement
      */
@@ -107,13 +106,6 @@ public class GameHandler {
         spectator.remove(client);
     }
 
-    /**
-     * @return {@code true} if action was added
-     */
-    public boolean addAction(Action action) {
-        return this.actions.computeIfAbsent(action.getType(), (actionType -> Maps.newHashMap())).putIfAbsent(action.getSourceClient(), action) == null;
-    }
-
     public List<Client> getAllClients() {
         List<Client> clients = Lists.newArrayList();
         clients.addAll(this.player.values());
@@ -155,6 +147,24 @@ public class GameHandler {
         return score;
     }
 
+    public void addShipPlacement(int clientId, Map<Integer,PlacementInfo> ships) throws GameException {
+        if(ships.size() > getConfiguration().getShips().size()){
+            throw new NotAllowedException("You have set to many ships");
+        }
+        if(this.startShip.putIfAbsent(clientId,ships) != ships){
+            throw new InvalidActionException("Your ships are already placed");
+        }
+    }
+
+    public void addShotPlacement(int clientId, Collection<Shot> shots) throws GameException {
+        if(shots.size() > getConfiguration().SHOTCOUNT){
+            throw new NotAllowedException("Your have shot to many times");
+        }
+        if(this.shots.putIfAbsent(clientId,shots) != shots){
+            throw new InvalidActionException("Your shots are already placed");
+        }
+    }
+
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -162,7 +172,11 @@ public class GameHandler {
     private long pauseTimeCache = 0L;
     private GameStage stage = GameStage.START;
 
+    /**
+     * main method, called every tick
+     */
     public void run() {
+        if(game.getState().equals(GameState.FINISHED) || game.getState().equals(GameState.LOBBY) || game.getState().equals(GameState.PAUSED))return;
         switch (this.stage) {
             case START:
                 this.startGame();
@@ -170,7 +184,8 @@ public class GameHandler {
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().ROUNDTIME) {
                     this.placeShips();
                     this.timeStamp = System.currentTimeMillis();
-                    this.stage = GameStage.VISUALIZATION;
+                    this.clientManager.sendMessageToClients(new GameStartNotification(),getAllClients());
+                    this.stage = GameStage.SHOTS;
                 }
                 break;
             case VISUALIZATION:
@@ -178,6 +193,9 @@ public class GameHandler {
                     clientManager.sendMessageToClients(new RoundStartNotification(), getAllClients());
                     this.stage = GameStage.SHOTS;
                     this.timeStamp = System.currentTimeMillis();
+                }
+                if(ships.size() <= 1){
+                    this.stage = GameStage.FINISHED;
                 }
                 break;
             case SHOTS:
@@ -189,6 +207,15 @@ public class GameHandler {
                     this.stage = GameStage.VISUALIZATION;
                     this.clientManager.sendMessageToClients(new PlayerUpdateNotification(hitShots, this.score, sunkShots), player.values());
                 }
+                break;
+            case FINISHED:
+                Optional<Map.Entry<Integer,Integer>> winner = score.entrySet().stream().max(Comparator.comparingInt(Map.Entry::getValue));
+                int id = 0;
+                if(winner.isPresent()){
+                    id = winner.get().getKey();
+                }
+                this.clientManager.sendMessageToClients(new FinishNotification(score,new IntId(id)),getAllClients());
+                this.game.setState(GameState.FINISHED);
                 break;
             default:
                 break;
@@ -204,9 +231,7 @@ public class GameHandler {
 
     public void startGame() {
         if (this.stage.equals(GameStage.START)) {
-            if (this.actions.containsKey(ActionType.PLACESHIP)) {
-                this.actions.get(ActionType.PLACESHIP).clear();
-            }
+            this.startShip.clear();
             this.stage = GameStage.PLACESHIPS;
             this.timeStamp = System.currentTimeMillis();
             this.clientManager.sendMessageToClients(new GameInitNotification(getAllClients(), this.getConfiguration()), getAllClients());
@@ -239,29 +264,23 @@ public class GameHandler {
 
     private void placeShips() {
         List<Integer> clients = Lists.newArrayList();
-        Map<Integer, Action> actionMap = this.actions.get(ActionType.PLACESHIP);
-        if (actionMap != null) {
-            for (Map.Entry<Integer, Action> entry : actionMap.entrySet()) {
-                clients.add(entry.getKey());
-                Field field = this.fields.get(entry.getKey());
-                this.startShip.put(entry.getKey(), ((PlaceShipAction) entry.getValue()).getShips());
-                Map<Integer, ShipType> ships = getConfiguration().getShips();
-                for (Map.Entry<Integer, PlacementInfo> pair : ((PlaceShipAction) entry.getValue()).getShips().entrySet()) {
-                    this.ships.computeIfAbsent(entry.getValue().getSourceClient(), id -> Lists.newArrayList()).add(field.placeShip(ships.get(pair.getKey()), pair.getValue()));
-                }
+        Map<Integer, ShipType> ships = getConfiguration().getShips();
+        for (Map.Entry<Integer, Map<Integer, PlacementInfo>> clientEntry : startShip.entrySet()) {
+            clients.add(clientEntry.getKey());
+            Field field = this.fields.get(clientEntry.getKey());
+            for (Map.Entry<Integer, PlacementInfo> shipEntry : clientEntry.getValue().entrySet()) {
+                this.ships.computeIfAbsent(clientEntry.getKey(), id -> Maps.newHashMap()).putIfAbsent(shipEntry.getKey(), field.placeShip(ships.get(shipEntry.getKey()), shipEntry.getValue()));
             }
         }
         List<Client> clients1 = player.entrySet().stream().filter(integerClientEntry -> !clients.contains(integerClientEntry.getKey())).map(Map.Entry::getValue).collect(Collectors.toList());
-        removeInactivePlayer(clients1);
+        this.removeInactivePlayer(clients1);
     }
 
     private List<Ship> performShots() {
         List<Ship> sunkShips = Lists.newArrayList();
         Map<HitType,Map<Shot, List<Integer>>> hitToPoint = Maps.newHashMap();
-        Map<Integer, Action> actionMap = this.actions.get(ActionType.SHOTS);
-        if (actionMap != null) {
-            for (Map.Entry<Integer, Action> entry : actionMap.entrySet()) {
-                for (Shot shot : ((ShotsAction) entry.getValue()).getShots()) {
+            for (Map.Entry<Integer, Collection<Shot>> entry : shots.entrySet()) {
+                for (Shot shot : entry.getValue()) {
                     ShotHit hit = fields.get(shot.getClientId()).hit(shot);
                     switch (hit.getHitType()) {
                         case HIT:
@@ -282,7 +301,6 @@ public class GameHandler {
                             break;
                     }
                 }
-            }
         }
 
         //add points for each hit to the player who shot a Shot at a position
@@ -312,6 +330,15 @@ public class GameHandler {
                         }));
             }
         }
+        this.ships.forEach((clientId, ships) -> ships.forEach((shipId, ship) -> {
+            if(sunkShips.contains(ship)){
+                ships.remove(shipId);
+            }
+            if(ships.isEmpty()){
+                this.ships.remove(clientId);
+            }
+        }));
+        this.shots.clear();
         return sunkShips;
     }
 

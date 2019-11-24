@@ -10,7 +10,6 @@ import de.upb.codingpirates.battleships.network.message.request.PlaceShipsReques
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
-import de.upb.codingpirates.battleships.server.game.actions.PlaceShipAction;
 
 public class PlaceShipsRequestHandler extends ExceptionMessageHandler<PlaceShipsRequest> {
     @Inject
@@ -24,9 +23,7 @@ public class PlaceShipsRequestHandler extends ExceptionMessageHandler<PlaceShips
         if (gamehandler == null) {
             throw new InvalidActionException("You are not part of a game");
         }
-        if (!gamehandler.addAction(new PlaceShipAction(connectionId.getInt(), message.getPositions()))) {
-            throw new InvalidActionException("Ships were already placed");
-        }
+        gamehandler.addShipPlacement(connectionId.getInt(), message.getPositions());
     }
 
     @Override

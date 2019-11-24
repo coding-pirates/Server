@@ -8,7 +8,6 @@ import de.upb.codingpirates.battleships.logic.Configuration;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.id.IntIdManager;
 import de.upb.codingpirates.battleships.network.message.notification.ContinueNotification;
-import de.upb.codingpirates.battleships.network.message.notification.GameInitNotification;
 import de.upb.codingpirates.battleships.network.message.notification.PauseNotification;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
 import de.upb.codingpirates.battleships.server.network.ServerApplication;
@@ -66,7 +65,6 @@ public class GameManager {
 
     public void launchGame(int gameId) {
         games.get(gameId).launchGame();
-        clientManager.sendMessageToClients(new GameInitNotification(games.get(gameId).getAllClients(), games.get(gameId).getConfiguration()), games.get(gameId).getAllClients());
     }
 
     public void pauseGame(int gameId) {
