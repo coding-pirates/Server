@@ -29,7 +29,7 @@ public class GameJoinPlayerRequestHandler extends ExceptionMessageHandler<GameJo
             throw new NotAllowedException("Game has already started!");
         }
         else if (gameManager.getGame(message.getGameId()).getGame().getState().equals(GameState.FINISHED)) {
-            throw new NotAllowedException("Game is already finished");
+            throw new NotAllowedException("Game is already finished!");
         }
         gameManager.addClientToGame(message.getGameId(), clientManager.getClient(connectionId.getInt()), ClientType.PLAYER);
         clientManager.sendMessageToClient(new GameJoinPlayerResponse(message.getGameId()), clientManager.getClient(connectionId.getInt()));
