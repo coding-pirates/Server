@@ -178,7 +178,7 @@ public final class MainController extends AbstractController<BorderPane> {
         }
     }
 
-    private void setupShipConfigurationGrid() {
+    private void setupShipTypeConfigurationControls() {
         /* Initially populate the shipTypeEditingComboBox. */
         final List<ShipTypeConfiguration> initialConfigurations =
             IntStream
@@ -227,17 +227,47 @@ public final class MainController extends AbstractController<BorderPane> {
                 }
             }));
 
+        /* Repopulate the shipTypeConfigurationGrid to display the newly selected ShipTypeConfiguration. */
         shipTypeEditingComboBox
             .getSelectionModel()
             .selectedItemProperty()
             .addListener((observable, oldSelection, newSelection) -> {
                 populateShipConfigurationGrid(newSelection);
+
+                shipTypeHeightSpinner.getValueFactory().setValue(newSelection.height);
+                shipTypeWidthSpinner.getValueFactory().setValue(newSelection.width);
             });
 
         /* Select the first ShipTypeConfiguration. */
         shipTypeEditingComboBox
-                .getSelectionModel()
-                .select(0);
+            .getSelectionModel()
+            .select(0);
+
+        /*
+         * Adjust selected ShipTypeConfiguration and repopulate shipConfigurationGrid accordingly when changes to
+         * the shipTypeHeightSpinner and shipTypeWidthSpinner occur.
+         */
+
+        shipTypeWidthSpinner
+            .valueProperty()
+            .addListener((observable, oldWidth, newWidth) -> {
+                final ShipTypeConfiguration selected = getSelectedShipTypeConfiguration();
+
+                selected.width = newWidth;
+                selected.removeInvalidMarks();
+
+                populateShipConfigurationGrid(selected);
+            });
+        shipTypeHeightSpinner
+            .valueProperty()
+            .addListener((observable, oldHeight, newHeight) -> {
+                final ShipTypeConfiguration selected = getSelectedShipTypeConfiguration();
+
+                selected.height = newHeight;
+                selected.removeInvalidMarks();
+
+                populateShipConfigurationGrid(selected);
+            });
     }
 
     /**
@@ -280,7 +310,7 @@ public final class MainController extends AbstractController<BorderPane> {
             resourceBundle.getString("configuration.fileExtension.glob")
         );
 
-        setupShipConfigurationGrid();
+        setupShipTypeConfigurationControls();
         setupPenaltyMinusPointsControls();
     }
     // </editor-fold>
@@ -467,6 +497,14 @@ public final class MainController extends AbstractController<BorderPane> {
     }
 
     /**
+     * An internal class used to represent the information associated with a {@link ShipType} configuration,
+     * notably a {@link #label} to identify it, a collection of {@link Point2D} objects named {@link #marks}
+     * to later represent the positions occupied by the {@code ShipType}, as well as {@link #width} and
+     * {@link #height} for the amount of columns and rows of the {@link #shipConfigurationGrid}.
+     *
+     * A {@code ShipTypeConfiguration} may be converted to a {@code ShipType} via the {@link #toShipType()}
+     * method.
+     *
      * @author Andre Blanke
      */
     private static final class ShipTypeConfiguration {
@@ -485,15 +523,24 @@ public final class MainController extends AbstractController<BorderPane> {
             this.label = label;
         }
 
+        /**
+         * @inheritDoc
+         *
+         * @return The label of this {@code ShipType} when displayed inside of {@link #shipTypeEditingComboBox}.
+         */
         @Override
         @Contract(pure = true)
         public String toString() {
             return label;
         }
 
+        private void removeInvalidMarks() {
+            marks.removeIf(point -> (point.getX() >= width) || (point.getY() >= height));
+        }
+
         @NotNull
         @Contract(value = " -> new", pure = true)
-        public ShipType toShipType() {
+        private ShipType toShipType() {
             return new ShipType(marks);
         }
     }
