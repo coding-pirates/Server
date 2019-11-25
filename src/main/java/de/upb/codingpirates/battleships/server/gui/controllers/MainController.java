@@ -6,11 +6,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import javafx.beans.value.ObservableValue;
@@ -19,14 +15,13 @@ import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory;
-import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.stage.Window;
 
 import com.google.gson.Gson;
 
@@ -38,26 +33,18 @@ import org.jetbrains.annotations.NotNull;
 
 import de.upb.codingpirates.battleships.logic.util.Configuration;
 import de.upb.codingpirates.battleships.logic.util.PenaltyType;
+import de.upb.codingpirates.battleships.logic.util.Point2D;
+import de.upb.codingpirates.battleships.logic.util.ShipType;
 import de.upb.codingpirates.battleships.server.gui.control.Alerts;
 
 import static java.util.stream.Collectors.toList;
 
 /**
+ * The controller associated with the {@code main.fxml} file.
+ *
  * @author Andre Blanke
  */
 public final class MainController extends AbstractController<BorderPane> {
-
-    /**
-     * The file extension of configuration files.
-     *
-     * It needs to be appended to the {@link File} object returned by a {@link FileChooser}.
-     * 
-     * @see #onImportButtonAction()
-     * @see #onExportButtonAction()
-     */
-    private String          configurationFileExtension;
-
-    private ExtensionFilter configurationExtensionFilter;
 
     // <editor-fold desc="Configuration controls">
     @FXML
@@ -97,24 +84,19 @@ public final class MainController extends AbstractController<BorderPane> {
     private Spinner<Integer> shipTypeCountSpinner;
 
     @FXML
-    private ComboBox<String> shipTypeEditingComboBox;
+    private ComboBox<ShipTypeConfiguration> shipTypeEditingComboBox;
 
     @FXML
-    private GridPane shipConfigurationContainer;
+    private Spinner<Integer> shipTypeHeightSpinner;
+
+    @FXML
+    private Spinner<Integer> shipTypeWidthSpinner;
+
+    @FXML
+    private GridPane shipConfigurationGrid;
     // </editor-fold>
 
-    @FXML
-    private Collection<Spinner<? extends Number>> spinners;
-
     private final Gson gson;
-
-    /**
-     * The default amount of {@link Rectangle}s contained within each row and column of the
-     * {@link #shipConfigurationContainer}.
-     *
-     * @see #setupShipConfigurationContainer()
-     */
-    private static final int DEFAULT_SHIP_CONFIGURATION_GRID_SIZE = 5;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -122,77 +104,140 @@ public final class MainController extends AbstractController<BorderPane> {
         this.gson = gson;
     }
 
-    /**
-     * Initializes all {@link Spinner}s which are part of the {@link #spinners} collection as
-     * follows:
-     */
-    @SuppressWarnings("unchecked")
-    private void initializeSpinners() {
-        for (final Spinner<? extends Number> spinner : spinners) {
-            final SpinnerValueFactory<? extends Number> factory = spinner.getValueFactory();
-
-            /*
-             * We don't know the concrete type parameter of TextFormatter because the spinner
-             * collection contains both Spinners of type Integer and of type Long.
-             */
-            final TextFormatter formatter = new TextFormatter(factory.getConverter(), factory.getValue());
-
-            spinner
-                .getEditor()
-                .setTextFormatter(formatter);
-
-            factory.valueProperty().bindBidirectional(formatter.valueProperty());
-        }
-    }
-
     private static final int LATIN_ALPHABET_LENGTH = 26;
+
+    /**
+     * Computes the unique label string for the n-th {@link ShipType}.
+     *
+     * A {@code ShipType} label consists of one or more letters of the latin alphabet.
+     *
+     * The label for {@code n + 1} is computed by either 'increasing' the last label letter by one if we have not yet
+     * reached the end of the alphabet or by introduction of a new letter to the string.
+     *
+     * Examples:
+     *
+     * <pre>
+     * toShipTypeLabel(0);  // "A"
+     * toShipTypeLabel(25); // "Z"
+     * toShipTypeLabel(26); // "AA"
+     * </pre>
+     *
+     * @param n The index of the {@link ShipType} for which to compute the label.
+     *
+     * @return A unique label for the n-th {@link ShipType}.
+     */
     @NotNull
     private String toShipTypeLabel(int n) {
         final StringBuilder shipTypeLabelBuilder = new StringBuilder();
 
         for (; n >= 0; n = (n / LATIN_ALPHABET_LENGTH) - 1) {
-            int rem = n % LATIN_ALPHABET_LENGTH;
+            final int remainder = n % LATIN_ALPHABET_LENGTH;
 
-            shipTypeLabelBuilder.insert(0, (char) ('A' + rem));
+            shipTypeLabelBuilder.insert(0, (char) ('A' + remainder));
         }
         return shipTypeLabelBuilder.toString();
     }
 
-    private void populateShipTypeEditingComboBox() {
-        final List<String> shipTypeLabels =
-                IntStream
-                    .range(0, shipTypeCountSpinner.getValue())
-                    .boxed()
-                    .map(this::toShipTypeLabel)
-                    .collect(toList());
-
-        shipTypeEditingComboBox
-                .getItems()
-                .setAll(shipTypeLabels);
+    // <editor-fold desc="Initialization">
+    private ShipTypeConfiguration getSelectedShipTypeConfiguration() {
+        return shipTypeEditingComboBox.getSelectionModel().getSelectedItem();
     }
 
-    private void setupShipConfigurationContainer() {
-        populateShipTypeEditingComboBox();
+    private static final int SHIP_CONFIGURATION_GRID_CELL_SIZE = 30;
 
+    private static final Color COLOR_MARKED   = Color.DARKGRAY;
+    private static final Color COLOR_UNMARKED = Color.TEAL;
+
+    private void populateShipConfigurationGrid(@NotNull final ShipTypeConfiguration config) {
+        shipConfigurationGrid.getChildren().clear();
+
+        for (int x = 0; x < config.width; ++x) {
+            for (int y = 0; y < config.height; ++y) {
+                final Rectangle rectangle =
+                    new Rectangle(SHIP_CONFIGURATION_GRID_CELL_SIZE, SHIP_CONFIGURATION_GRID_CELL_SIZE);
+                final Point2D coordinate = new Point2D(x, y);
+
+                rectangle.setUserData(coordinate);
+                rectangle.setOnMouseClicked(event -> {
+                    //noinspection SuspiciousMethodCalls
+                    if (config.marks.remove(rectangle.getUserData())) {
+                        rectangle.setFill(COLOR_UNMARKED);
+                    } else {
+                        rectangle.setFill(COLOR_MARKED);
+                        config.marks.add(coordinate);
+                    }
+                });
+
+                if (config.marks.contains(coordinate))
+                    rectangle.setFill(COLOR_MARKED);
+                else
+                    rectangle.setFill(COLOR_UNMARKED);
+
+                shipConfigurationGrid.add(rectangle, x, y);
+            }
+        }
+    }
+
+    private void setupShipConfigurationGrid() {
+        /* Initially populate the shipTypeEditingComboBox. */
+        final List<ShipTypeConfiguration> initialConfigurations =
+            IntStream
+                .range(0, shipTypeCountSpinner.getValue())
+                .boxed()
+                .map(this::toShipTypeLabel)
+                .map(ShipTypeConfiguration::new)
+                .collect(toList());
         shipTypeEditingComboBox
-            .getSelectionModel()
-            .select(0);
+                .getItems()
+                .setAll(initialConfigurations);
+
+        /* Ensure the shipTypeEditingComboBox is (at least) as wide as the shipTypeCountSpinner. */
         shipTypeEditingComboBox
             .minWidthProperty()
             .bind(shipTypeCountSpinner.widthProperty());
+
         shipTypeCountSpinner
             .valueProperty()
-            .addListener(((observableValue, oldValue, newValue) -> populateShipTypeEditingComboBox()));
+            .addListener(((observableValue, oldCount, newCount) -> {
+                /*
+                 * Avoid discarding all ShipTypeConfigurations and attempt to keep the first newCount configurations
+                 * if the new amount of configurations is smaller than the old one.
+                 */
+                if (newCount < oldCount) {
+                    final Collection<ShipTypeConfiguration> configurationsToKeep =
+                        shipTypeEditingComboBox.getItems().subList(0, newCount);
 
-        for (int x = 0; x < DEFAULT_SHIP_CONFIGURATION_GRID_SIZE; ++x) {
-            for (int y = 0; y < DEFAULT_SHIP_CONFIGURATION_GRID_SIZE; ++y) {
-                final Rectangle rectangle = new Rectangle(30, 30);
+                    shipTypeEditingComboBox.getItems().setAll(configurationsToKeep);
+                /*
+                 * Otherwise, if the new amount is larger than the old one we keep the current configurations and
+                 * add newCount - oldCount new configurations to the existing ones.
+                 */
+                } else {
+                    final Collection<ShipTypeConfiguration> newConfigurations =
+                        IntStream
+                            .range(oldCount, newCount)
+                            .boxed()
+                            .map(this::toShipTypeLabel)
+                            .map(ShipTypeConfiguration::new)
+                            .collect(toList());
 
-                rectangle.setFill(Color.RED);
+                    shipTypeEditingComboBox
+                        .getItems()
+                        .addAll(newConfigurations);
+                }
+            }));
 
-                shipConfigurationContainer.add(rectangle, x, y);
-            }
-        }
+        shipTypeEditingComboBox
+            .getSelectionModel()
+            .selectedItemProperty()
+            .addListener((observable, oldSelection, newSelection) -> {
+                populateShipConfigurationGrid(newSelection);
+            });
+
+        /* Select the first ShipTypeConfiguration. */
+        shipTypeEditingComboBox
+                .getSelectionModel()
+                .select(0);
     }
 
     /**
@@ -202,10 +247,10 @@ public final class MainController extends AbstractController<BorderPane> {
      */
     private void setupPenaltyMinusPointsControls() {
         final ObservableValue<Boolean> isPenaltyKindNotPointloss =
-                penaltyTypeComboBox
-                        .getSelectionModel()
-                        .selectedItemProperty()
-                        .isNotEqualTo(PenaltyType.POINTLOSS);
+            penaltyTypeComboBox
+                .getSelectionModel()
+                .selectedItemProperty()
+                .isNotEqualTo(PenaltyType.POINTLOSS);
 
         penaltyTypeComboBox
             .getItems()
@@ -229,19 +274,31 @@ public final class MainController extends AbstractController<BorderPane> {
     public void initialize(final URL url, final ResourceBundle resourceBundle) {
         super.initialize(url, resourceBundle);
 
-        configurationFileExtension = resourceBundle.getString("configuration.fileExtension");
-
+        configurationFileExtension   = resourceBundle.getString("configuration.fileExtension");
         configurationExtensionFilter = new ExtensionFilter(
             resourceBundle.getString("configuration.fileExtension.description"),
             resourceBundle.getString("configuration.fileExtension.glob")
         );
-        initializeSpinners();
 
-        setupShipConfigurationContainer();
+        setupShipConfigurationGrid();
         setupPenaltyMinusPointsControls();
     }
+    // </editor-fold>
 
     // <editor-fold desc="Configuration import and export">
+    /**
+     * The file extension of configuration files.
+     *
+     * It needs to be appended to the {@link File} object returned by a {@link FileChooser} when exporting,
+     * as {@link FileChooser#showOpenDialog(Window)} does not append the extension associated with the
+     * {@link #configurationExtensionFilter}.
+     *
+     * @see #onExportButtonAction()
+     */
+    private String          configurationFileExtension;
+
+    private ExtensionFilter configurationExtensionFilter;
+
     @NotNull
     @Contract(pure = true)
     private FileChooser newConfigurationFileChooser(final String title) {
@@ -407,5 +464,37 @@ public final class MainController extends AbstractController<BorderPane> {
     @FXML
     @SuppressWarnings("unused")
     private void onStartNewGameButtonAction() {
+    }
+
+    /**
+     * @author Andre Blanke
+     */
+    private static final class ShipTypeConfiguration {
+
+        private int width  = DEFAULT_WIDTH_AND_HEIGHT;
+        private int height = DEFAULT_WIDTH_AND_HEIGHT;
+
+        private final Set<Point2D> marks = new HashSet<>();
+
+        private final String label;
+
+        private static final int DEFAULT_WIDTH_AND_HEIGHT = 5;
+
+        @Contract(pure = true)
+        private ShipTypeConfiguration(@NotNull final String label) {
+            this.label = label;
+        }
+
+        @Override
+        @Contract(pure = true)
+        public String toString() {
+            return label;
+        }
+
+        @NotNull
+        @Contract(value = " -> new", pure = true)
+        public ShipType toShipType() {
+            return new ShipType(marks);
+        }
     }
 }
