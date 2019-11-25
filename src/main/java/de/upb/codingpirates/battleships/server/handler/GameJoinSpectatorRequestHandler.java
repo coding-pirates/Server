@@ -8,7 +8,6 @@ import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.ExceptionMessageHandler;
 import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.request.GameJoinSpectatorRequest;
-import de.upb.codingpirates.battleships.network.message.response.GameJoinPlayerResponse;
 import de.upb.codingpirates.battleships.network.message.response.GameJoinSpectatorResponse;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
@@ -23,7 +22,7 @@ public class GameJoinSpectatorRequestHandler extends ExceptionMessageHandler<Gam
     @Override
     public void handleMessage(GameJoinSpectatorRequest message, Id connectionId) throws GameException {
         if (!clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.SPECTATOR)) {
-            throw new NotAllowedException("You are not a Spectator");
+            throw new NotAllowedException("game.handler.gameJoinSpectatorRequest.noSpectator");
         }
         gameManager.addClientToGame(message.getGameId(), clientManager.getClient(connectionId.getInt()), ClientType.SPECTATOR);
         clientManager.sendMessageToClient(new GameJoinSpectatorResponse(message.getGameId()), clientManager.getClient(connectionId.getInt()));

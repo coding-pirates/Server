@@ -19,7 +19,7 @@ public class ServerJoinRequestHandler extends ExceptionMessageHandler<ServerJoin
     @Override
     public void handleMessage(ServerJoinRequest message, Id connectionId) throws InvalidActionException {
         if (this.clientManager.create(connectionId.getInt(), message.getName(), message.getClientType()) == null) {
-            throw new InvalidActionException("The ClientType is not valid");
+            throw new InvalidActionException("game.handler.serverJoinRequest.noClientType");
         } else {
             this.clientManager.sendMessageToId(new ServerJoinResponse(connectionId.getInt()), connectionId);
         }

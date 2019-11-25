@@ -21,7 +21,7 @@ public class PlaceShipsRequestHandler extends ExceptionMessageHandler<PlaceShips
     public void handleMessage(PlaceShipsRequest message, Id connectionId) throws GameException {
         GameHandler gamehandler = gameManager.getGameHandlerForClientId(connectionId.getInt());
         if (gamehandler == null) {
-            throw new InvalidActionException("You are not part of a game");
+            throw new InvalidActionException("game.handler.placeShipsRequest.noGame");
         }
         gamehandler.addShipPlacement(connectionId.getInt(), message.getPositions());
     }

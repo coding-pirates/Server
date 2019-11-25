@@ -23,13 +23,13 @@ public class GameJoinPlayerRequestHandler extends ExceptionMessageHandler<GameJo
     @Override
     public void handleMessage(GameJoinPlayerRequest message, Id connectionId) throws GameException {
         if (!clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.PLAYER)) {
-            throw new NotAllowedException("You are not a Player");
+            throw new NotAllowedException("game.handler.gameJoinPlayerRequest.noPlayer");
         }
         else if (gameManager.getGame(message.getGameId()).getGame().getState().equals(GameState.IN_PROGRESS)) {
-            throw new NotAllowedException("Game has already started!");
+            throw new NotAllowedException("game.handler.gameJoinPlayerRequest.gameAlreadyStarted");
         }
         else if (gameManager.getGame(message.getGameId()).getGame().getState().equals(GameState.FINISHED)) {
-            throw new NotAllowedException("Game is already finished!");
+            throw new NotAllowedException("game.handler.gameJoinPlayerRequest.gameIsFinished");
         }
         gameManager.addClientToGame(message.getGameId(), clientManager.getClient(connectionId.getInt()), ClientType.PLAYER);
         clientManager.sendMessageToClient(new GameJoinPlayerResponse(message.getGameId()), clientManager.getClient(connectionId.getInt()));

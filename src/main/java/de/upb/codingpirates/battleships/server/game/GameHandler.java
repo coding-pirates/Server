@@ -11,12 +11,13 @@ import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionExc
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.IntId;
 import de.upb.codingpirates.battleships.server.Properties;
+import de.upb.codingpirates.battleships.server.Translator;
 
 import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class GameHandler {
+public class GameHandler implements Translator {
 
     @Nonnull
     private ClientManager clientManager;
@@ -92,13 +93,13 @@ public class GameHandler {
         switch (type) {
             case PLAYER:
                 if (player.size() >= game.getConfig().getMaxPlayerCount())
-                    throw new InvalidActionException("The game is full");
+                    throw new InvalidActionException("game.isFull");
                 player.putIfAbsent(client.getId(), client);
                 fields.putIfAbsent(client.getId(), new Field(game.getConfig().getHeight(), game.getConfig().getWidth()));
                 game.addPlayer();
             case SPECTATOR:
                 if (player.size() >= Properties.MAXSPECTATOR)
-                    throw new InvalidActionException("The game is full");
+                    throw new InvalidActionException("game.isFull");
                 spectator.putIfAbsent(client.getId(), client);
         }
     }
@@ -209,10 +210,10 @@ public class GameHandler {
      */
     public void addShipPlacement(int clientId, Map<Integer, PlacementInfo> ships) throws GameException {
         if(ships.size() > getConfiguration().getShips().size()){
-            throw new NotAllowedException("You have set to many ships");
+            throw new NotAllowedException("game.player.toManyShips");
         }
         if(this.startShip.putIfAbsent(clientId,ships) != ships){
-            throw new InvalidActionException("Your ships are already placed");
+            throw new InvalidActionException("game.player.shipsAlreadyPlaced");
         }
     }
 
@@ -224,10 +225,10 @@ public class GameHandler {
      */
     public void addShotPlacement(int clientId, Collection<Shot> shots) throws GameException {
         if(shots.size() > getConfiguration().getShotCount()){
-            throw new NotAllowedException("Your have shot to many times");
+            throw new NotAllowedException("game.player.toManyShots");
         }
         if(this.shots.putIfAbsent(clientId,shots) != shots){
-            throw new InvalidActionException("Your shots are already placed");
+            throw new InvalidActionException("game.player.shotsAlreadyPlaced");
         }
     }
 
@@ -447,7 +448,7 @@ public class GameHandler {
      * removes player that didn't placed their ships
      */
     private void removeInactivePlayer(Collection<Client> clients) {
-        clientManager.sendMessageToClients(new ErrorNotification(ErrorType.INVALID_ACTION, PlaceShipsRequest.MESSAGE_ID, "No ships were placed"), clients);
+        clientManager.sendMessageToClients(new ErrorNotification(ErrorType.INVALID_ACTION, PlaceShipsRequest.MESSAGE_ID, translate("game.player.noPlacedShips")), clients);
         clients.forEach(client -> this.removeClient(client.getId()));
         clients.forEach(client -> clientManager.sendMessageToClients(new LeaveNotification(client.getId()), clients));
     }
@@ -457,7 +458,7 @@ public class GameHandler {
      * @throws InvalidActionException if there is no round running
      */
     public long getRemainingTime() throws InvalidActionException{
-        if(!this.game.getState().equals(GameState.IN_PROGRESS) && !this.game.getState().equals(GameState.PAUSED))throw new InvalidActionException("there is no timer active");
+        if(!this.game.getState().equals(GameState.IN_PROGRESS) && !this.game.getState().equals(GameState.PAUSED))throw new InvalidActionException("game.noTimerActive");
         if(this.game.getState().equals(GameState.PAUSED))return this.pauseTimeCache;
         switch (stage){
             case PLACESHIPS:
@@ -466,7 +467,7 @@ public class GameHandler {
             case VISUALIZATION:
                 return System.currentTimeMillis() - this.timeStamp - getConfiguration().getVisualizationTime();
             default:
-                throw new InvalidActionException("there is no timer active");
+                throw new InvalidActionException("game.noTimerActive");
         }
     }
 }

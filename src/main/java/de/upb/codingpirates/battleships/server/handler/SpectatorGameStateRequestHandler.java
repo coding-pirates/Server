@@ -23,7 +23,7 @@ public class SpectatorGameStateRequestHandler extends ExceptionMessageHandler<Sp
     public void handleMessage(SpectatorGameStateRequest message, Id connectionId) throws GameException {
         GameHandler handler = gameManager.getGameHandlerForClientId(connectionId.getInt());
         if (!clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.SPECTATOR)) {
-            throw new NotAllowedException("You are not a Spectator");
+            throw new NotAllowedException("game.handler.spectatorGameStateRequest.noSpectator");
         }
         clientManager.sendMessageToId(new SpectatorGameStateResponse(handler.getPlayer(), handler.getShots(), handler.getStartShip(), handler.getGame().getState()), connectionId);
     }

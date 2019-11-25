@@ -28,7 +28,7 @@ public class LobbyRequestHandler extends ExceptionMessageHandler<LobbyRequest> {
             List<Game> games = gameManager.getAllGames().stream().map((GameHandler::getGame)).collect(Collectors.toList());
             clientManager.sendMessageToId(new LobbyResponse(games), connectionId);
         } else {
-            throw new NotAllowedException("You are not registered at this server");
+            throw new NotAllowedException("game.handler.lobbyRequestHandler.notRegistered");
         }
     }
 

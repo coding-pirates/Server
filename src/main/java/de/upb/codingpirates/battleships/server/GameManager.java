@@ -13,7 +13,6 @@ import de.upb.codingpirates.battleships.server.game.GameHandler;
 import de.upb.codingpirates.battleships.server.network.ServerApplication;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -49,7 +48,7 @@ public class GameManager {
             games.get(gameId).addClient(clientType, client);
             clientToGame.putIfAbsent(client.getId(), gameId);
         } else {
-            throw new InvalidActionException("The game does not exist");
+            throw new InvalidActionException("game.gameManager.noGame");
         }
     }
 
@@ -57,7 +56,7 @@ public class GameManager {
         if (clientToGame.containsKey(client)) {
             games.get(clientToGame.remove(client)).removeClient(client);
         } else {
-            throw new InvalidActionException("Client does not belong to a game");
+            throw new InvalidActionException("game.gameManager.noGameForClient");
         }
     }
 
@@ -81,13 +80,16 @@ public class GameManager {
 
     public GameHandler getGameHandlerForClientId(int clientId) throws InvalidActionException {
         if (!clientToGame.containsKey(clientId)) {
-            throw new InvalidActionException("This client does not participate in a game");
+            throw new InvalidActionException("game.gameManager.noGameForClient");
         }
         return games.get(clientToGame.get(clientId));
     }
 
-    @Nullable
-    public GameHandler getGame(int id) {
+    @Nonnull
+    public GameHandler getGame(int id) throws InvalidActionException {
+        if(!games.containsKey(id)){
+            throw new InvalidActionException("game.gameManager.gameNotExist");
+        }
         return games.get(id);
     }
 

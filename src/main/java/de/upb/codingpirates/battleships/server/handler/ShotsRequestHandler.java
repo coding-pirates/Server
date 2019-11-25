@@ -21,7 +21,7 @@ public class ShotsRequestHandler extends ExceptionMessageHandler<ShotsRequest> {
     public void handleMessage(ShotsRequest message, Id connectionId) throws GameException {
         GameHandler gamehandler = gameManager.getGameHandlerForClientId(connectionId.getInt());
         if (gamehandler == null) {
-            throw new InvalidActionException("You are not part of a game");
+            throw new InvalidActionException("game.handler.shotsRequest.noGame");
         }
         gamehandler.addShotPlacement(connectionId.getInt(), message.getShots());
     }

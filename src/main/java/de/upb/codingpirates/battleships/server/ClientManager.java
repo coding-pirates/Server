@@ -27,7 +27,7 @@ import java.util.Map;
  * <p>
  * get an instance with {@link ServerApplication#getClientManager()}
  */
-public class ClientManager implements ConnectionHandler {
+public class ClientManager implements ConnectionHandler, Translator {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Inject
@@ -167,7 +167,7 @@ public class ClientManager implements ConnectionHandler {
             return ClientType.PLAYER;
         else if (spectator.containsKey(id))
             return ClientType.SPECTATOR;
-        throw new InvalidActionException("This clientId is not registered");
+        throw new InvalidActionException("game.clientManager.clientNotExist");
     }
 
     public Client getClient(int id) {
@@ -177,7 +177,7 @@ public class ClientManager implements ConnectionHandler {
     @Override
     public void handleBattleshipException(BattleshipException e) {
         if (e.getConnectionId() != null) {
-            this.sendMessageToId(new ErrorNotification(e.getErrorType(), e.getMessageId(), e.getMessage()), e.getConnectionId());
+            this.sendMessageToId(new ErrorNotification(e.getErrorType(), e.getMessageId(), this.translate(e.getMessage())), e.getConnectionId());
         } else {
             LOGGER.warn("could not send ErrorNotification. Could not identify source client");
         }
