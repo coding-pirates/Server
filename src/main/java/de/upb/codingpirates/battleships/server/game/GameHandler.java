@@ -91,10 +91,10 @@ public class GameHandler {
     public void addClient(@Nonnull ClientType type, @Nonnull Client client) throws InvalidActionException {
         switch (type) {
             case PLAYER:
-                if (player.size() >= game.getConfig().MAXPLAYERCOUNT)
+                if (player.size() >= game.getConfig().getMaxPlayerCount())
                     throw new InvalidActionException("The game is full");
                 player.putIfAbsent(client.getId(), client);
-                fields.putIfAbsent(client.getId(), new Field(game.getConfig().HEIGHT, game.getConfig().WIDTH));
+                fields.putIfAbsent(client.getId(), new Field(game.getConfig().getHeight(), game.getConfig().getWidth()));
                 game.addPlayer();
             case SPECTATOR:
                 if (player.size() >= Properties.MAXSPECTATOR)
@@ -223,7 +223,7 @@ public class GameHandler {
      * @throws GameException if to many shots have been placed or the shots for the player has already been placed
      */
     public void addShotPlacement(int clientId, Collection<Shot> shots) throws GameException {
-        if(shots.size() > getConfiguration().SHOTCOUNT){
+        if(shots.size() > getConfiguration().getShotCount()){
             throw new NotAllowedException("Your have shot to many times");
         }
         if(this.shots.putIfAbsent(clientId,shots) != shots){
@@ -262,7 +262,7 @@ public class GameHandler {
             case START:
                 this.startGame();
             case PLACESHIPS:
-                if (System.currentTimeMillis() - timeStamp >= getConfiguration().ROUNDTIME) {
+                if (System.currentTimeMillis() - timeStamp >= getConfiguration().getRoundTime()) {
                     this.placeShips();
                     this.timeStamp = System.currentTimeMillis();
                     this.clientManager.sendMessageToClients(new GameStartNotification(),getAllClients());
@@ -270,7 +270,7 @@ public class GameHandler {
                 }
                 break;
             case VISUALIZATION:
-                if (System.currentTimeMillis() - timeStamp >= getConfiguration().VISUALIZATIONTIME) {
+                if (System.currentTimeMillis() - timeStamp >= getConfiguration().getVisualizationTime()) {
                     clientManager.sendMessageToClients(new RoundStartNotification(), getAllClients());
                     this.stage = GameStage.SHOTS;
                     this.timeStamp = System.currentTimeMillis();
@@ -282,7 +282,7 @@ public class GameHandler {
                 }
                 break;
             case SHOTS:
-                if (System.currentTimeMillis() - timeStamp >= getConfiguration().ROUNDTIME) {
+                if (System.currentTimeMillis() - timeStamp >= getConfiguration().getRoundTime()) {
                     this.performShots();
                     this.timeStamp = System.currentTimeMillis();
                     this.stage = GameStage.VISUALIZATION;
@@ -332,11 +332,11 @@ public class GameHandler {
             this.game.setState(GameState.PAUSED);
             switch (stage){
                 case VISUALIZATION:
-                    this.pauseTimeCache = getConfiguration().VISUALIZATIONTIME - (System.currentTimeMillis() - timeStamp);
+                    this.pauseTimeCache = getConfiguration().getVisualizationTime() - (System.currentTimeMillis() - timeStamp);
                     break;
                 case PLACESHIPS:
                 case SHOTS:
-                    this.pauseTimeCache = getConfiguration().ROUNDTIME - (System.currentTimeMillis() - timeStamp);
+                    this.pauseTimeCache = getConfiguration().getRoundTime() - (System.currentTimeMillis() - timeStamp);
                     break;
                 default:
                     break;
@@ -407,7 +407,7 @@ public class GameHandler {
         //add points for each hit to the player who shot a Shot at a position
         if(hitToPoint.containsKey(HitType.HIT)){
             for(Map.Entry<Shot, List<Integer>> entry : hitToPoint.get(HitType.HIT).entrySet()) {
-                int points = getConfiguration().HITPOINTS / entry.getValue().size();
+                int points = getConfiguration().getHitPoints() / entry.getValue().size();
                 entry.getValue().forEach( client ->
                 score.compute(client, (id, point) -> {
                     if (point == null) {
@@ -420,7 +420,7 @@ public class GameHandler {
         }
         if(hitToPoint.containsKey(HitType.SUNK)){
             for(Map.Entry<Shot, List<Integer>> entry : hitToPoint.get(HitType.HIT).entrySet()) {
-                int points = getConfiguration().SUNKPOINTS / entry.getValue().size();
+                int points = getConfiguration().getSunkPoints() / entry.getValue().size();
                 entry.getValue().forEach( client ->
                         score.compute(client, (id, point) -> {
                             if (point == null) {
@@ -462,9 +462,9 @@ public class GameHandler {
         switch (stage){
             case PLACESHIPS:
             case SHOTS:
-                return System.currentTimeMillis() - this.timeStamp - getConfiguration().ROUNDTIME;
+                return System.currentTimeMillis() - this.timeStamp - getConfiguration().getRoundTime();
             case VISUALIZATION:
-                return System.currentTimeMillis() - this.timeStamp - getConfiguration().VISUALIZATIONTIME;
+                return System.currentTimeMillis() - this.timeStamp - getConfiguration().getVisualizationTime();
             default:
                 throw new InvalidActionException("there is no timer active");
         }
