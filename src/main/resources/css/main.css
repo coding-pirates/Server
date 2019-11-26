@@ -1,0 +1,22 @@
+GridPane {
+    -fx-hgap: 10px;
+    -fx-vgap: 10px;
+}
+
+TitledPane {
+    -fx-collapsible: false;
+}
+
+#center-box {
+    -fx-alignment: center;
+    -fx-padding: 10px;
+}
+
+#center-box > * {
+    -fx-padding: 5px;
+}
+
+#ship-configuration-container {
+    -fx-hgap: 3px !important;
+    -fx-vgap: 3px !important;
+}

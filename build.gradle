@@ -5,6 +5,7 @@ dependencies {
     implementation project(":network")
     implementation project(":logic")
 
+    implementation group: 'org.jetbrains', name: 'annotations', version: '18.0.0'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.1'
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.5.2'
     implementation group: 'com.google.guava', name: 'guava', version: '28.1-jre'
@@ -14,7 +15,7 @@ dependencies {
 targetCompatibility = '1.8'
 sourceCompatibility = '1.8'
 
-mainClassName = 'de.upb.codingpirates.battleships.server.ServerMain'
+mainClassName = 'de.upb.codingpirates.battleships.server.BattleshipsServerApplication'
 
 sourceSets {
     main {
