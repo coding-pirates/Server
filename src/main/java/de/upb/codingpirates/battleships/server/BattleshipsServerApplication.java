@@ -1,24 +1,20 @@
 package de.upb.codingpirates.battleships.server;
 
-import java.io.IOException;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
-
 import com.google.gson.GsonBuilder;
+import de.upb.codingpirates.battleships.server.gui.controllers.MainController;
+import de.upb.codingpirates.battleships.server.network.ServerApplication;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-
-import com.google.gson.Gson;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.jetbrains.annotations.NotNull;
 
-import de.upb.codingpirates.battleships.server.gui.controllers.MainController;
+import java.io.IOException;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 /**
  * @author Andre Blanke
@@ -33,6 +29,8 @@ public final class BattleshipsServerApplication extends Application {
     private static final String TITLE = "Battleships Server";
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    private static ServerApplication server;
 
     public static void main(final String[] args) {
         launch(args);
@@ -96,10 +94,12 @@ public final class BattleshipsServerApplication extends Application {
 
     @Override
     public void start(@NotNull final Stage stage) throws Exception {
+        if(server == null)
+            server = new ServerApplication();
         final MainController controller = new MainController(
             new GsonBuilder()
                 .setPrettyPrinting()
-                .create());
+                .create(), server);
 
         stage.setScene(new Scene(loadView("main", controller)));
         stage.setTitle(TITLE);

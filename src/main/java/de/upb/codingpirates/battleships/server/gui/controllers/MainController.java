@@ -5,7 +5,9 @@ import de.upb.codingpirates.battleships.logic.Configuration;
 import de.upb.codingpirates.battleships.logic.PenaltyType;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
+import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.gui.control.Alerts;
+import de.upb.codingpirates.battleships.server.network.ServerApplication;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -93,11 +95,13 @@ public final class MainController extends AbstractController<BorderPane> {
     // </editor-fold>
 
     private final Gson gson;
+    private final ServerApplication server;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public MainController(@NotNull final Gson gson) {
+    public MainController(@NotNull final Gson gson, ServerApplication server) {
         this.gson = gson;
+        this.server = server;
     }
 
     private static final int LATIN_ALPHABET_LENGTH = 26;
@@ -490,6 +494,8 @@ public final class MainController extends AbstractController<BorderPane> {
     @FXML
     @SuppressWarnings("unused")
     private void onStartNewGameButtonAction() {
+        GameManager manager = server.getGameManager();
+        manager.createGame(getConfigurationFromControls(),"TestGame",false);//TODO named game & tournament games
     }
 
     /**
