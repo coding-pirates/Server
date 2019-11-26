@@ -1,14 +1,11 @@
 package de.upb.codingpirates.battleships.server.gui.controllers;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.stream.IntStream;
-
+import com.google.gson.Gson;
+import de.upb.codingpirates.battleships.logic.Configuration;
+import de.upb.codingpirates.battleships.logic.PenaltyType;
+import de.upb.codingpirates.battleships.logic.Point2D;
+import de.upb.codingpirates.battleships.logic.ShipType;
+import de.upb.codingpirates.battleships.server.gui.control.Alerts;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -22,20 +19,19 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
-
-import com.google.gson.Gson;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import de.upb.codingpirates.battleships.logic.util.Configuration;
-import de.upb.codingpirates.battleships.logic.util.PenaltyType;
-import de.upb.codingpirates.battleships.logic.util.Point2D;
-import de.upb.codingpirates.battleships.logic.util.ShipType;
-import de.upb.codingpirates.battleships.server.gui.control.Alerts;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.toList;
 
