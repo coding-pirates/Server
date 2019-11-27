@@ -15,6 +15,7 @@ import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
@@ -95,6 +96,9 @@ public final class MainController extends AbstractController<BorderPane> {
     @FXML
     private GridPane shipConfigurationGrid;
     // </editor-fold>
+
+    @FXML
+    private TextField gameNameTextField;
 
     private final Gson gson;
 

@@ -4,17 +4,18 @@
 <?import java.lang.Long?>
 <?import java.util.ArrayList?>
 
-<?import javafx.scene.control.ButtonBar?>
+<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
-<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane
@@ -23,74 +24,77 @@
     stylesheets="@/css/main.css">
   <center>
     <VBox id="center-box">
-      <GridPane>
-        <fx:define>
-          <Integer fx:id="INT_MAX_VALUE"  fx:constant="MAX_VALUE"/>
-          <Long    fx:id="LONG_MAX_VALUE" fx:constant="MAX_VALUE"/>
-        </fx:define>
+      <HBox>
+        <GridPane
+            HBox.hgrow="ALWAYS"
+            alignment="CENTER">
+          <fx:define>
+            <Integer fx:id="INT_MAX_VALUE"  fx:constant="MAX_VALUE"/>
+            <Long    fx:id="LONG_MAX_VALUE" fx:constant="MAX_VALUE"/>
+          </fx:define>
 
-        <!-- Row 0 -->
-        <Label
-          GridPane.columnIndex="0"
-          GridPane.rowIndex="0"
-          text="%configuration.maxPlayerCount.label"/>
-        <Spinner
-          fx:id="maxPlayerCountSpinner"
-          GridPane.columnIndex="1"
-          GridPane.rowIndex="0"
-          editable="true"
-          initialValue="4"
-          min="2"
-          max="$INT_MAX_VALUE"/>
+          <!-- Row 0 -->
+          <Label
+            GridPane.columnIndex="0"
+            GridPane.rowIndex="0"
+            text="%configuration.maxPlayerCount.label"/>
+          <Spinner
+            fx:id="maxPlayerCountSpinner"
+            GridPane.columnIndex="1"
+            GridPane.rowIndex="0"
+            editable="true"
+            initialValue="4"
+            min="2"
+            max="$INT_MAX_VALUE"/>
 
-        <!-- Row 1 -->
-        <Label
-          GridPane.columnIndex="0"
-          GridPane.rowIndex="1"
-          text="%configuration.shotCount.label"/>
-        <Spinner
-          fx:id="shotCountSpinner"
-          GridPane.columnIndex="1"
-          GridPane.rowIndex="1"
-          editable="true"
-          initialValue="1"
-          min="1"
-          max="$INT_MAX_VALUE"/>
+          <!-- Row 1 -->
+          <Label
+            GridPane.columnIndex="0"
+            GridPane.rowIndex="1"
+            text="%configuration.shotCount.label"/>
+          <Spinner
+            fx:id="shotCountSpinner"
+            GridPane.columnIndex="1"
+            GridPane.rowIndex="1"
+            editable="true"
+            initialValue="1"
+            min="1"
+            max="$INT_MAX_VALUE"/>
 
-        <!-- Row 2 -->
-        <Label
-          GridPane.columnIndex="0"
-          GridPane.rowIndex="2"
-          text="%configuration.hitPoints.label"/>
-        <Spinner
-          fx:id="hitPointsSpinner"
-          GridPane.columnIndex="1"
-          GridPane.rowIndex="2"
-          editable="true"
-          initialValue="1"
-          min="1"
-          max="$INT_MAX_VALUE"/>
+          <!-- Row 2 -->
+          <Label
+            GridPane.columnIndex="0"
+            GridPane.rowIndex="2"
+            text="%configuration.hitPoints.label"/>
+          <Spinner
+            fx:id="hitPointsSpinner"
+            GridPane.columnIndex="1"
+            GridPane.rowIndex="2"
+            editable="true"
+            initialValue="1"
+            min="1"
+            max="$INT_MAX_VALUE"/>
 
-        <!-- Row 3 -->
-        <Label
-          GridPane.columnIndex="0"
-          GridPane.rowIndex="3"
-          text="%configuration.sunkPoints.label"/>
-        <Spinner
-          fx:id="sunkPointsSpinner"
-          GridPane.columnIndex="1"
-          GridPane.rowIndex="3"
-          editable="true"
-          initialValue="5"
-          min="1"
-          max="$INT_MAX_VALUE"/>
+          <!-- Row 3 -->
+          <Label
+            GridPane.columnIndex="0"
+            GridPane.rowIndex="3"
+            text="%configuration.sunkPoints.label"/>
+          <Spinner
+            fx:id="sunkPointsSpinner"
+            GridPane.columnIndex="1"
+            GridPane.rowIndex="3"
+            editable="true"
+            initialValue="5"
+            min="1"
+            max="$INT_MAX_VALUE"/>
 
-        <!-- Row 4 -->
-        <Label
-          GridPane.columnIndex="0"
-          GridPane.rowIndex="4"
-          text="%configuration.roundTime.label"/>
-        <Spinner
+          <!-- Row 4 -->
+          <Label
+            GridPane.columnIndex="0"
+            GridPane.rowIndex="4"
+            text="%configuration.roundTime.label"/>
+          <Spinner
             fx:id="roundTimeSpinner"
             GridPane.columnIndex="1"
             GridPane.rowIndex="4"
@@ -99,12 +103,12 @@
             min="1"
             max="$LONG_MAX_VALUE"/>
 
-        <!-- Row 5 -->
-        <Label
-          GridPane.columnIndex="0"
-          GridPane.rowIndex="5"
-          text="%configuration.visualizationTime.label"/>
-        <Spinner
+          <!-- Row 5 -->
+          <Label
+            GridPane.columnIndex="0"
+            GridPane.rowIndex="5"
+            text="%configuration.visualizationTime.label"/>
+          <Spinner
             fx:id="visualizationTimeSpinner"
             GridPane.columnIndex="1"
             GridPane.rowIndex="5"
@@ -113,200 +117,202 @@
             min="1"
             max="$LONG_MAX_VALUE"/>
 
-        <!-- Row 6 -->
-        <TitledPane
+          <!-- Row 6 -->
+          <TitledPane
             GridPane.columnIndex="0"
             GridPane.columnSpan="2"
             GridPane.rowIndex="6"
             text="%configuration.ships.header">
-          <HBox alignment="CENTER">
+            <HBox alignment="CENTER">
+              <GridPane>
+                <!-- Row 0 -->
+                <Label
+                  GridPane.columnIndex="0"
+                  GridPane.rowIndex="0"
+                  text="%configuration.ships.type.count.labelText"/>
+                <Spinner
+                  fx:id="shipTypeCountSpinner"
+                  GridPane.columnIndex="1"
+                  GridPane.rowIndex="0"
+                  editable="true"
+                  initialValue="5"
+                  min="1"
+                  max="$INT_MAX_VALUE"/>
+
+                <!-- Row 1 -->
+                <Label
+                  GridPane.columnIndex="0"
+                  GridPane.rowIndex="1"
+                  text="%configuration.ships.type.editing.labelText"/>
+                <ComboBox
+                  fx:id="shipTypeEditingComboBox"
+                  GridPane.columnIndex="1"
+                  GridPane.rowIndex="1"/>
+
+                <!-- Row 2 -->
+                <Separator
+                  GridPane.columnIndex="0"
+                  GridPane.columnSpan="2"
+                  GridPane.rowIndex="2"/>
+
+                <!-- Row 3 -->
+                <Label
+                  GridPane.columnIndex="0"
+                  GridPane.rowIndex="3"
+                  text="%configuration.ships.type.height"/>
+                <Spinner
+                  GridPane.columnIndex="1"
+                  GridPane.rowIndex="3"
+                  fx:id="shipTypeHeightSpinner"
+                  editable="true"
+                  initialValue="5"
+                  min="2"
+                  max="$INT_MAX_VALUE"/>
+
+                <!-- Row 4 -->
+                <Label
+                  GridPane.columnIndex="0"
+                  GridPane.rowIndex="4"
+                  text="%configuration.ships.type.width"/>
+                <Spinner
+                  GridPane.columnIndex="1"
+                  GridPane.rowIndex="4"
+                  fx:id="shipTypeWidthSpinner"
+                  editable="true"
+                  initialValue="5"
+                  min="2"
+                  max="$INT_MAX_VALUE"/>
+
+                <!-- Row 5 -->
+                <Separator
+                  GridPane.columnIndex="0"
+                  GridPane.columnSpan="2"
+                  GridPane.rowIndex="5"/>
+
+                <!-- Row 6 -->
+                <HBox
+                  GridPane.columnIndex="0"
+                  GridPane.columnSpan="2"
+                  GridPane.rowIndex="6"
+                  alignment="CENTER">
+                  <ScrollPane>
+                    <GridPane
+                      fx:id="shipConfigurationGrid"
+                      id="ship-configuration-grid"/>
+                  </ScrollPane>
+                </HBox>
+              </GridPane>
+            </HBox>
+          </TitledPane>
+
+          <!-- Row 7 -->
+          <TitledPane
+            GridPane.columnIndex="0"
+            GridPane.columnSpan="2"
+            GridPane.rowIndex="7"
+            text="%configuration.playingField.header">
             <GridPane>
               <!-- Row 0 -->
               <Label
                 GridPane.columnIndex="0"
                 GridPane.rowIndex="0"
-                text="%configuration.ships.type.count.labelText"/>
+                text="%configuration.playingField.height.label"/>
               <Spinner
-                fx:id="shipTypeCountSpinner"
+                fx:id="heightSpinner"
                 GridPane.columnIndex="1"
                 GridPane.rowIndex="0"
                 editable="true"
-                initialValue="5"
-                min="1"
+                initialValue="10"
+                min="2"
                 max="$INT_MAX_VALUE"/>
 
               <!-- Row 1 -->
               <Label
                 GridPane.columnIndex="0"
                 GridPane.rowIndex="1"
-                text="%configuration.ships.type.editing.labelText"/>
-              <ComboBox
-                fx:id="shipTypeEditingComboBox"
-                GridPane.columnIndex="1"
-                GridPane.rowIndex="1"/>
-
-              <!-- Row 2 -->
-              <Separator
-                GridPane.columnIndex="0"
-                GridPane.columnSpan="2"
-                GridPane.rowIndex="2"/>
-
-              <!-- Row 3 -->
-              <Label
-                GridPane.columnIndex="0"
-                GridPane.rowIndex="3"
-                text="%configuration.ships.type.height"/>
+                text="%configuration.playingField.width.label"/>
               <Spinner
+                fx:id="widthSpinner"
                 GridPane.columnIndex="1"
-                GridPane.rowIndex="3"
-                fx:id="shipTypeHeightSpinner"
+                GridPane.rowIndex="1"
                 editable="true"
-                initialValue="5"
+                initialValue="10"
                 min="2"
                 max="$INT_MAX_VALUE"/>
-
-              <!-- Row 4 -->
-              <Label
-                GridPane.columnIndex="0"
-                GridPane.rowIndex="4"
-                text="%configuration.ships.type.width"/>
-              <Spinner
-                GridPane.columnIndex="1"
-                GridPane.rowIndex="4"
-                fx:id="shipTypeWidthSpinner"
-                editable="true"
-                initialValue="5"
-                min="2"
-                max="$INT_MAX_VALUE"/>
-
-              <!-- Row 5 -->
-              <Separator
-                GridPane.columnIndex="0"
-                GridPane.columnSpan="2"
-                GridPane.rowIndex="5"/>
-
-              <!-- Row 6 -->
-              <HBox
-                  GridPane.columnIndex="0"
-                  GridPane.columnSpan="2"
-                  GridPane.rowIndex="6"
-                  alignment="CENTER">
-                <ScrollPane>
-                  <GridPane
-                    fx:id="shipConfigurationGrid"
-                    id="ship-configuration-grid"/>
-                </ScrollPane>
-              </HBox>
             </GridPane>
-          </HBox>
-        </TitledPane>
+          </TitledPane>
 
-        <!-- Row 7 -->
-        <TitledPane
-            GridPane.columnIndex="0"
-            GridPane.columnSpan="2"
-            GridPane.rowIndex="7"
-            text="%configuration.playingField.header">
-          <GridPane>
-            <!-- Row 0 -->
-            <Label
-              GridPane.columnIndex="0"
-              GridPane.rowIndex="0"
-              text="%configuration.playingField.height.label"/>
-            <Spinner
-              fx:id="heightSpinner"
-              GridPane.columnIndex="1"
-              GridPane.rowIndex="0"
-              editable="true"
-              initialValue="10"
-              min="2"
-              max="$INT_MAX_VALUE"/>
-
-            <!-- Row 1 -->
-            <Label
-              GridPane.columnIndex="0"
-              GridPane.rowIndex="1"
-              text="%configuration.playingField.width.label"/>
-            <Spinner
-              fx:id="widthSpinner"
-              GridPane.columnIndex="1"
-              GridPane.rowIndex="1"
-              editable="true"
-              initialValue="10"
-              min="2"
-              max="$INT_MAX_VALUE"/>
-          </GridPane>
-        </TitledPane>
-
-        <!-- Row 8 -->
-        <TitledPane
+          <!-- Row 8 -->
+          <TitledPane
             GridPane.columnIndex="0"
             GridPane.columnSpan="2"
             GridPane.rowIndex="8"
             text="%configuration.penalty.header">
-          <GridPane>
-            <!-- Row 0 -->
-            <Label
-              GridPane.columnIndex="0"
-              GridPane.rowIndex="0"
-              text="%configuration.penalty.penaltyType.label"/>
-            <ComboBox
-              fx:id="penaltyTypeComboBox"
-              GridPane.columnIndex="1"
-              GridPane.rowIndex="0"/>
+            <GridPane>
+              <!-- Row 0 -->
+              <Label
+                GridPane.columnIndex="0"
+                GridPane.rowIndex="0"
+                text="%configuration.penalty.penaltyType.label"/>
+              <ComboBox
+                fx:id="penaltyTypeComboBox"
+                GridPane.columnIndex="1"
+                GridPane.rowIndex="0"/>
 
-            <!-- Row 1 -->
-            <Label
-              fx:id="penaltyMinusPointsLabel"
-              GridPane.columnIndex="0"
-              GridPane.rowIndex="1"
-              text="%configuration.penalty.penaltyMinusPoints.label"/>
-            <Spinner
-              fx:id="penaltyMinusPointsSpinner"
-              GridPane.columnIndex="1"
-              GridPane.rowIndex="1"
-              editable="true"
-              initialValue="10"
-              min="1"
-              max="$INT_MAX_VALUE"/>
-          </GridPane>
-        </TitledPane>
-        <fx:define>
-          <!--
-            The 'Parent tag has no default property' errors appear to be an IDE bug and can
-            safely be ignored.
-          -->
-          <ArrayList fx:id="spinners">
-            <fx:reference source="maxPlayerCountSpinner"/>
-            <fx:reference source="shotCountSpinner"/>
-            <fx:reference source="hitPointsSpinner"/>
-            <fx:reference source="sunkPointsSpinner"/>
-            <fx:reference source="roundTimeSpinner"/>
-            <fx:reference source="visualizationTimeSpinner"/>
-            <fx:reference source="heightSpinner"/>
-            <fx:reference source="widthSpinner"/>
-            <fx:reference source="penaltyMinusPointsSpinner"/>
-          </ArrayList>
-        </fx:define>
-      </GridPane>
-      <ButtonBar>
-        <buttons>
-          <Button
-            ButtonBar.buttonData="LEFT"
-            onAction="#onImportButtonAction"
-            text="%configuration.import.button.text"/>
-          <Button
-            ButtonBar.buttonData="LEFT"
-            onAction="#onExportButtonAction"
-            text="%configuration.export.button.text"/>
-          <Button
-            ButtonBar.buttonData="RIGHT"
-            onAction="#onStartNewGameButtonAction"
-            text="%game.startNew.button.text"/>
-        </buttons>
-      </ButtonBar>
+              <!-- Row 1 -->
+              <Label
+                fx:id="penaltyMinusPointsLabel"
+                GridPane.columnIndex="0"
+                GridPane.rowIndex="1"
+                text="%configuration.penalty.penaltyMinusPoints.label"/>
+              <Spinner
+                fx:id="penaltyMinusPointsSpinner"
+                GridPane.columnIndex="1"
+                GridPane.rowIndex="1"
+                editable="true"
+                initialValue="10"
+                min="1"
+                max="$INT_MAX_VALUE"/>
+            </GridPane>
+          </TitledPane>
+          <fx:define>
+            <!--
+              The 'Parent tag has no default property' errors appear to be an IDE bug and can
+              safely be ignored.
+            -->
+            <ArrayList fx:id="spinners">
+              <fx:reference source="maxPlayerCountSpinner"/>
+              <fx:reference source="shotCountSpinner"/>
+              <fx:reference source="hitPointsSpinner"/>
+              <fx:reference source="sunkPointsSpinner"/>
+              <fx:reference source="roundTimeSpinner"/>
+              <fx:reference source="visualizationTimeSpinner"/>
+              <fx:reference source="heightSpinner"/>
+              <fx:reference source="widthSpinner"/>
+              <fx:reference source="penaltyMinusPointsSpinner"/>
+            </ArrayList>
+          </fx:define>
+        </GridPane>
+      </HBox>
     </VBox>
   </center>
   <bottom>
+    <HBox id="bottom-box">
+      <Button
+        onAction="#onImportButtonAction"
+        text="%configuration.import.button.text"/>
+      <Button
+        onAction="#onExportButtonAction"
+        text="%configuration.export.button.text"/>
+      <Region HBox.hgrow="ALWAYS"/>
+      <HBox alignment="CENTER_RIGHT">
+        <TextField
+          fx:id="gameNameTextField"
+          promptText="%game.startNew.name.promptText"/>
+        <Button
+          onAction="#onStartNewGameButtonAction"
+          text="%game.startNew.button.text"/>
+      </HBox>
+    </HBox>
   </bottom>
 </BorderPane>

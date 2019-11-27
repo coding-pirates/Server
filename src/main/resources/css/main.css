@@ -7,6 +7,12 @@ TitledPane {
     -fx-collapsible: false;
 }
 
+#bottom-box {
+    -fx-alignment: center;
+    -fx-padding: 10px;
+    -fx-spacing: 5px;
+}
+
 #center-box {
     -fx-alignment: center;
     -fx-padding: 10px;
