@@ -276,7 +276,8 @@
               <ComboBox
                 fx:id="penaltyTypeComboBox"
                 GridPane.columnIndex="1"
-                GridPane.rowIndex="0"/>
+                GridPane.rowIndex="0"
+                maxWidth="Infinity"/>
 
               <!-- Row 1 -->
               <Label
@@ -304,6 +305,7 @@
           <Button
             GridPane.columnIndex="1"
             GridPane.rowIndex="9"
+            maxWidth="Infinity"
             onAction="#onStartNewGameButtonAction"
             text="%game.startNew.button.text"/>
           <fx:define>

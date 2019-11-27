@@ -293,16 +293,13 @@ public final class MainController extends AbstractController<BorderPane> {
         penaltyTypeComboBox
             .getSelectionModel()
             .select(PenaltyType.POINTLOSS);
-        penaltyTypeComboBox
-            .minWidthProperty()
-            .bind(penaltyMinusPointsSpinner.widthProperty());
 
         penaltyMinusPointsLabel
-                .disableProperty()
-                .bind(isPenaltyKindNotPointloss);
+            .disableProperty()
+            .bind(isPenaltyKindNotPointloss);
         penaltyMinusPointsSpinner
-                .disableProperty()
-                .bind(isPenaltyKindNotPointloss);
+            .disableProperty()
+            .bind(isPenaltyKindNotPointloss);
     }
 
     @Override
