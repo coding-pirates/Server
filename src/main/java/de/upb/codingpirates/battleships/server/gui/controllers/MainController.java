@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.IntStream;
 
+import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -319,6 +320,11 @@ public final class MainController extends AbstractController<BorderPane> {
     }
     // </editor-fold>
 
+    @FXML
+    private void onExitMenuItemAction() {
+        Platform.exit();
+    }
+
     // <editor-fold desc="Configuration import and export">
     /**
      * The file extension of configuration files.
@@ -327,7 +333,7 @@ public final class MainController extends AbstractController<BorderPane> {
      * as {@link FileChooser#showOpenDialog(Window)} does not append the extension associated with the
      * {@link #configurationExtensionFilter}.
      *
-     * @see #onExportButtonAction()
+     * @see #onExportConfigurationMenuItemAction()
      */
     private String          configurationFileExtension;
 
@@ -379,7 +385,7 @@ public final class MainController extends AbstractController<BorderPane> {
      */
     @FXML
     @SuppressWarnings("unused")
-    private void onExportButtonAction() {
+    private void onExportConfigurationMenuItemAction() {
         final FileChooser chooser =
             newConfigurationFileChooser(resourceBundle.getString("configuration.export.dialog.title"));
 
@@ -463,7 +469,7 @@ public final class MainController extends AbstractController<BorderPane> {
      */
     @FXML
     @SuppressWarnings("unused")
-    private void onImportButtonAction() {
+    private void onImportConfigurationMenuItemAction() {
         final FileChooser chooser =
             newConfigurationFileChooser(resourceBundle.getString("configuration.import.dialog.title"));
 
