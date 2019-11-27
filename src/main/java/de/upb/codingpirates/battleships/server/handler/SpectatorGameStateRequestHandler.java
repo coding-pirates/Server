@@ -2,6 +2,7 @@ package de.upb.codingpirates.battleships.server.handler;
 
 import com.google.inject.Inject;
 import de.upb.codingpirates.battleships.logic.ClientType;
+import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.Id;
@@ -14,10 +15,14 @@ import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
 
 public class SpectatorGameStateRequestHandler extends ExceptionMessageHandler<SpectatorGameStateRequest> {
-    @Inject
     private ClientManager clientManager;
-    @Inject
     private GameManager gameManager;
+
+    @Inject
+    public SpectatorGameStateRequestHandler(ConnectionHandler handler, GameManager gameManager) {
+        this.clientManager = (ClientManager) handler;
+        this.gameManager = gameManager;
+    }
 
     @Override
     public void handleMessage(SpectatorGameStateRequest message, Id connectionId) throws GameException {

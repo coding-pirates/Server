@@ -30,8 +30,7 @@ import java.util.Map;
 public class ClientManager implements ConnectionHandler, Translator {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    @Inject
-    private ServerConnectionManager connectionManager;
+    private final ServerConnectionManager connectionManager;
 
     /**
      * maps client id to client
@@ -45,6 +44,11 @@ public class ClientManager implements ConnectionHandler, Translator {
      * maps client id to spectator
      */
     private final Map<Integer, Client> spectator = Maps.newHashMap();
+
+    @Inject
+    public ClientManager(ServerConnectionManager connectionManager) {
+        this.connectionManager = connectionManager;
+    }
 
     @Nullable
     public Client create(int id, String name, ClientType clientType) {

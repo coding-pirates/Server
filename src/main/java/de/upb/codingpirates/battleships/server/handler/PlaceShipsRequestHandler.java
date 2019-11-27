@@ -1,6 +1,7 @@
 package de.upb.codingpirates.battleships.server.handler;
 
 import com.google.inject.Inject;
+import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.id.Id;
@@ -12,10 +13,14 @@ import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
 
 public class PlaceShipsRequestHandler extends ExceptionMessageHandler<PlaceShipsRequest> {
+    private final ClientManager clientManager;
+    private final GameManager gameManager;
+
     @Inject
-    private ClientManager clientManager;
-    @Inject
-    private GameManager gameManager;
+    public PlaceShipsRequestHandler(ConnectionHandler handler, GameManager gameManager) {
+        this.clientManager = (ClientManager) handler;
+        this.gameManager = gameManager;
+    }
 
     @Override
     public void handleMessage(PlaceShipsRequest message, Id connectionId) throws GameException {

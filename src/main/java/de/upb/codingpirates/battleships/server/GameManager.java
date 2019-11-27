@@ -24,10 +24,8 @@ import java.util.*;
 public class GameManager {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    @Inject
-    private ClientManager clientManager;
-    @Inject
-    private IntIdManager idManager;
+    private final ClientManager clientManager;
+    private final IntIdManager idManager;
 
     /**
      * maps game id to gamehandler
@@ -38,7 +36,10 @@ public class GameManager {
      */
     private final Map<Integer, Integer> clientToGame = Maps.newHashMap();
 
-    public GameManager() {
+    @Inject
+    public GameManager(ConnectionHandler handler, IntIdManager idManager) {
+        clientManager = (ClientManager)handler;
+        this.idManager = idManager;
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {

@@ -1,6 +1,7 @@
 package de.upb.codingpirates.battleships.server.handler;
 
 import com.google.inject.Inject;
+import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.Message;
@@ -13,10 +14,14 @@ import de.upb.codingpirates.battleships.server.game.GameHandler;
 
 public class ConnectionClosedReportHandler implements MessageHandler<ConnectionClosedReport> {
 
+    private final ClientManager clientManager;
+    private final GameManager gameManager;
+
     @Inject
-    private ClientManager clientManager;
-    @Inject
-    private GameManager gameManager;
+    public ConnectionClosedReportHandler(ConnectionHandler handler, GameManager gameManager) {
+        this.clientManager = (ClientManager) handler;
+        this.gameManager = gameManager;
+    }
 
     @Override
     public void handle(ConnectionClosedReport message, Id connectionId) throws InvalidActionException {
