@@ -17,9 +17,6 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<?import de.upb.codingpirates.battleships.server.gui.control.LongSpinnerValueFactory?>
-<?import de.upb.codingpirates.battleships.server.gui.control.LongSecondsSuffixedStringConverter?>
-
 <BorderPane
     xmlns:fx="http://javafx.com/fxml"
     fx:id="root"
@@ -97,18 +94,10 @@
             fx:id="roundTimeSpinner"
             GridPane.columnIndex="1"
             GridPane.rowIndex="4"
-            editable="true">
-          <valueFactory>
-            <LongSpinnerValueFactory
-                initialValue="10"
-                min="1"
-                max="$LONG_MAX_VALUE">
-              <converter>
-                <LongSecondsSuffixedStringConverter/>
-              </converter>
-            </LongSpinnerValueFactory>
-          </valueFactory>
-        </Spinner>
+            editable="true"
+            initialValue="10"
+            min="1"
+            max="$LONG_MAX_VALUE"/>
 
         <!-- Row 5 -->
         <Label
@@ -119,18 +108,10 @@
             fx:id="visualizationTimeSpinner"
             GridPane.columnIndex="1"
             GridPane.rowIndex="5"
-            editable="true">
-          <valueFactory>
-            <LongSpinnerValueFactory
-                initialValue="3"
-                min="1"
-                max="$LONG_MAX_VALUE">
-              <converter>
-                <LongSecondsSuffixedStringConverter/>
-              </converter>
-            </LongSpinnerValueFactory>
-          </valueFactory>
-        </Spinner>
+            editable="true"
+            initialValue="3"
+            min="1"
+            max="$LONG_MAX_VALUE"/>
 
         <!-- Row 6 -->
         <TitledPane
