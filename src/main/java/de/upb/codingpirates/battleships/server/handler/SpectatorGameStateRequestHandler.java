@@ -2,6 +2,7 @@ package de.upb.codingpirates.battleships.server.handler;
 
 import com.google.inject.Inject;
 import de.upb.codingpirates.battleships.logic.ClientType;
+import de.upb.codingpirates.battleships.logic.GameState;
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
@@ -30,10 +31,14 @@ public class SpectatorGameStateRequestHandler extends ExceptionMessageHandler<Sp
 
     @Override
     public void handleMessage(SpectatorGameStateRequest message, Id connectionId) throws GameException {
-        GameHandler handler = gameManager.getGameHandlerForClientId(connectionId.getInt());
         if (!clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.SPECTATOR)) {
             throw new NotAllowedException("game.handler.spectatorGameStateRequest.noSpectator");
         }
+        GameHandler handler = gameManager.getGameHandlerForClientId(connectionId.getInt());
+        if(handler.getGame().getState() != GameState.IN_PROGRESS){
+            throw new NotAllowedException("game.handler.spectatorGameStateRequest.wrongTime");
+        }
+
         clientManager.sendMessageToId(new SpectatorGameStateResponse(handler.getPlayers(), handler.getShots(), handler.getStartShip(), handler.getGame().getState()), connectionId);
     }
 

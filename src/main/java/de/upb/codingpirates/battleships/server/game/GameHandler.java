@@ -627,4 +627,8 @@ public class GameHandler implements Translator {
     private void placeRandomShips(int client, Map<Integer, PlacementInfo> alreadyPlaced){
         //TODO fill
     }
+
+    public GameStage getStage() {
+        return stage;
+    }
 }
