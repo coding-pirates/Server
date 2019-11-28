@@ -6,19 +6,21 @@ import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
-import de.upb.codingpirates.battleships.network.id.IntId;
 import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
-import de.upb.codingpirates.battleships.server.Properties;
-import de.upb.codingpirates.battleships.server.Translator;
+import de.upb.codingpirates.battleships.server.util.Properties;
+import de.upb.codingpirates.battleships.server.util.Translator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class GameHandler implements Translator {
+    private static final Logger LOGGER = LogManager.getLogger();
 
     @Nonnull
     private ClientManager clientManager;
@@ -26,7 +28,7 @@ public class GameHandler implements Translator {
      * game properties
      */
     @Nonnull
-    private Game game;
+    private final Game game;
     /**
      * if game owned by tournament
      */
@@ -34,50 +36,62 @@ public class GameHandler implements Translator {
     /**
      * maps client id to player
      */
+    @Nonnull
     private final Map<Integer, Client> player = Maps.newHashMap();
     /**
      * maps client id to spectator
      */
+    @Nonnull
     private final Map<Integer, Client> spectator = Maps.newHashMap();
     /**
      * maps player id to his field
      */
+    @Nonnull
     private final Map<Integer, Field> fields = Maps.newHashMap();
     /**
      * maps client id to shots
      */
+    @Nonnull
     private final Map<Integer, Collection<Shot>> shots = Maps.newHashMap();
     /**
      * maps player id to players ships
      */
+    @Nonnull
     private final Map<Integer, Map<Integer, Ship>> ships = Maps.newHashMap();
     /**
      * maps player id to players ship placement
      */
+    @Nonnull
     private final Map<Integer, Map<Integer, PlacementInfo>> startShip = Maps.newHashMap();
     /**
      * maps player id to players score
      */
+    @Nonnull
     private final Map<Integer, Integer> score = Maps.newHashMap();
     /**
      * list of all hit shots
      */
+    @Nonnull
     private final List<Shot> hitShots = Lists.newArrayList();
     /**
      * list of all missed shots
      */
+    @Nonnull
     private final List<Shot> missedShots = Lists.newArrayList();
     /**
      * list of all shots that result in a sunken ship
      */
+    @Nonnull
     private final List<Shot> sunkShots = Lists.newArrayList();
     /**
      * list of all sunken ships
      */
+    @Nonnull
     private final List<Ship> sunkenShips = Lists.newArrayList();
     /**
      * maps from ship to shots that hit the ship
      */
+    @Nonnull
     private final Map<Ship, List<Shot>> shipToShots = Maps.newHashMap();
 
     public GameHandler(@Nonnull String name, int id, @Nonnull Configuration config, boolean tournament, @Nonnull ClientManager clientManager) {
@@ -93,15 +107,16 @@ public class GameHandler implements Translator {
     public void addClient(@Nonnull ClientType type, @Nonnull Client client) throws InvalidActionException {
         switch (type) {
             case PLAYER:
-                if (player.size() >= game.getConfig().getMaxPlayerCount())
+                if (getPlayers().size() >= getGame().getConfig().getMaxPlayerCount())
                     throw new InvalidActionException("game.isFull");
-                player.putIfAbsent(client.getId(), client);
-                fields.putIfAbsent(client.getId(), new Field(game.getConfig().getHeight(), game.getConfig().getWidth()));
-                game.addPlayer();
+                player().putIfAbsent(client.getId(), client);
+                getFields().putIfAbsent(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth()));
+                getGame().addPlayer();
+                break;
             case SPECTATOR:
-                if (player.size() >= Properties.MAXSPECTATOR)
+                if (spectator().size() >= Properties.MAXSPECTATOR)
                     throw new InvalidActionException("game.isFull");
-                spectator.putIfAbsent(client.getId(), client);
+                spectator().putIfAbsent(client.getId(), client);
         }
     }
 
@@ -109,32 +124,72 @@ public class GameHandler implements Translator {
      * removes from the game including all statistics
      */
     public void removeClient(int client) {
-        if (this.player.containsKey(client)) {
-            player.remove(client);
-            fields.remove(client);
-            game.removePlayer();
-            score.remove(client);
-            ships.remove(client);
-            startShip.remove(client);
-        }
-        spectator.remove(client);
+            if (this.player().containsKey(client)) {
+                player().remove(client);
+                getFields().remove(client);
+                getGame().removePlayer();
+                getScore().remove(client);
+                getShips().remove(client);
+                getStartShip().remove(client);
+            }
+            this.spectator().remove(client);
+
     }
 
     /**
      * @return all clients participating in the game or viewing the game. (player, spectator)
      */
+    @Nonnull
     public List<Client> getAllClients() {
         List<Client> clients = Lists.newArrayList();
-        clients.addAll(this.player.values());
-        clients.addAll(this.spectator.values());
+        clients.addAll(getPlayers());
+        clients.addAll(getSpectators());
         return clients;
+    }
+
+    @Nonnull
+    private Map<Integer, Client> player() {
+        synchronized (player) {
+            return player;
+        }
+    }
+
+    @Nonnull
+    private Map<Integer, Client> spectator() {
+        synchronized (spectator) {
+            return spectator;
+        }
     }
 
     /**
      * @return all players
      */
-    public Collection<Client> getPlayer() {
-        return player.values();
+    @Nonnull
+    public Collection<Client> getPlayers() {
+        synchronized (player) {
+            return player.values();
+        }
+    }
+
+    @Nonnull
+    public Collection<Client> getSpectators() {
+        synchronized (spectator) {
+            return spectator.values();
+        }
+    }
+
+    @Nonnull
+    public Map<Integer, Field> getFields() {
+        synchronized (fields) {
+            return fields;
+        }
+    }
+
+    @Nonnull
+    public Map<Integer, Map<Integer, Ship>> getShips() {
+        synchronized (ships) {
+            return ships;
+        }
     }
 
     /**
@@ -142,65 +197,89 @@ public class GameHandler implements Translator {
      */
     @Nonnull
     public Game getGame() {
-        return game;
+        synchronized (game) {
+            return game;
+        }
     }
 
     /**
      * @return the {@link Configuration} from the {@link Game} object
      */
+    @Nonnull
     private Configuration getConfiguration() {
-        return game.getConfig();
+        synchronized (game) {
+            return game.getConfig();
+        }
     }
 
     /**
      * @return all shots that hit a ship
      */
+    @Nonnull
     public List<Shot> getHitShots() {
-        return hitShots;
+        synchronized (hitShots) {
+            return hitShots;
+        }
     }
 
     /**
      * @return all shots that doesn't hit a target
      */
+    @Nonnull
     public List<Shot> getMissedShots() {
-        return missedShots;
+        synchronized (missedShots) {
+            return missedShots;
+        }
     }
 
     /**
      * @return all shots that hit a ship if the ship is already sunken
      */
+    @Nonnull
     public List<Shot> getSunkShots(){
-        return sunkShots;
+        synchronized (sunkShots) {
+            return sunkShots;
+        }
     }
 
     /**
      * @return all shots
      */
+    @Nonnull
     public List<Shot> getShots() {
-        List<Shot> shots = Lists.newArrayList(this.hitShots);
-        shots.addAll(missedShots);
-        return shots;
+                List<Shot> shots = Lists.newArrayList(this.getHitShots());
+                shots.addAll(this.getMissedShots());
+                return shots;
     }
 
     /**
      * @return the ship placements for every player
      */
+    @Nonnull
     public Map<Integer, Map<Integer, PlacementInfo>> getStartShip() {
-        return startShip;
+        synchronized (startShip) {
+            return startShip;
+        }
     }
 
     /**
      * @return the score
      */
+    @Nonnull
     public Map<Integer, Integer> getScore() {
-        return score;
+        synchronized (score) {
+            return score;
+        }
     }
 
     /**
      * @return all sunken ships
      */
+    @Nonnull
     public List<Ship> getSunkenShips() {
-        return sunkenShips;
+        synchronized (sunkenShips) {
+            return sunkenShips;
+        }
     }
 
     /**
@@ -209,14 +288,17 @@ public class GameHandler implements Translator {
      * @param ships map from ship id to placementinfo
      * @throws GameException if to many ships have been placed or the ships for the player has already been placed
      */
-    public void addShipPlacement(int clientId, Map<Integer, PlacementInfo> ships) throws GameException {
-        if(ships.size() > getConfiguration().getShips().size()) {
-            throw new NotAllowedException("game.player.toManyShips");
-        }
-        this.startShip.put(clientId,ships);
-        if(ships.size() < getConfiguration().getShips().size()){
-            throw new InvalidActionException("game.player.toLessShips");
-        }
+    public void addShipPlacement(int clientId,@Nonnull Map<Integer, PlacementInfo> ships) throws GameException {
+            if (ships.size() > getConfiguration().getShips().size()) {
+                LOGGER.debug("Client {} would have set to many ships", clientId);
+                throw new NotAllowedException("game.player.toManyShips");
+            }
+            this.startShip.put(clientId, ships);
+            if (ships.size() < getConfiguration().getShips().size()) {
+                LOGGER.debug("Client {} set to less ships", clientId);
+                throw new InvalidActionException("game.player.toLessShips");
+            }
+            LOGGER.debug("Ships placed successful for player {}", clientId);
     }
 
     /**
@@ -225,7 +307,7 @@ public class GameHandler implements Translator {
      * @param shots all shots from the player
      * @throws GameException if to many shots have been placed or the shots for the player has already been placed
      */
-    public void addShotPlacement(int clientId, Collection<Shot> shots) throws GameException {
+    public void addShotPlacement(int clientId,@Nonnull Collection<Shot> shots) throws GameException {
         if(shots.size() > getConfiguration().getShotCount()){
             throw new NotAllowedException("game.player.toManyShots");
         }
@@ -234,6 +316,7 @@ public class GameHandler implements Translator {
             throw new InvalidActionException("game.player.toLessShots");
         }
     }
+
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -248,7 +331,8 @@ public class GameHandler implements Translator {
      * only run when {@link Game} has {@link GameState#IN_PROGRESS}
      * <p>
      * {@link GameStage#START}:
-     * does everything which should be done beforehand.<p>
+     * does everything which should be done beforehand.
+     * pauses for 1 sec<p>
      * {@link GameStage#PLACESHIPS}:
      * waits for round timer & waits for {@link PlaceShipsRequest}'s <p>
      * {@link GameStage#SHOTS}:
@@ -265,7 +349,9 @@ public class GameHandler implements Translator {
         if(!game.getState().equals(GameState.IN_PROGRESS))return;
         switch (this.stage) {
             case START:
-                this.startGame();
+                if (System.currentTimeMillis() - timeStamp >= timeStamp + 1000L) {
+                    this.startGame();
+                }
             case PLACESHIPS:
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().getRoundTime()) {
                     this.placeShips();
@@ -303,7 +389,8 @@ public class GameHandler implements Translator {
                 if(winner.isPresent()){
                     id = winner.get().getKey();
                 }
-                this.clientManager.sendMessageToClients(new FinishNotification(score,new IntId(id)),getAllClients());
+                LOGGER.debug("Game {} has finished",game.getId());
+                this.clientManager.sendMessageToClients(new FinishNotification(score,id),getAllClients());
                 this.game.setState(GameState.FINISHED);
                 break;
             default:
@@ -321,6 +408,7 @@ public class GameHandler implements Translator {
         if (this.game.getState() == GameState.LOBBY) {
             this.game.setState(GameState.IN_PROGRESS);
             this.stage = GameStage.START;
+            this.timeStamp = System.currentTimeMillis();
         }
         return true;
     }
@@ -330,6 +418,7 @@ public class GameHandler implements Translator {
      */
     private void startGame() {
         if (this.stage.equals(GameStage.START)) {
+            LOGGER.debug("Game {} started",game.getId());
             this.startShip.clear();
             this.stage = GameStage.PLACESHIPS;
             this.timeStamp = System.currentTimeMillis();

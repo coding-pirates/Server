@@ -1,4 +1,4 @@
-package de.upb.codingpirates.battleships.server;
+package de.upb.codingpirates.battleships.server.util;
 
 import java.util.Locale;
 import java.util.ResourceBundle;

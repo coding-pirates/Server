@@ -12,12 +12,16 @@ import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
 
+import javax.annotation.Nonnull;
+
 public class PlayerGameStateRequestHandler extends ExceptionMessageHandler<PlayerGameStateRequest> {
+    @Nonnull
     private final ClientManager clientManager;
+    @Nonnull
     private final GameManager gameManager;
 
     @Inject
-    public PlayerGameStateRequestHandler(ConnectionHandler handler, GameManager gameManager) {
+    public PlayerGameStateRequestHandler(@Nonnull ConnectionHandler handler, @Nonnull GameManager gameManager) {
         this.clientManager = (ClientManager) handler;
         this.gameManager = gameManager;
     }
@@ -25,7 +29,7 @@ public class PlayerGameStateRequestHandler extends ExceptionMessageHandler<Playe
     @Override
     public void handleMessage(PlayerGameStateRequest message, Id connectionId) throws GameException {
         GameHandler handler = gameManager.getGameHandlerForClientId(connectionId.getInt());
-        this.clientManager.sendMessageToId(new PlayerGameStateResponse(handler.getGame().getState(),handler.getHitShots(),handler.getSunkShots(),handler.getStartShip().get(connectionId.getInt()),handler.getPlayer()), connectionId);
+        this.clientManager.sendMessageToId(new PlayerGameStateResponse(handler.getGame().getState(), handler.getHitShots(), handler.getSunkShots(), handler.getStartShip().get(connectionId.getInt()), handler.getPlayers()), connectionId);
     }
 
     @Override

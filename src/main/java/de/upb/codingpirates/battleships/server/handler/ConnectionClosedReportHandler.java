@@ -11,23 +11,32 @@ import de.upb.codingpirates.battleships.network.message.report.ConnectionClosedR
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
+import de.upb.codingpirates.battleships.server.util.Markers;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.annotation.Nonnull;
 
 public class ConnectionClosedReportHandler implements MessageHandler<ConnectionClosedReport> {
+    private static final Logger LOGGER = LogManager.getLogger();
 
+    @Nonnull
     private final ClientManager clientManager;
+    @Nonnull
     private final GameManager gameManager;
 
     @Inject
-    public ConnectionClosedReportHandler(ConnectionHandler handler, GameManager gameManager) {
+    public ConnectionClosedReportHandler(@Nonnull ConnectionHandler handler, @Nonnull GameManager gameManager) {
         this.clientManager = (ClientManager) handler;
         this.gameManager = gameManager;
     }
 
     @Override
     public void handle(ConnectionClosedReport message, Id connectionId) throws InvalidActionException {
-        this.clientManager.disconnect(connectionId.getInt());//TODO test
-        gameManager.removeClientFromGame(connectionId.getInt());
+        LOGGER.debug(Markers.HANDLER, "Handle ConnectionClosedReport for {}", connectionId);
+        this.clientManager.disconnect(connectionId.getInt());
         GameHandler handler = gameManager.getGameHandlerForClientId(connectionId.getInt());
+        gameManager.removeClientFromGame(connectionId.getInt());
         clientManager.sendMessageToClients(new LeaveNotification(connectionId.getInt()), handler.getAllClients());
     }
 

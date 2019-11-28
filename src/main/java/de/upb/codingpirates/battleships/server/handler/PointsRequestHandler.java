@@ -11,14 +11,17 @@ import de.upb.codingpirates.battleships.network.message.response.PointsResponse;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 
+import javax.annotation.Nonnull;
 import java.util.Map;
 
 public class PointsRequestHandler extends ExceptionMessageHandler<PointsRequest> {
+    @Nonnull
     private ClientManager clientManager;
+    @Nonnull
     private GameManager gameManager;
 
     @Inject
-    public PointsRequestHandler(ConnectionHandler handler, GameManager gameManager) {
+    public PointsRequestHandler(@Nonnull ConnectionHandler handler, @Nonnull GameManager gameManager) {
         this.clientManager = (ClientManager) handler;
         this.gameManager = gameManager;
     }

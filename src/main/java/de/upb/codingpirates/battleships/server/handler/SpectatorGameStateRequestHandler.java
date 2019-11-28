@@ -14,12 +14,16 @@ import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
 
+import javax.annotation.Nonnull;
+
 public class SpectatorGameStateRequestHandler extends ExceptionMessageHandler<SpectatorGameStateRequest> {
+    @Nonnull
     private ClientManager clientManager;
+    @Nonnull
     private GameManager gameManager;
 
     @Inject
-    public SpectatorGameStateRequestHandler(ConnectionHandler handler, GameManager gameManager) {
+    public SpectatorGameStateRequestHandler(@Nonnull ConnectionHandler handler, @Nonnull GameManager gameManager) {
         this.clientManager = (ClientManager) handler;
         this.gameManager = gameManager;
     }
@@ -30,7 +34,7 @@ public class SpectatorGameStateRequestHandler extends ExceptionMessageHandler<Sp
         if (!clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.SPECTATOR)) {
             throw new NotAllowedException("game.handler.spectatorGameStateRequest.noSpectator");
         }
-        clientManager.sendMessageToId(new SpectatorGameStateResponse(handler.getPlayer(), handler.getShots(), handler.getStartShip(), handler.getGame().getState()), connectionId);
+        clientManager.sendMessageToId(new SpectatorGameStateResponse(handler.getPlayers(), handler.getShots(), handler.getStartShip(), handler.getGame().getState()), connectionId);
     }
 
     @Override
