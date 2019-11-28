@@ -1,5 +1,7 @@
 package de.upb.codingpirates.battleships.server.gui.controllers;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import de.upb.codingpirates.battleships.logic.Configuration;
 import de.upb.codingpirates.battleships.logic.PenaltyType;
@@ -495,7 +497,11 @@ public final class MainController extends AbstractController<BorderPane> {
     @SuppressWarnings("unused")
     private void onStartNewGameButtonAction() {
         GameManager manager = server.getGameManager();
-        manager.createGame(getConfigurationFromControls(),"TestGame",false);//TODO named game & tournament games
+        Configuration configuration = getConfigurationFromControls();
+        Map<Integer, ShipType> ships = Maps.newHashMap();
+        ships.put(0, new ShipType(Lists.newArrayList(new Point2D(1,1),new Point2D(1,2),new Point2D(2,1))));
+        Configuration newC = new Configuration(configuration.getMaxPlayerCount(),configuration.getHeight(),configuration.getWidth(),configuration.getShotCount(),configuration.getHitPoints(),configuration.getSunkPoints(),configuration.getRoundTime(),configuration.getVisualizationTime(),ships,configuration.getPenaltyMinusPoints(),configuration.getPenaltyKind());
+        manager.createGame(newC,"TestGame",false);//TODO named game & tournament games
     }
 
     /**

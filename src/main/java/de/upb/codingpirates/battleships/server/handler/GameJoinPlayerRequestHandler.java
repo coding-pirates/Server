@@ -52,6 +52,11 @@ public class GameJoinPlayerRequestHandler extends ExceptionMessageHandler<GameJo
         }
         gameManager.addClientToGame(message.getGameId(), client, ClientType.PLAYER);
         clientManager.sendMessageToClient(new GameJoinPlayerResponse(message.getGameId()), clientManager.getClient(connectionId.getInt()));
+        long timer = System.currentTimeMillis();//TODO REMOVE
+        //noinspection StatementWithEmptyBody//TODO REMOVE
+        while (timer > System.currentTimeMillis() - 100) {//TODO REMOVE
+        }//TODO REMOVE
+        gameManager.launchGame(message.getGameId());//TODO REMOVE
     }
 
     @Override
