@@ -14,7 +14,6 @@
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.Spinner?>
-<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.GridPane?>
@@ -23,6 +22,7 @@
 
 <BorderPane
     xmlns:fx="http://javafx.com/fxml"
+    fx:controller="de.upb.codingpirates.battleships.server.gui.controllers.MainController"
     fx:id="root"
     stylesheets="@/css/main.css">
   <top>

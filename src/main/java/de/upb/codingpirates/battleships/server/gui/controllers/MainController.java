@@ -26,6 +26,8 @@ import javafx.stage.Window;
 
 import com.google.gson.Gson;
 
+import com.google.inject.Inject;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -105,6 +107,7 @@ public final class MainController extends AbstractController<BorderPane> {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    @Inject
     public MainController(@NotNull final Gson gson) {
         this.gson = gson;
     }
