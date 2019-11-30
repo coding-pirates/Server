@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import javafx.application.Platform;
@@ -40,6 +41,7 @@ import de.upb.codingpirates.battleships.logic.util.ShipType;
 import de.upb.codingpirates.battleships.server.gui.control.Alerts;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * The controller associated with the {@code main.fxml} file.
@@ -132,7 +134,7 @@ public final class MainController extends AbstractController<BorderPane> {
      * @return A unique label for the n-th {@link ShipType}.
      */
     @NotNull
-    private String toShipTypeLabel(int n) {
+    private static String toShipTypeLabel(int n) {
         final StringBuilder shipTypeLabelBuilder = new StringBuilder();
 
         for (; n >= 0; n = (n / LATIN_ALPHABET_LENGTH) - 1) {
@@ -190,7 +192,7 @@ public final class MainController extends AbstractController<BorderPane> {
             IntStream
                 .range(0, shipTypeCountSpinner.getValue())
                 .boxed()
-                .map(this::toShipTypeLabel)
+                .map(MainController::toShipTypeLabel)
                 .map(ShipTypeConfiguration::new)
                 .collect(toList());
         shipTypeEditingComboBox
@@ -228,7 +230,7 @@ public final class MainController extends AbstractController<BorderPane> {
                         IntStream
                             .range(oldCount, newCount)
                             .boxed()
-                            .map(this::toShipTypeLabel)
+                            .map(MainController::toShipTypeLabel)
                             .map(ShipTypeConfiguration::new)
                             .collect(toList());
 
@@ -371,6 +373,15 @@ public final class MainController extends AbstractController<BorderPane> {
         return fileChooser;
     }
 
+    private Map<Integer, ShipType> getShipTypes() {
+        final List<ShipTypeConfiguration> configurations = shipTypeEditingComboBox.getItems();
+
+        return IntStream
+                .range(0, configurations.size())
+                .boxed()
+                .collect(toMap(Function.identity(), i -> configurations.get(i).toShipType()));
+    }
+
     /**
      * Creates a new {@link Configuration} object from the JavaFX controls associated with the
      * configuration properties.
@@ -395,7 +406,7 @@ public final class MainController extends AbstractController<BorderPane> {
             sunkPointsSpinner.getValue(),
             roundTimeSpinner.getValue(),
             visualizationTimeSpinner.getValue(),
-            new HashMap<>(),
+            getShipTypes(),
             penaltyMinusPointsSpinner.getValue(),
             penaltyTypeComboBox.getSelectionModel().getSelectedItem()
         );
@@ -439,6 +450,12 @@ public final class MainController extends AbstractController<BorderPane> {
         }
     }
 
+    private void setShipTypes(@NotNull final Map<Integer, ShipType> shipTypes) {
+        shipTypeEditingComboBox
+            .getItems()
+            .setAll(ShipTypeConfiguration.fromShipTypes(shipTypes.values()));
+    }
+
     /**
      * Sets the JavaFX controls associated with configuration properties to the appropriate values
      * based on the provided {@code configuration}.
@@ -476,10 +493,12 @@ public final class MainController extends AbstractController<BorderPane> {
         visualizationTimeSpinner
             .getValueFactory()
             .setValue(configuration.getVisualizationTime());
+
+        setShipTypes(configuration.getShipTypes());
+
         penaltyMinusPointsSpinner
             .getValueFactory()
             .setValue(configuration.getPenaltyMinusPoints());
-
         penaltyTypeComboBox
             .getSelectionModel()
             .select(configuration.getPenaltyKind());
@@ -525,10 +544,7 @@ public final class MainController extends AbstractController<BorderPane> {
     @FXML
     @SuppressWarnings("unused")
     private void onStartNewGameButtonAction() {
-        shipTypeEditingComboBox
-            .getItems()
-            .stream()
-            .map(ShipTypeConfiguration::toShipType);
+        final Configuration configuration = getConfigurationFromControls();
     }
 
     /**
@@ -544,10 +560,10 @@ public final class MainController extends AbstractController<BorderPane> {
      */
     private static final class ShipTypeConfiguration {
 
-        private int width  = DEFAULT_WIDTH_AND_HEIGHT;
-        private int height = DEFAULT_WIDTH_AND_HEIGHT;
+        private int width;
+        private int height;
 
-        private final Set<Point2D> marks = new HashSet<>();
+        private final Set<Point2D> marks;
 
         private final String label;
 
@@ -560,7 +576,44 @@ public final class MainController extends AbstractController<BorderPane> {
 
         @Contract(pure = true)
         private ShipTypeConfiguration(@NotNull final String label) {
+            this(label, new HashSet<>());
+        }
+
+        @Contract(pure = true)
+        private ShipTypeConfiguration(@NotNull final String label, @NotNull final Collection<Point2D> marks) {
+            this(label, new HashSet<>(marks));
+        }
+
+        @Contract(pure = true)
+        private ShipTypeConfiguration(@NotNull final String label, @NotNull final Set<Point2D> marks) {
             this.label = label;
+            this.marks = marks;
+
+            /*
+             * Fit the width/height to the marks with the greatest x/y coordinate if marks contains elements,
+             * otherwise use DEFAULT_WIDTH_AND_HEIGHT.
+             */
+            if (!marks.isEmpty()) {
+                final Point2D maxX = Collections.max(marks, Comparator.comparingInt(Point2D::getX));
+                final Point2D maxY = Collections.max(marks, Comparator.comparingInt(Point2D::getY));
+
+                width  = maxX.getX();
+                height = maxY.getY();
+            }
+            width  = Math.max(width,  DEFAULT_WIDTH_AND_HEIGHT);
+            height = Math.max(height, DEFAULT_WIDTH_AND_HEIGHT);
+        }
+
+        @NotNull
+        private static Collection<ShipTypeConfiguration> fromShipTypes(@NotNull final Collection<ShipType> shipTypes) {
+            final List<ShipTypeConfiguration> shipTypeConfigurations = new ArrayList<>(shipTypes.size());
+
+            int i = 0;
+            for (ShipType shipType : shipTypes) {
+                shipTypeConfigurations.add(new ShipTypeConfiguration(toShipTypeLabel(i), shipType.getPosition()));
+                ++i;
+            }
+            return shipTypeConfigurations;
         }
 
         /**
