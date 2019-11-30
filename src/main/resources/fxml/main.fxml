@@ -217,7 +217,9 @@
                   <ScrollPane>
                     <GridPane
                       fx:id="shipConfigurationGrid"
-                      id="ship-configuration-grid"/>
+                      id="ship-configuration-grid"
+                      maxHeight="Infinity"
+                      maxWidth="Infinity"/>
                   </ScrollPane>
                 </HBox>
               </GridPane>

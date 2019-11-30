@@ -21,7 +21,13 @@ TitledPane {
     -fx-padding: 5px;
 }
 
-#ship-configuration-container {
-    -fx-hgap: 3px !important;
-    -fx-vgap: 3px !important;
+.ship-configuration-cell {
+    -fx-stroke: black;
+}
+
+#ship-configuration-grid {
+    -fx-border-color: black;
+    -fx-border-width: 2px;
+    -fx-hgap: 0px;
+    -fx-vgap: 0px;
 }

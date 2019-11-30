@@ -163,6 +163,7 @@ public final class MainController extends AbstractController<BorderPane> {
                 final Point2D coordinate = new Point2D(x, y);
 
                 rectangle.setUserData(coordinate);
+                rectangle.getStyleClass().add("ship-configuration-cell");
                 rectangle.setOnMouseClicked(event -> {
                     //noinspection SuspiciousMethodCalls
                     if (config.marks.remove(rectangle.getUserData())) {
@@ -209,8 +210,13 @@ public final class MainController extends AbstractController<BorderPane> {
                  * if the new amount of configurations is smaller than the old one.
                  */
                 if (newCount < oldCount) {
+                    /*
+                     * We cannot directly use the result of the subList(0, newCount) call, as the subList method
+                     * returns a view of the original list rather than a new one, which would result in a
+                     * ConcurrentModificationException in the next line when invoking setAll(configurationsToKeep);
+                     */
                     final Collection<ShipTypeConfiguration> configurationsToKeep =
-                        shipTypeEditingComboBox.getItems().subList(0, newCount);
+                        new ArrayList<>(shipTypeEditingComboBox.getItems().subList(0, newCount));
 
                     shipTypeEditingComboBox.getItems().setAll(configurationsToKeep);
                 /*
@@ -237,6 +243,24 @@ public final class MainController extends AbstractController<BorderPane> {
             .getSelectionModel()
             .selectedItemProperty()
             .addListener((observable, oldSelection, newSelection) -> {
+                /*
+                 * newSelection might be null if we decrease the value of the shipTypeCountSpinner and the selected
+                 * ShipTypeConfiguration is one of the ones to be removed from the ComboBox.
+                 *
+                 * In that case select the last possible entry which is thus closest to the one that was previously
+                 * selected.
+                 */
+                if (newSelection == null) {
+                    final ShipTypeConfiguration last =
+                        shipTypeEditingComboBox
+                            .getItems()
+                            .get(shipTypeEditingComboBox.getItems().size() - 1);
+
+                    shipTypeEditingComboBox
+                        .getSelectionModel()
+                        .select(last);
+                    return;
+                }
                 populateShipConfigurationGrid(newSelection);
 
                 shipTypeHeightSpinner.getValueFactory().setValue(newSelection.height);
@@ -501,6 +525,10 @@ public final class MainController extends AbstractController<BorderPane> {
     @FXML
     @SuppressWarnings("unused")
     private void onStartNewGameButtonAction() {
+        shipTypeEditingComboBox
+            .getItems()
+            .stream()
+            .map(ShipTypeConfiguration::toShipType);
     }
 
     /**
@@ -525,6 +553,11 @@ public final class MainController extends AbstractController<BorderPane> {
 
         private static final int DEFAULT_WIDTH_AND_HEIGHT = 5;
 
+        /**
+         * The minimum size of a {@link ShipType} according to the product vision.
+         */
+        private static final int MINIMUM_SHIP_TYPE_SIZE   = 2;
+
         @Contract(pure = true)
         private ShipTypeConfiguration(@NotNull final String label) {
             this.label = label;
@@ -545,10 +578,69 @@ public final class MainController extends AbstractController<BorderPane> {
             marks.removeIf(point -> (point.getX() >= width) || (point.getY() >= height));
         }
 
+        private static final Point2D[] NEIGHBOR_OFFSETS = {
+            new Point2D(-1, 0), /* Left   */
+            new Point2D( 0, 1), /* Top    */
+            new Point2D( 1, 0), /* Right  */
+            new Point2D( 0, -1) /* Bottom */
+        };
+
+        // <editor-fold desc="toShipType()">
+        @Contract(pure = true)
+        private boolean shouldTraverse(
+                @NotNull final boolean[][] marks,
+                @NotNull final boolean[][] visited,
+                final int x,
+                final int y) {
+            return ((x >= 0) && (x < width)) && ((y >= 0) && (y < height)) && marks[x][y] && !visited[x][y];
+        }
+
+        private void dfs(
+                @NotNull final boolean[][] marks,
+                @NotNull final boolean[][] visited,
+                final int x,
+                final int y) {
+            visited[x][y] = true;
+
+            for (final Point2D offset : NEIGHBOR_OFFSETS) {
+                final int xx = x + offset.getX();
+                final int yy = y + offset.getY();
+
+                if (shouldTraverse(marks, visited, xx, yy))
+                    dfs(marks, visited, xx, yy);
+            }
+        }
+
+        private boolean checkMarksConnected() {
+            final boolean[][] markMatrix = new boolean[width][height];
+            final boolean[][] visited    = new boolean[width][height];
+
+            for (Point2D mark : marks)
+                markMatrix[mark.getX()][mark.getY()] = true;
+
+            int segmentCount = 0;
+            for (int x = 0; x < width; ++x) {
+                for (int y = 0; y < height; ++y) {
+                    if (markMatrix[x][y] && !visited[x][y]) {
+                        dfs(markMatrix, visited, x, y);
+
+                        if (++segmentCount > 1)
+                            return false;
+                    }
+                }
+            }
+            return true;
+        }
+
         @NotNull
         @Contract(value = " -> new", pure = true)
         private ShipType toShipType() {
+            if (marks.size() < MINIMUM_SHIP_TYPE_SIZE)
+                throw new RuntimeException();
+            if (!checkMarksConnected())
+                throw new RuntimeException();
             return new ShipType(marks);
         }
+        // </editor-fold>
     }
 }
