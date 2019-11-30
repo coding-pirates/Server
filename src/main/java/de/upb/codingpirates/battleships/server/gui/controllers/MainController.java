@@ -14,10 +14,8 @@ import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
@@ -348,6 +346,33 @@ public final class MainController extends AbstractController<BorderPane> {
         Platform.exit();
     }
 
+    private void displayInvalidConfigurationAlert(@NotNull final ShipTypeConfiguration invalidConfiguration) {
+        Alert alert = new Alert(AlertType.ERROR);
+
+        alert.setTitle(
+            resourceBundle.getString("configuration.ships.invalidConfigurationAlert.title"));
+        alert.setHeaderText(
+            resourceBundle.getString("configuration.ships.invalidConfigurationAlert.headerText"));
+
+        final String contentText;
+        if (!invalidConfiguration.hasMinimumSize()) {
+            contentText = String.format(
+                resourceBundle.getString("configuration.ships.invalidConfigurationAlert.contentText.sizeInsufficient"),
+                invalidConfiguration.label,
+                ShipTypeConfiguration.MINIMUM_SHIP_TYPE_SIZE,
+                invalidConfiguration.marks.size()
+            );
+        } else {
+            contentText = String.format(
+                resourceBundle.getString("configuration.ships.invalidConfigurationAlert.contentText.notConnected"),
+                invalidConfiguration.label
+            );
+        }
+        alert.setContentText(contentText);
+
+        alert.showAndWait();
+    }
+
     // <editor-fold desc="Configuration import and export">
     /**
      * The file extension of configuration files.
@@ -373,13 +398,19 @@ public final class MainController extends AbstractController<BorderPane> {
         return fileChooser;
     }
 
-    private Map<Integer, ShipType> getShipTypes() {
+    private Map<Integer, ShipType> getShipTypesFromControls() throws InvalidShipTypeConfigurationException {
         final List<ShipTypeConfiguration> configurations = shipTypeEditingComboBox.getItems();
 
         return IntStream
-                .range(0, configurations.size())
-                .boxed()
-                .collect(toMap(Function.identity(), i -> configurations.get(i).toShipType()));
+            .range(0, configurations.size())
+            .boxed()
+            .collect(toMap(Function.identity(), i -> configurations.get(i).toShipType()));
+    }
+
+    private void setControlsFromShipTypes(@NotNull final Map<Integer, ShipType> shipTypes) {
+        shipTypeEditingComboBox
+            .getItems()
+            .setAll(ShipTypeConfiguration.fromShipTypes(shipTypes.values()));
     }
 
     /**
@@ -396,7 +427,7 @@ public final class MainController extends AbstractController<BorderPane> {
      */
     @NotNull
     @Contract(" -> new")
-    private Configuration getConfigurationFromControls() {
+    private Configuration getConfigurationFromControls() throws InvalidShipTypeConfigurationException {
         return new Configuration(
             maxPlayerCountSpinner.getValue(),
             heightSpinner.getValue(),
@@ -406,10 +437,59 @@ public final class MainController extends AbstractController<BorderPane> {
             sunkPointsSpinner.getValue(),
             roundTimeSpinner.getValue(),
             visualizationTimeSpinner.getValue(),
-            getShipTypes(),
+            getShipTypesFromControls(),
             penaltyMinusPointsSpinner.getValue(),
             penaltyTypeComboBox.getSelectionModel().getSelectedItem()
         );
+    }
+
+    /**
+     * Sets the JavaFX controls associated with configuration properties to the appropriate values
+     * based on the provided {@code configuration}.
+     *
+     * The counterpart of this method is {@link #getConfigurationFromControls()} which creates a
+     * new {@link Configuration} object based on the state of the associated JavaFX controls.
+     *
+     * @param configuration The {@link Configuration} whose properties should be used to determine
+     *                      the new state of the GUI controls.
+     *
+     * @see #getConfigurationFromControls()
+     */
+    private void setControlsFromConfiguration(@NotNull final Configuration configuration) {
+        maxPlayerCountSpinner
+                .getValueFactory()
+                .setValue(configuration.getMaxPlayerCount());
+        heightSpinner
+                .getValueFactory()
+                .setValue(configuration.getHeight());
+        widthSpinner
+                .getValueFactory()
+                .setValue(configuration.getWidth());
+        shotCountSpinner
+                .getValueFactory()
+                .setValue(configuration.getShotCount());
+        hitPointsSpinner
+                .getValueFactory()
+                .setValue(configuration.getHitPoints());
+        sunkPointsSpinner
+                .getValueFactory()
+                .setValue(configuration.getSunkPoints());
+
+        roundTimeSpinner
+                .getValueFactory()
+                .setValue((int) configuration.getRoundTime());
+        visualizationTimeSpinner
+                .getValueFactory()
+                .setValue((int) configuration.getVisualizationTime());
+
+        setControlsFromShipTypes(configuration.getShipTypes());
+
+        penaltyMinusPointsSpinner
+                .getValueFactory()
+                .setValue(configuration.getPenaltyMinusPoints());
+        penaltyTypeComboBox
+                .getSelectionModel()
+                .select(configuration.getPenaltyKind());
     }
 
     /**
@@ -433,6 +513,8 @@ public final class MainController extends AbstractController<BorderPane> {
             LOGGER.info("Exporting configuration to '{}.", exportPath);
 
             Files.write(exportPath, configurationJson.getBytes(StandardCharsets.UTF_8));
+        } catch (final InvalidShipTypeConfigurationException exception) {
+            displayInvalidConfigurationAlert(exception.invalidConfiguration);
         } catch (final IOException exception) {
             final String contentText =
                 String.format(resourceBundle.getString("configuration.export.exceptionAlert.contentText"), exportPath);
@@ -448,61 +530,6 @@ public final class MainController extends AbstractController<BorderPane> {
                     exception)
                 .showAndWait();
         }
-    }
-
-    private void setShipTypes(@NotNull final Map<Integer, ShipType> shipTypes) {
-        shipTypeEditingComboBox
-            .getItems()
-            .setAll(ShipTypeConfiguration.fromShipTypes(shipTypes.values()));
-    }
-
-    /**
-     * Sets the JavaFX controls associated with configuration properties to the appropriate values
-     * based on the provided {@code configuration}.
-     *
-     * The counterpart of this method is {@link #getConfigurationFromControls()} which creates a
-     * new {@link Configuration} object based on the state of the associated JavaFX controls.
-     *
-     * @param configuration The {@link Configuration} whose properties should be used to determine
-     *                      the new state of the GUI controls.
-     *
-     * @see #getConfigurationFromControls()
-     */
-    private void setControlsFromConfiguration(@NotNull final Configuration configuration) {
-        maxPlayerCountSpinner
-            .getValueFactory()
-            .setValue(configuration.getMaxPlayerCount());
-        heightSpinner
-            .getValueFactory()
-            .setValue(configuration.getHeight());
-        widthSpinner
-            .getValueFactory()
-            .setValue(configuration.getWidth());
-        shotCountSpinner
-            .getValueFactory()
-            .setValue(configuration.getShotCount());
-        hitPointsSpinner
-            .getValueFactory()
-            .setValue(configuration.getHitPoints());
-        sunkPointsSpinner
-            .getValueFactory()
-            .setValue(configuration.getSunkPoints());
-
-        roundTimeSpinner
-            .getValueFactory()
-            .setValue((int) configuration.getRoundTime());
-        visualizationTimeSpinner
-            .getValueFactory()
-            .setValue((int) configuration.getVisualizationTime());
-
-        setShipTypes(configuration.getShipTypes());
-
-        penaltyMinusPointsSpinner
-            .getValueFactory()
-            .setValue(configuration.getPenaltyMinusPoints());
-        penaltyTypeComboBox
-            .getSelectionModel()
-            .select(configuration.getPenaltyKind());
     }
 
     /**
@@ -545,7 +572,14 @@ public final class MainController extends AbstractController<BorderPane> {
     @FXML
     @SuppressWarnings("unused")
     private void onStartNewGameButtonAction() {
-        final Configuration configuration = getConfigurationFromControls();
+        final Configuration configuration;
+
+        try {
+            configuration = getConfigurationFromControls();
+        } catch (final InvalidShipTypeConfigurationException exception) {
+            displayInvalidConfigurationAlert(exception.invalidConfiguration);
+            return;
+        }
     }
 
     /**
@@ -686,15 +720,27 @@ public final class MainController extends AbstractController<BorderPane> {
             return true;
         }
 
+        @Contract(pure = true)
+        private boolean hasMinimumSize() {
+            return marks.size() >= MINIMUM_SHIP_TYPE_SIZE;
+        }
+
         @NotNull
         @Contract(value = " -> new", pure = true)
-        private ShipType toShipType() {
-            if (marks.size() < MINIMUM_SHIP_TYPE_SIZE)
-                throw new RuntimeException();
-            if (!checkMarksConnected())
-                throw new RuntimeException();
+        private ShipType toShipType() throws InvalidShipTypeConfigurationException {
+            if (!hasMinimumSize() || !checkMarksConnected())
+                throw new InvalidShipTypeConfigurationException(this);
             return new ShipType(marks);
         }
         // </editor-fold>
+    }
+
+    private static final class InvalidShipTypeConfigurationException extends RuntimeException {
+
+        private final ShipTypeConfiguration invalidConfiguration;
+
+        private InvalidShipTypeConfigurationException(@NotNull final ShipTypeConfiguration invalidConfiguration) {
+            this.invalidConfiguration = invalidConfiguration;
+        }
     }
 }
