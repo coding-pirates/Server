@@ -49,7 +49,6 @@
             alignment="CENTER">
           <fx:define>
             <Integer fx:id="INT_MAX_VALUE"  fx:constant="MAX_VALUE"/>
-            <Long    fx:id="LONG_MAX_VALUE" fx:constant="MAX_VALUE"/>
           </fx:define>
 
           <!-- Row 0 -->
@@ -120,7 +119,7 @@
             editable="true"
             initialValue="10"
             min="1"
-            max="$LONG_MAX_VALUE"/>
+            max="$INT_MAX_VALUE"/>
 
           <!-- Row 5 -->
           <Label
@@ -134,7 +133,7 @@
             editable="true"
             initialValue="3"
             min="1"
-            max="$LONG_MAX_VALUE"/>
+            max="$INT_MAX_VALUE"/>
 
           <!-- Row 6 -->
           <TitledPane

@@ -64,10 +64,10 @@ public final class MainController extends AbstractController<BorderPane> {
     private Spinner<Integer> sunkPointsSpinner;
 
     @FXML
-    private Spinner<Long> roundTimeSpinner;
+    private Spinner<Integer> roundTimeSpinner;
 
     @FXML
-    private Spinner<Long> visualizationTimeSpinner;
+    private Spinner<Integer> visualizationTimeSpinner;
 
     @FXML
     private Spinner<Integer> heightSpinner;
@@ -487,12 +487,13 @@ public final class MainController extends AbstractController<BorderPane> {
         sunkPointsSpinner
             .getValueFactory()
             .setValue(configuration.getSunkPoints());
+
         roundTimeSpinner
             .getValueFactory()
-            .setValue(configuration.getRoundTime());
+            .setValue((int) configuration.getRoundTime());
         visualizationTimeSpinner
             .getValueFactory()
-            .setValue(configuration.getVisualizationTime());
+            .setValue((int) configuration.getVisualizationTime());
 
         setShipTypes(configuration.getShipTypes());
 
