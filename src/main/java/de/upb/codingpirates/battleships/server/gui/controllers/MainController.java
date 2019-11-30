@@ -342,6 +342,7 @@ public final class MainController extends AbstractController<BorderPane> {
     // </editor-fold>
 
     @FXML
+    @SuppressWarnings("unused")
     private void onExitMenuItemAction() {
         Platform.exit();
     }
@@ -721,6 +722,7 @@ public final class MainController extends AbstractController<BorderPane> {
         }
 
         @Contract(pure = true)
+        @SuppressWarnings("BooleanMethodIsAlwaysInverted")
         private boolean hasMinimumSize() {
             return marks.size() >= MINIMUM_SHIP_TYPE_SIZE;
         }

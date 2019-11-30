@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import java.lang.Integer?>
-<?import java.lang.Long?>
 <?import java.util.ArrayList?>
 
 <?import javafx.scene.layout.BorderPane?>
@@ -15,6 +14,7 @@
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.GridPane?>
@@ -41,7 +41,7 @@
       </Menu>
     </MenuBar>
   </top>
-  <center>
+  <right>
     <VBox id="center-box">
       <HBox>
         <GridPane
@@ -329,5 +329,5 @@
         </GridPane>
       </HBox>
     </VBox>
-  </center>
+  </right>
 </BorderPane>
