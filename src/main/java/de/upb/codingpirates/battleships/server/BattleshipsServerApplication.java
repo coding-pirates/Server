@@ -18,6 +18,8 @@ import org.apache.logging.log4j.Logger;
 
 import org.jetbrains.annotations.NotNull;
 
+import de.upb.codingpirates.battleships.server.gui.util.ResourceBundleWrapper;
+
 /**
  * @author Andre Blanke
  */
@@ -62,7 +64,7 @@ public final class BattleshipsServerApplication extends Application {
 
         final FXMLLoader loader = new FXMLLoader(
             BattleshipsServerApplication.class.getResource(fxmlPath),
-            ResourceBundle.getBundle(bundleBaseName)
+            new ResourceBundleWrapper(ResourceBundle.getBundle(bundleBaseName))
         );
         loader.setControllerFactory(injector::getInstance);
 
