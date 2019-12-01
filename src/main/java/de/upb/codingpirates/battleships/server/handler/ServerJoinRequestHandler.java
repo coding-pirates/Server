@@ -27,7 +27,7 @@ public class ServerJoinRequestHandler extends ExceptionMessageHandler<ServerJoin
     }
 
     @Override
-    public void handleMessage(ServerJoinRequest message, Id connectionId) throws GameException {
+    public void handleMessage(@Nonnull ServerJoinRequest message, Id connectionId) throws GameException {
         LOGGER.debug("Handle ServerJoinRequest from {}, with name {}, as {}", connectionId, message.getName(), message.getClientType());
         this.clientManager.create(connectionId.getInt(), message.getName(), message.getClientType());
         this.clientManager.sendMessageToId(new ServerJoinResponse(connectionId.getInt()), connectionId);

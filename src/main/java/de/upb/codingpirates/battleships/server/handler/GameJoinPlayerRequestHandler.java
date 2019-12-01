@@ -36,7 +36,7 @@ public class GameJoinPlayerRequestHandler extends ExceptionMessageHandler<GameJo
 
 
     @Override
-    public void handleMessage(GameJoinPlayerRequest message, Id connectionId) throws GameException {
+    public void handleMessage(@Nonnull GameJoinPlayerRequest message, Id connectionId) throws GameException {
         LOGGER.debug(Markers.CLIENT, "Handle GameJoinPlayerRequest from {}, for game {}", connectionId, message.getGameId());
         if (!clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.PLAYER)) {
             throw new NotAllowedException("game.handler.gameJoinPlayerRequest.noPlayer");
@@ -54,9 +54,11 @@ public class GameJoinPlayerRequestHandler extends ExceptionMessageHandler<GameJo
         clientManager.sendMessageToClient(new GameJoinPlayerResponse(message.getGameId()), clientManager.getClient(connectionId.getInt()));
         long timer = System.currentTimeMillis();//TODO REMOVE
         //noinspection StatementWithEmptyBody//TODO REMOVE
-        while (timer > System.currentTimeMillis() - 100) {//TODO REMOVE
+        while (timer > System.currentTimeMillis() - 1000L) {//TODO REMOVE
         }//TODO REMOVE
-        gameManager.launchGame(message.getGameId());//TODO REMOVE
+        if(!gameManager.launchGame(message.getGameId())){//TODO REMOVE
+            LOGGER.error("to less player");//TODO REMOVE
+        }//TODO REMOVE
     }
 
     @Override

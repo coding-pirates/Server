@@ -33,16 +33,12 @@ public class GameManager {
 
     /**
      * maps game id to gamehandler
-     * <p>
-     * do not use this attribute use {@link #games()}
      */
-    private final Map<Integer, GameHandler> games = Maps.newHashMap();
+    private final Map<Integer, GameHandler> games = Collections.synchronizedMap(Maps.newHashMap());
     /**
      * maps client id to gameid
-     * <p>
-     * do not use this attribute use {@link #clientToGame()}
      */
-    private final Map<Integer, Integer> clientToGame = Maps.newHashMap();
+    private final Map<Integer, Integer> clientToGame = Collections.synchronizedMap(Maps.newHashMap());
 
     @Inject
     public GameManager(@Nonnull ConnectionHandler handler, @Nonnull IntIdManager idManager) {
@@ -71,7 +67,7 @@ public class GameManager {
         }
         int id = this.idManager.generate().getInt();
         LOGGER.debug(Markers.GAME, "Create game: {} with id: {}", name, id);
-        this.games().putIfAbsent(id, new GameHandler(name, id, configuration, tournament, clientManager));
+        this.games.putIfAbsent(id, new GameHandler(name, id, configuration, tournament, clientManager));
         return -1;
     }
 
@@ -85,9 +81,9 @@ public class GameManager {
      */
     public void addClientToGame(int gameId, @Nonnull Client client, @Nonnull ClientType clientType) throws InvalidActionException {
         LOGGER.debug(Markers.GAME, "Adding client {}, with type {}, to game {}", client.getId(), clientType, gameId);
-        if (this.games().containsKey(gameId)) {
-            this.games().get(gameId).addClient(clientType, client);
-            this.clientToGame().putIfAbsent(client.getId(), gameId);
+        if (this.games.containsKey(gameId)) {
+            this.games.get(gameId).addClient(clientType, client);
+            this.clientToGame.putIfAbsent(client.getId(), gameId);
         } else {
             LOGGER.error(Markers.GAME, "Can't find game {}", gameId);
             throw new InvalidActionException("game.gameManager.noGame");
@@ -102,8 +98,8 @@ public class GameManager {
      */
     public void removeClientFromGame(int client) throws InvalidActionException {
         LOGGER.debug(Markers.CLIENT, "Remove client {} from active game", client);
-        if (clientToGame().containsKey(client)) {
-            this.games().get(this.clientToGame().remove(client)).removeClient(client);
+        if (clientToGame.containsKey(client)) {
+            this.games.get(this.clientToGame.remove(client)).removeClient(client);
         } else {
             LOGGER.warn(Markers.CLIENT, "Client {} does not participate in a game", client);
             throw new InvalidActionException("game.gameManager.noGameForClient");
@@ -117,8 +113,8 @@ public class GameManager {
      * @return {@code false} if player count is under 2
      */
     public boolean launchGame(int gameId) {
-        LOGGER.debug(Markers.GAME, "launched game {}, {}", gameId, this.games().get(gameId).getGame().getName());
-        return this.games().get(gameId).launchGame();
+        LOGGER.debug(Markers.GAME, "launched game {}, {}", gameId, this.games.get(gameId).getGame().getName());
+        return this.games.get(gameId).launchGame();
     }
 
     /**
@@ -127,9 +123,9 @@ public class GameManager {
      * @param gameId gameId
      */
     public void pauseGame(int gameId) {
-        LOGGER.debug(Markers.GAME, "paused game {}, {}", gameId, this.games().get(gameId).getGame().getName());
-        this.games().get(gameId).pauseGame();
-        clientManager.sendMessageToClients(new PauseNotification(), this.games().get(gameId).getAllClients());
+        LOGGER.debug(Markers.GAME, "paused game {}, {}", gameId, this.games.get(gameId).getGame().getName());
+        this.games.get(gameId).pauseGame();
+        clientManager.sendMessageToClients(new PauseNotification(), this.games.get(gameId).getAllClients());
     }
 
     /**
@@ -138,9 +134,9 @@ public class GameManager {
      * @param gameId gameId
      */
     public void continueGame(int gameId) {
-        LOGGER.debug(Markers.GAME, "continued game {}, {}", gameId, this.games().get(gameId).getGame().getName());
-        this.games().get(gameId).continueGame();
-        clientManager.sendMessageToClients(new ContinueNotification(), this.games().get(gameId).getAllClients());
+        LOGGER.debug(Markers.GAME, "continued game {}, {}", gameId, this.games.get(gameId).getGame().getName());
+        this.games.get(gameId).continueGame();
+        clientManager.sendMessageToClients(new ContinueNotification(), this.games.get(gameId).getAllClients());
     }
 
     /**
@@ -150,15 +146,15 @@ public class GameManager {
      * @param points if {@code false} all points will be set to 0
      */
     public void abortGame(int gameId, boolean points) {
-        LOGGER.debug(Markers.GAME, "abort game {}, {}", gameId, this.games().get(gameId).getGame().getName());
-        this.games().get(gameId).abortGame(points);
+        LOGGER.debug(Markers.GAME, "abort game {}, {}", gameId, this.games.get(gameId).getGame().getName());
+        this.games.get(gameId).abortGame(points);
     }
 
     /**
      * @return all existing games
      */
     public Collection<GameHandler> getAllGames() {
-        return this.games().values();
+        return this.games.values();
     }
 
     /**
@@ -168,11 +164,11 @@ public class GameManager {
      */
     @Nonnull
     public GameHandler getGameHandlerForClientId(int clientId) throws InvalidActionException {
-        if (!this.clientToGame().containsKey(clientId)) {
+        if (!this.clientToGame.containsKey(clientId)) {
             LOGGER.warn(Markers.CLIENT, "Could not get game for client {}", clientId);
             throw new InvalidActionException("game.gameManager.noGameForClient");
         }
-        return this.games().get(this.clientToGame().get(clientId));
+        return this.games.get(this.clientToGame.get(clientId));
     }
 
     /**
@@ -182,18 +178,18 @@ public class GameManager {
      */
     @Nonnull
     public GameHandler getGame(int id) throws InvalidActionException {
-        if (!this.games().containsKey(id)) {
+        if (!this.games.containsKey(id)) {
             LOGGER.warn(Markers.GAME, "The game with id: {} does not exist", id);
             throw new InvalidActionException("game.gameManager.gameNotExist");
         }
-        return this.games().get(id);
+        return this.games.get(id);
     }
 
     /**
      * run method for every game
      */
     private void run() {
-        this.games().values().forEach(GameHandler::run);
+        this.games.values().forEach(GameHandler::run);
     }
 
     /**
@@ -220,17 +216,4 @@ public class GameManager {
         return -1;
     }
 
-    @Nonnull
-    private Map<Integer, GameHandler> games() {
-        synchronized (games) {
-            return games;
-        }
-    }
-
-    @Nonnull
-    private Map<Integer, Integer> clientToGame() {
-        synchronized (this.clientToGame) {
-            return this.clientToGame;
-        }
-    }
 }

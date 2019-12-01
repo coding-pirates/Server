@@ -33,6 +33,12 @@ public class ServerTests {
     private static int id2;
     private static int lobbySize;
 
+    public static boolean gameinit1;
+    public static boolean gameinit2;
+
+    public static boolean gamestart1;
+    public static boolean gamestart2;
+
     @Test
     public void test() throws IllegalAccessException, IOException, InstantiationException {
         long timer = 0;
@@ -72,7 +78,11 @@ public class ServerTests {
         timer = System.currentTimeMillis();
         while (timer > System.currentTimeMillis() - 50000){
         }
-        LOGGER.debug("finished connection test");
+
+        while (true){
+
+        }
+//        LOGGER.debug("finished connection test");
     }
 
     public static ClientConnector getConnector() {

@@ -25,6 +25,7 @@ public class GameInitNotificationHandler implements MessageHandler<GameInitNotif
         LOGGER.info("GameInit");
 
         try {
+            LOGGER.info("Send PlaceShipsRequest");
             connector.sendMessageToServer(new PlaceShipsRequest(new HashMap<Integer, PlacementInfo>(){{
                 put(0,new PlacementInfo(new Point2D(2,2), Rotation.NONE));
             }}));

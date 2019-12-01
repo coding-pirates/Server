@@ -23,6 +23,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -38,25 +39,21 @@ public class ClientManager implements ConnectionHandler, Translator {
 
     /**
      * maps client id to client
-     * <p>
-     * dont use this attribute. Use clients()
      */
     @Nonnull
-    private final Map<Integer, Client> clients = Maps.newHashMap();
+    private final Map<Integer, Client> clients = Collections.synchronizedMap(Maps.newHashMap());
+
     /**
      * maps client id to player
-     * <p>
-     * dont use this attribute. Use player()
      */
     @Nonnull
-    private final Map<Integer, Client> player = Maps.newHashMap();
+    private final Map<Integer, Client> player = Collections.synchronizedMap(Maps.newHashMap());
+
     /**
      * maps client id to spectator
-     * <p>
-     * dont use this attribute. Use spectator()
      */
     @Nonnull
-    private final Map<Integer, Client> spectator = Maps.newHashMap();
+    private final Map<Integer, Client> spectator = Collections.synchronizedMap(Maps.newHashMap());
 
     @Inject
     public ClientManager(@Nonnull ServerConnectionManager connectionManager) {
@@ -74,19 +71,18 @@ public class ClientManager implements ConnectionHandler, Translator {
     @Nonnull
     public Client create(int id,@Nonnull String name,@Nonnull ClientType clientType) throws InvalidActionException {
         LOGGER.debug(Markers.CLIENT, "create client with id: {}, type {}", id, clientType);
-        if (this.clients().containsKey(id)) {
+        if (this.clients.containsKey(id)) {
             throw new InvalidActionException("game.clientManager.createClient.idExists");
         }
 
         Client client = new Client(id, name);
-
-        this.clients().putIfAbsent(id, client);
+        this.clients.putIfAbsent(id, client);
         switch (clientType) {
             case PLAYER:
-                this.player().putIfAbsent(id, client);
+                this.player.putIfAbsent(id, client);
                 break;
             case SPECTATOR:
-                this.spectator().putIfAbsent(id, client);
+                this.spectator.putIfAbsent(id, client);
                 break;
         }
         return client;
@@ -98,9 +94,9 @@ public class ClientManager implements ConnectionHandler, Translator {
      * @param clientId
      */
     public void disconnect(int clientId) {
-        this.clients().remove(clientId);
-        this.player().remove(clientId);
-        this.spectator().remove(clientId);
+        this.clients.remove(clientId);
+        this.player.remove(clientId);
+        this.spectator.remove(clientId);
 
     }
 
@@ -111,7 +107,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      */
     public void sendMessageToAll(Message message) {
         try {
-            for (int id : this.clients().keySet()) {
+            for (int id : this.clients.keySet()) {
                 this.connectionManager.send(new IntId(id), message);
             }
         } catch (IOException e) {
@@ -204,9 +200,9 @@ public class ClientManager implements ConnectionHandler, Translator {
      */
     @Nonnull
     public ClientType getClientTypeFromID(int id) throws InvalidActionException {
-        if (this.player().containsKey(id))
+        if (this.player.containsKey(id))
             return ClientType.PLAYER;
-        else if (this.spectator().containsKey(id))
+        else if (this.spectator.containsKey(id))
             return ClientType.SPECTATOR;
         throw new InvalidActionException("game.clientManager.clientNotExist");
     }
@@ -216,7 +212,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      */
     @Nullable
     public Client getClient(int id) {
-        return this.clients().get(id);
+        return this.clients.get(id);
     }
 
     @Override
@@ -228,33 +224,4 @@ public class ClientManager implements ConnectionHandler, Translator {
         }
     }
 
-    /**
-     * @return {@link #clients} as Thread synchronized object
-     */
-    @Nonnull
-    private Map<Integer, Client> clients() {
-        synchronized (clients) {
-            return clients;
-        }
-    }
-
-    /**
-     * @return {@link #player} as Thread synchronized object
-     */
-    @Nonnull
-    private Map<Integer, Client> player() {
-        synchronized (this.player) {
-            return this.player;
-        }
-    }
-
-    /**
-     * @return {@link #spectator} as Thread synchronized object
-     */
-    @Nonnull
-    private Map<Integer, Client> spectator() {
-        synchronized (this.spectator) {
-            return spectator;
-        }
-    }
 }

@@ -37,62 +37,62 @@ public class GameHandler implements Translator {
      * maps client id to player
      */
     @Nonnull
-    private final Map<Integer, Client> player = Maps.newHashMap();
+    private final Map<Integer, Client> player = Collections.synchronizedMap(Maps.newHashMap());
     /**
      * maps client id to spectator
      */
     @Nonnull
-    private final Map<Integer, Client> spectator = Maps.newHashMap();
+    private final Map<Integer, Client> spectator = Collections.synchronizedMap(Maps.newHashMap());
     /**
      * maps player id to his field
      */
     @Nonnull
-    private final Map<Integer, Field> fields = Maps.newHashMap();
+    private final Map<Integer, Field> fields = Collections.synchronizedMap(Maps.newHashMap());
     /**
      * maps client id to shots
      */
     @Nonnull
-    private final Map<Integer, Collection<Shot>> shots = Maps.newHashMap();
+    private final Map<Integer, Collection<Shot>> shots = Collections.synchronizedMap(Maps.newHashMap());
     /**
      * maps player id to players ships
      */
     @Nonnull
-    private final Map<Integer, Map<Integer, Ship>> ships = Maps.newHashMap();
+    private final Map<Integer, Map<Integer, Ship>> ships = Collections.synchronizedMap(Maps.newHashMap());
     /**
      * maps player id to players ship placement
      */
     @Nonnull
-    private final Map<Integer, Map<Integer, PlacementInfo>> startShip = Maps.newHashMap();
+    private final Map<Integer, Map<Integer, PlacementInfo>> startShip = Collections.synchronizedMap(Maps.newHashMap());
     /**
      * maps player id to players score
      */
     @Nonnull
-    private final Map<Integer, Integer> score = Maps.newHashMap();
+    private final Map<Integer, Integer> score = Collections.synchronizedMap(Maps.newHashMap());
     /**
      * list of all hit shots
      */
     @Nonnull
-    private final List<Shot> hitShots = Lists.newArrayList();
+    private final List<Shot> hitShots = Collections.synchronizedList(Lists.newArrayList());
     /**
      * list of all missed shots
      */
     @Nonnull
-    private final List<Shot> missedShots = Lists.newArrayList();
+    private final List<Shot> missedShots = Collections.synchronizedList(Lists.newArrayList());
     /**
      * list of all shots that result in a sunken ship
      */
     @Nonnull
-    private final List<Shot> sunkShots = Lists.newArrayList();
+    private final List<Shot> sunkShots = Collections.synchronizedList(Lists.newArrayList());
     /**
      * list of all sunken ships
      */
     @Nonnull
-    private final List<Ship> sunkenShips = Lists.newArrayList();
+    private final List<Ship> sunkenShips = Collections.synchronizedList(Lists.newArrayList());
     /**
      * maps from ship to shots that hit the ship
      */
     @Nonnull
-    private final Map<Ship, List<Shot>> shipToShots = Maps.newHashMap();
+    private final Map<Ship, List<Shot>> shipToShots = Collections.synchronizedMap(Maps.newHashMap());
 
     public GameHandler(@Nonnull String name, int id, @Nonnull Configuration config, boolean tournament, @Nonnull ClientManager clientManager) {
         this.game = new Game(name, id, GameState.LOBBY, config, tournament);
@@ -110,7 +110,7 @@ public class GameHandler implements Translator {
                 if (getPlayers().size() >= getGame().getConfig().getMaxPlayerCount())
                     throw new InvalidActionException("game.isFull");
                 player().putIfAbsent(client.getId(), client);
-                getFields().putIfAbsent(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth()));
+                getFields().putIfAbsent(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(),client.getId()));
                 getGame().addPlayer();
                 break;
             case SPECTATOR:
@@ -142,23 +142,21 @@ public class GameHandler implements Translator {
     @Nonnull
     public List<Client> getAllClients() {
         List<Client> clients = Lists.newArrayList();
-        clients.addAll(getPlayers());
-        clients.addAll(getSpectators());
+        if(getPlayers().size() > 0)
+            clients.addAll(getPlayers());
+        if(getSpectators().size() > 0)
+            clients.addAll(getSpectators());
         return clients;
     }
 
     @Nonnull
     private Map<Integer, Client> player() {
-        synchronized (player) {
-            return player;
-        }
+        return player;
     }
 
     @Nonnull
     private Map<Integer, Client> spectator() {
-        synchronized (spectator) {
-            return spectator;
-        }
+        return spectator;
     }
 
     /**
@@ -166,30 +164,22 @@ public class GameHandler implements Translator {
      */
     @Nonnull
     public Collection<Client> getPlayers() {
-        synchronized (player) {
-            return player.values();
-        }
+        return player.values();
     }
 
     @Nonnull
     public Collection<Client> getSpectators() {
-        synchronized (spectator) {
-            return spectator.values();
-        }
+        return spectator.values();
     }
 
     @Nonnull
     public Map<Integer, Field> getFields() {
-        synchronized (fields) {
-            return fields;
-        }
+        return fields;
     }
 
     @Nonnull
     public Map<Integer, Map<Integer, Ship>> getShips() {
-        synchronized (ships) {
-            return ships;
-        }
+        return ships;
     }
 
     /**
@@ -197,9 +187,7 @@ public class GameHandler implements Translator {
      */
     @Nonnull
     public Game getGame() {
-        synchronized (game) {
-            return game;
-        }
+        return game;
     }
 
     /**
@@ -207,9 +195,7 @@ public class GameHandler implements Translator {
      */
     @Nonnull
     private Configuration getConfiguration() {
-        synchronized (game) {
-            return game.getConfig();
-        }
+        return game.getConfig();
     }
 
     /**
@@ -217,9 +203,7 @@ public class GameHandler implements Translator {
      */
     @Nonnull
     public List<Shot> getHitShots() {
-        synchronized (hitShots) {
-            return hitShots;
-        }
+        return hitShots;
     }
 
     /**
@@ -227,9 +211,7 @@ public class GameHandler implements Translator {
      */
     @Nonnull
     public List<Shot> getMissedShots() {
-        synchronized (missedShots) {
-            return missedShots;
-        }
+        return missedShots;
     }
 
     /**
@@ -237,9 +219,7 @@ public class GameHandler implements Translator {
      */
     @Nonnull
     public List<Shot> getSunkShots(){
-        synchronized (sunkShots) {
-            return sunkShots;
-        }
+        return sunkShots;
     }
 
     /**
@@ -247,9 +227,9 @@ public class GameHandler implements Translator {
      */
     @Nonnull
     public List<Shot> getShots() {
-                List<Shot> shots = Lists.newArrayList(this.getHitShots());
-                shots.addAll(this.getMissedShots());
-                return shots;
+        List<Shot> shots = Lists.newArrayList(this.getHitShots());
+        shots.addAll(this.getMissedShots());
+        return shots;
     }
 
     /**
@@ -257,9 +237,7 @@ public class GameHandler implements Translator {
      */
     @Nonnull
     public Map<Integer, Map<Integer, PlacementInfo>> getStartShip() {
-        synchronized (startShip) {
-            return startShip;
-        }
+        return startShip;
     }
 
     /**
@@ -267,19 +245,7 @@ public class GameHandler implements Translator {
      */
     @Nonnull
     public Map<Integer, Integer> getScore() {
-        synchronized (score) {
-            return score;
-        }
-    }
-
-    /**
-     * @return all sunken ships
-     */
-    @Nonnull
-    public List<Ship> getSunkenShips() {
-        synchronized (sunkenShips) {
-            return sunkenShips;
-        }
+        return score;
     }
 
     /**
@@ -311,7 +277,7 @@ public class GameHandler implements Translator {
         if(shots.size() > getConfiguration().getShotCount()){
             throw new NotAllowedException("game.player.toManyShots");
         }
-        this.shots.putIfAbsent(clientId,shots);
+        this.shots.put(clientId,shots);
         if(shots.size() < getConfiguration().getShotCount()){
             throw new InvalidActionException("game.player.toLessShots");
         }
@@ -349,8 +315,10 @@ public class GameHandler implements Translator {
         if(!game.getState().equals(GameState.IN_PROGRESS))return;
         switch (this.stage) {
             case START:
-                if (System.currentTimeMillis() - timeStamp >= timeStamp + 1000L) {
+                if (timeStamp < System.currentTimeMillis() - 1000L) {
                     this.startGame();
+                    this.sendUpdateNotification();
+                    this.createEmptyScore();
                 }
             case PLACESHIPS:
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().getRoundTime()) {
@@ -403,9 +371,10 @@ public class GameHandler implements Translator {
      * @return {@code false} if player count is under 2
      */
     public boolean launchGame() {
-        if(this.player.size() < 2)
-            return false;
         if (this.game.getState() == GameState.LOBBY) {
+            if (this.player.size() < 2) {
+                return false;
+            }
             this.game.setState(GameState.IN_PROGRESS);
             this.stage = GameStage.START;
             this.timeStamp = System.currentTimeMillis();
@@ -464,8 +433,7 @@ public class GameHandler implements Translator {
         if(this.game.getState() != GameState.FINISHED){
             this.game.setState(GameState.FINISHED);
             if(!points){
-                this.score.clear();
-                this.player.forEach((id,client)->score.put(id,0));
+                this.createEmptyScore();
             }
             this.sendUpdateNotification();
             this.getAllClients().forEach(client ->this.clientManager.disconnect(client.getId()));
@@ -484,7 +452,7 @@ public class GameHandler implements Translator {
             for (Map.Entry<Integer, PlacementInfo> shipEntry : clientEntry.getValue().entrySet()) {
                 Ship ship = field.placeShip(ships.get(shipEntry.getKey()), shipEntry.getValue());
                 if(ship != null) {//TODO ship can't be placed
-                    this.ships.computeIfAbsent(clientEntry.getKey(), id -> Maps.newHashMap()).putIfAbsent(shipEntry.getKey(), ship);
+                    this.ships.computeIfAbsent(clientEntry.getKey(), id -> Maps.newHashMap()).put(shipEntry.getKey(), ship);
                 }
             }
             if(clientEntry.getValue().size() < getConfiguration().getShips().size()){
@@ -500,42 +468,39 @@ public class GameHandler implements Translator {
      */
     private void performShots() {
         List<Ship> sunkShips = Lists.newArrayList();
-        Map<HitType,Map<Shot, List<Integer>>> hitToPoint = Maps.newHashMap();
-            for (Map.Entry<Integer, Collection<Shot>> entry : shots.entrySet()) {
-                for (Shot shot : entry.getValue()) {
-                    if(shot.getClientId() == entry.getKey()){
-                        this.clientManager.sendMessageToInt(new ErrorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID,translate("game.gameManager.shotOwnShip")),entry.getKey());
-                        break;
-                    }
-                    ShotHit hit = fields.get(shot.getClientId()).hit(shot);
-                    switch (hit.getHitType()) {
-                        case HIT:
-                            hitToPoint.computeIfAbsent(HitType.HIT,hitType -> Maps.newHashMap()).computeIfAbsent(hit.getShot(),point2D -> Lists.newArrayList()).add(entry.getKey());
-
-                            this.hitShots.add(shot);
-                            this.shipToShots.computeIfAbsent(hit.getShip(),(ship -> Lists.newArrayList())).add(hit.getShot());
-                            break;
-                        case SUNK:
-                            hitToPoint.computeIfAbsent(HitType.SUNK,hitType -> Maps.newHashMap()).computeIfAbsent(hit.getShot(),point2D -> Lists.newArrayList()).add(entry.getKey());
-
-                            this.hitShots.add(shot);
-                            this.shipToShots.computeIfAbsent(hit.getShip(),(ship -> Lists.newArrayList())).add(hit.getShot());
-                            sunkShips.add(hit.getShip());
-                            break;
-                        case NONE:
-                            for (Shot shot1:this.hitShots){
-                                if(shot1.equals(shot)){
-                                    this.clientManager.sendMessageToInt(new ErrorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID,translate("game.gameManager.alreadyHit")), entry.getKey());
-                                    break;
-                                }
-                            }
-                        default:
-                            this.missedShots.add(shot);
-                            break;
-                    }
+        Map<HitType, Map<Shot, List<Integer>>> hitToPoint = Maps.newHashMap();
+        for (Map.Entry<Integer, Collection<Shot>> entry : shots.entrySet()) {
+            for (Shot shot : entry.getValue()) {
+                if (shot.getClientId() == entry.getKey()) {
+                    this.clientManager.sendMessageToInt(new ErrorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.shotOwnShip")), entry.getKey());
+                    continue;
                 }
+                ShotHit hit = fields.get(shot.getClientId()).hit(shot);
+                switch (hit.getHitType()) {
+                    case HIT:
+                        hitToPoint.computeIfAbsent(HitType.HIT, hitType -> Maps.newHashMap()).computeIfAbsent(hit.getShot(), shot1 -> Lists.newArrayList()).add(entry.getKey());
+                        this.hitShots.add(shot);
+                        this.shipToShots.computeIfAbsent(hit.getShip(), (ship -> Lists.newArrayList())).add(hit.getShot());
+                        break;
+                    case SUNK:
+                        hitToPoint.computeIfAbsent(HitType.SUNK, hitType -> Maps.newHashMap()).computeIfAbsent(hit.getShot(), point2D -> Lists.newArrayList()).add(entry.getKey());
+                        this.hitShots.add(shot);
+                        this.shipToShots.computeIfAbsent(hit.getShip(), (ship -> Lists.newArrayList())).add(hit.getShot());
+                        sunkShips.add(hit.getShip());
+                        break;
+                    case NONE:
+                        for (Shot shot1 : this.hitShots) {
+                            if (shot1.equals(shot)) {
+                                this.clientManager.sendMessageToInt(new ErrorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.alreadyHit")), entry.getKey());
+                                break;
+                            }
+                        }
+                    default:
+                        this.missedShots.add(shot);
+                        break;
+                }
+            }
         }
-
         //add points for each hit to the player who shot a Shot at a position
         if(hitToPoint.containsKey(HitType.HIT)){
             for(Map.Entry<Shot, List<Integer>> entry : hitToPoint.get(HitType.HIT).entrySet()) {
@@ -563,14 +528,18 @@ public class GameHandler implements Translator {
                         }));
             }
         }
+        Map<Integer,List<Integer>> remove = Maps.newHashMap();
         this.ships.forEach((clientId, ships) -> ships.forEach((shipId, ship) -> {
             if(sunkShips.contains(ship)){
-                ships.remove(shipId);
+                remove.computeIfAbsent(clientId, id -> Lists.newArrayList()).add(shipId);
             }
+        }));
+        remove.forEach((clientId, ships) -> ships.forEach( ship -> this.ships.get(clientId).remove(ship)));
+        this.ships.forEach((clientId, ships)->{
             if(ships.isEmpty()){
                 this.deadPlayer.add(clientId);
             }
-        }));
+        });
         sunkShips.forEach((ship -> this.sunkShots.addAll(this.shipToShots.get(ship))));
         this.shots.clear();
     }
@@ -579,7 +548,7 @@ public class GameHandler implements Translator {
      * removed dead player
      * @param clientId
      */
-    private void removeDeadPlayer(int clientId){
+    private void removeDeadPlayer(int clientId){//TODO what should be done if player is dead
         this.removeClient(clientId);
         clientManager.sendMessageToClients(new LeaveNotification(clientId), this.getAllClients());
     }
@@ -626,6 +595,11 @@ public class GameHandler implements Translator {
      */
     private void placeRandomShips(int client, Map<Integer, PlacementInfo> alreadyPlaced){
         //TODO fill
+    }
+
+    private void createEmptyScore(){
+        this.score.clear();
+        this.player.forEach((id,client)->score.put(id,0));
     }
 
     public GameStage getStage() {
