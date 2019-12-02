@@ -5,7 +5,9 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
+import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
+import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.IntIdManager;
 import de.upb.codingpirates.battleships.network.message.notification.ContinueNotification;
 import de.upb.codingpirates.battleships.network.message.notification.PauseNotification;
@@ -61,7 +63,6 @@ public class GameManager {
      * @return {@code -1} if game was created successful, {@code > 0} if the selected field size of the Configuration is too small
      */
     public int createGame(@Nonnull Configuration configuration, @Nonnull String name, boolean tournament) {
-        LOGGER.info(configuration.getShipTypes().get(0));
         int size = checkField(configuration);
         if (size != -1) {
             return size;
@@ -80,11 +81,14 @@ public class GameManager {
      * @param clientType
      * @throws InvalidActionException if game does not exist
      */
-    public void addClientToGame(int gameId, @Nonnull Client client, @Nonnull ClientType clientType) throws InvalidActionException {
+    public void addClientToGame(int gameId, @Nonnull Client client, @Nonnull ClientType clientType) throws GameException {
         LOGGER.debug(Markers.GAME, "Adding client {}, with type {}, to game {}", client.getId(), clientType, gameId);
+        if(this.clientToGame.containsKey(client.getId())){
+            throw new NotAllowedException("game.gameManager.alreadyIngame");
+        }
         if (this.games.containsKey(gameId)) {
             this.games.get(gameId).addClient(clientType, client);
-            this.clientToGame.putIfAbsent(client.getId(), gameId);
+            this.clientToGame.put(client.getId(), gameId);
         } else {
             LOGGER.error(Markers.GAME, "Can't find game {}", gameId);
             throw new InvalidActionException("game.gameManager.noGame");
