@@ -61,6 +61,7 @@ public class GameManager {
      * @return {@code -1} if game was created successful, {@code > 0} if the selected field size of the Configuration is too small
      */
     public int createGame(@Nonnull Configuration configuration, @Nonnull String name, boolean tournament) {
+        LOGGER.info(configuration.getShipTypes().get(0));
         int size = checkField(configuration);
         if (size != -1) {
             return size;

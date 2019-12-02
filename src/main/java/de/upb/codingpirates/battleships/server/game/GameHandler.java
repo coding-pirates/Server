@@ -10,6 +10,7 @@ import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
+import de.upb.codingpirates.battleships.server.util.Markers;
 import de.upb.codingpirates.battleships.server.util.Properties;
 import de.upb.codingpirates.battleships.server.util.Translator;
 import org.apache.logging.log4j.LogManager;
@@ -107,16 +108,16 @@ public class GameHandler implements Translator {
     public void addClient(@Nonnull ClientType type, @Nonnull Client client) throws InvalidActionException {
         switch (type) {
             case PLAYER:
-                if (getPlayers().size() >= getGame().getConfig().getMaxPlayerCount())
+                if (player.size() >= game.getConfig().getMaxPlayerCount())
                     throw new InvalidActionException("game.isFull");
-                player().putIfAbsent(client.getId(), client);
+                player.putIfAbsent(client.getId(), client);
                 getFields().putIfAbsent(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(),client.getId()));
-                getGame().addPlayer();
+                game.addPlayer();
                 break;
             case SPECTATOR:
-                if (spectator().size() >= Properties.MAXSPECTATOR)
+                if (spectator.size() >= Properties.MAXSPECTATOR)
                     throw new InvalidActionException("game.isFull");
-                spectator().putIfAbsent(client.getId(), client);
+                spectator.putIfAbsent(client.getId(), client);
         }
     }
 
@@ -124,15 +125,14 @@ public class GameHandler implements Translator {
      * removes from the game including all statistics
      */
     public void removeClient(int client) {
-            if (this.player().containsKey(client)) {
-                player().remove(client);
-                getFields().remove(client);
-                getGame().removePlayer();
-                getScore().remove(client);
-                getShips().remove(client);
-                getStartShip().remove(client);
+            if (this.player.containsKey(client)) {
+                this.player.remove(client);
+                this.fields.remove(client);
+                this.game.removePlayer();
+                this.ships.remove(client);
+                this.startShip.remove(client);
             }
-            this.spectator().remove(client);
+            this.spectator.remove(client);
 
     }
 
@@ -142,9 +142,9 @@ public class GameHandler implements Translator {
     @Nonnull
     public List<Client> getAllClients() {
         List<Client> clients = Lists.newArrayList();
-        if(getPlayers().size() > 0)
+        if(player.size() > 0)
             clients.addAll(getPlayers());
-        if(getSpectators().size() > 0)
+        if(spectator.size() > 0)
             clients.addAll(getSpectators());
         return clients;
     }
@@ -336,6 +336,7 @@ public class GameHandler implements Translator {
                     this.sendUpdateNotification();
 
                     this.deadPlayer.forEach(clientId -> {
+                        LOGGER.info(Markers.GAME, "{} has lost",clientId);
                         this.ships.remove(clientId);
                         this.removeDeadPlayer(clientId);
                     });
@@ -487,6 +488,7 @@ public class GameHandler implements Translator {
                         this.hitShots.add(shot);
                         this.shipToShots.computeIfAbsent(hit.getShip(), (ship -> Lists.newArrayList())).add(hit.getShot());
                         sunkShips.add(hit.getShip());
+                        LOGGER.info(Markers.INGAME,"Ship has been sunk of {}",shot.getClientId());
                         break;
                     case NONE:
                         for (Shot shot1 : this.hitShots) {

@@ -1,10 +1,11 @@
 package de.upb.codingpirates.battleships.server.test;
 
 
+import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import de.upb.codingpirates.battleships.logic.ClientType;
+import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.NetworkApplication;
 import de.upb.codingpirates.battleships.network.Properties;
@@ -15,14 +16,18 @@ import de.upb.codingpirates.battleships.network.message.request.GameJoinPlayerRe
 import de.upb.codingpirates.battleships.network.message.request.LobbyRequest;
 import de.upb.codingpirates.battleships.network.message.request.ServerJoinRequest;
 import de.upb.codingpirates.battleships.network.network.module.ClientNetworkModule;
+import de.upb.codingpirates.battleships.server.network.ServerApplication;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.HashMap;
 
 public class ServerTests {
+    public static final Configuration DEFAULT = new Configuration(4, 10, 10, 4, 1, 1, 1000, 100, new HashMap<Integer, ShipType>(){{put(0,new ShipType(Lists.newArrayList(new Point2D(1,1),new Point2D(2,1),new Point2D(1,2))));}}, 1, PenaltyType.POINTLOSS);
+
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static NetworkApplication client;
@@ -33,15 +38,24 @@ public class ServerTests {
     private static int id2;
     private static int lobbySize;
 
-    public static boolean gameinit1;
-    public static boolean gameinit2;
-
-    public static boolean gamestart1;
-    public static boolean gamestart2;
-
     @Test
     public void test() throws IllegalAccessException, IOException, InstantiationException {
+        new Thread(() -> {
+            ServerApplication server = null;
+            try {
+                server = new ServerApplication();
+            } catch (InstantiationException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            server.getGameManager().createGame(DEFAULT, "test", false);
+            long timer = System.currentTimeMillis();
+            while (timer > System.currentTimeMillis() - 20000){
+            }
+        }).start();
         long timer = 0;
+        timer = System.currentTimeMillis();
+        while (timer > System.currentTimeMillis() - 1000){
+        }
         LOGGER.debug("start connection test");
 
         client = ServerTests.Client.main();
@@ -72,17 +86,16 @@ public class ServerTests {
         while (timer > System.currentTimeMillis() - 1000){
         }
 
+
         connector.sendMessageToServer(new GameJoinPlayerRequest(lobbySize-1));
         connector2.sendMessageToServer(new GameJoinPlayerRequest(lobbySize-1));
 
         timer = System.currentTimeMillis();
-        while (timer > System.currentTimeMillis() - 50000){
+        while (timer > System.currentTimeMillis() - 20000){
         }
 
-        while (true){
 
-        }
-//        LOGGER.debug("finished connection test");
+        LOGGER.debug("finished connection test");
     }
 
     public static ClientConnector getConnector() {
