@@ -563,10 +563,26 @@ public final class ConfigurationController extends AbstractController<Parent> {
     }
     // </editor-fold>
 
+    private void displayInvalidNameAlert(final String invalidName) {
+        final Alert alert = new Alert(AlertType.ERROR);
+
+        alert.setContentText(resourceBundle.getString("game.name.invalidNameAlert.contentText"));
+        alert.setTitle(resourceBundle.getString("game.name.invalidNameAlert.title"));
+        alert.setHeaderText(resourceBundle.getString("game.name.invalidNameAlert.header"));
+
+        alert.showAndWait();
+    }
+
     @FXML
     @SuppressWarnings("unused")
     private void onStartNewGameButtonAction() {
         final Configuration configuration;
+
+        final String gameName = gameNameTextField.getText().trim();
+        if (gameName.isEmpty()) {
+            displayInvalidNameAlert(gameName);
+            return;
+        }
 
         try {
             configuration = getConfigurationFromControls();
