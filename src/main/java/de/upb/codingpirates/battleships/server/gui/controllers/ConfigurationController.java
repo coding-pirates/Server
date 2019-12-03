@@ -1,15 +1,13 @@
 package de.upb.codingpirates.battleships.server.gui.controllers;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.IntStream;
-
+import com.google.gson.Gson;
+import com.google.inject.Inject;
+import de.upb.codingpirates.battleships.logic.Configuration;
+import de.upb.codingpirates.battleships.logic.PenaltyType;
+import de.upb.codingpirates.battleships.logic.Point2D;
+import de.upb.codingpirates.battleships.logic.ShipType;
+import de.upb.codingpirates.battleships.server.gui.control.Alerts;
+import de.upb.codingpirates.battleships.server.network.ServerApplication;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -22,22 +20,20 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
-
-import com.google.gson.Gson;
-
-import com.google.inject.Inject;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import de.upb.codingpirates.battleships.logic.util.Configuration;
-import de.upb.codingpirates.battleships.logic.util.PenaltyType;
-import de.upb.codingpirates.battleships.logic.util.Point2D;
-import de.upb.codingpirates.battleships.logic.util.ShipType;
-import de.upb.codingpirates.battleships.server.gui.control.Alerts;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -104,6 +100,8 @@ public final class ConfigurationController extends AbstractController<Parent> {
     private TextField gameNameTextField;
 
     private final Gson gson;
+
+    private ServerApplication server;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -587,10 +585,17 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
         try {
             configuration = getConfigurationFromControls();
+            if(server == null){
+                server = new ServerApplication();
+            }
         } catch (final InvalidShipTypeConfigurationException exception) {
             displayInvalidConfigurationAlert(exception.invalidConfiguration);
             return;
+        } catch (IllegalAccessException | InstantiationException e) {
+            e.printStackTrace();
+            return;
         }
+        server.getGameManager().createGame(configuration,gameNameTextField.getText(),false);
     }
 
     /**
@@ -656,7 +661,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
             int i = 0;
             for (ShipType shipType : shipTypes) {
-                shipTypeConfigurations.add(new ShipTypeConfiguration(toShipTypeLabel(i), shipType.getPosition()));
+                shipTypeConfigurations.add(new ShipTypeConfiguration(toShipTypeLabel(i), shipType.getPositions()));
                 ++i;
             }
             return shipTypeConfigurations;

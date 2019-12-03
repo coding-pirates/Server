@@ -5,9 +5,8 @@ dependencies {
     implementation project(":network")
     implementation project(":logic")
 
-    compile group: 'org.jetbrains', name: 'annotations', version: '18.0.0'
-
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.1'
+    implementation group: 'com.google.inject', name: 'guice', version: '4.2.1'
+    implementation group: 'org.jetbrains', name: 'annotations', version: '18.0.0'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.1'
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.5.2'
     implementation group: 'com.google.guava', name: 'guava', version: '28.1-jre'
