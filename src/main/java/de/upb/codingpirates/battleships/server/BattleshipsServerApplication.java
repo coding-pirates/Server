@@ -1,20 +1,24 @@
 package de.upb.codingpirates.battleships.server;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import de.upb.codingpirates.battleships.server.gui.util.ResourceBundleWrapper;
+import java.io.IOException;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
+import de.upb.codingpirates.battleships.server.gui.util.ResourceBundleWrapper;
 
 /**
  * @author Andre Blanke
