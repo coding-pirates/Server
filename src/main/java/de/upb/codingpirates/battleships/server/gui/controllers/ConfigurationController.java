@@ -43,7 +43,8 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 /**
- * The controller associated with the {@code main.fxml} file.
+ * The controller associated with the {@code configuration.fxml} file which allows the creation of
+ * {@link Configuration} objects and starting of configured games.
  *
  * @author Andre Blanke
  */
@@ -107,7 +108,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Inject
-    public ConfigurationController(@NotNull final Gson gson) {
+    private ConfigurationController(@NotNull final Gson gson) {
         this.gson = gson;
     }
 
