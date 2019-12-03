@@ -18,6 +18,7 @@ import de.upb.codingpirates.battleships.network.message.request.ServerJoinReques
 import de.upb.codingpirates.battleships.network.network.module.ClientNetworkModule;
 import de.upb.codingpirates.battleships.network.util.DefaultReaderMethod;
 import de.upb.codingpirates.battleships.network.util.ClientReaderMethod;
+import de.upb.codingpirates.battleships.server.network.ServerApplication;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
