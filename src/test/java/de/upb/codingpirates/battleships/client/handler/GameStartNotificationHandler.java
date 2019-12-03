@@ -21,7 +21,7 @@ public class GameStartNotificationHandler implements MessageHandler<GameStartNot
     @Override
     public void handle(GameStartNotification message, Id connectionId) throws GameException {
         try {
-            clientConnector.sendMessageToServer(new ShotsRequest(Lists.newArrayList(new Shot(1, new Point2D(3, 4)), new Shot(1, new Point2D(4, 4)), new Shot(0, new Point2D(3, 4)), new Shot(0, new Point2D(4, 4)))));
+            clientConnector.sendMessageToServer(new ShotsRequest(Lists.newArrayList(new Shot(1, new Point2D(3, 4)), new Shot(1, new Point2D(4, 4)), new Shot(2, new Point2D(3, 4)), new Shot(2, new Point2D(4, 4)))));
         } catch (IOException e) {
             e.printStackTrace();
         }

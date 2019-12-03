@@ -24,6 +24,7 @@ public class GameInitNotificationHandler implements MessageHandler<GameInitNotif
     public void handle(GameInitNotification message, Id connectionId) throws GameException {
         LOGGER.info("GameInit");
 
+        ServerTests.clients = message.getClientList();
         try {
             LOGGER.info("Send PlaceShipsRequest");
             connector.sendMessageToServer(new PlaceShipsRequest(new HashMap<Integer, PlacementInfo>(){{

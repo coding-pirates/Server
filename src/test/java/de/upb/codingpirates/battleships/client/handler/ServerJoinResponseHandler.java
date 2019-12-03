@@ -23,6 +23,7 @@ public class ServerJoinResponseHandler implements MessageHandler<ServerJoinRespo
         LOGGER.debug("handle ServerJoinResponse with id {}",message.getClientId());
         dispatcher.setConnectionId(message.getClientId());
         try {
+            ServerTests.ids.add(message.getClientId());
             ServerTests.getConnector().sendMessageToServer(new LobbyRequest());
         } catch (IOException e) {
             e.printStackTrace();

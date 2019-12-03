@@ -110,8 +110,8 @@ public class GameHandler implements Translator {
             case PLAYER:
                 if (player.size() >= game.getConfig().getMaxPlayerCount())
                     throw new InvalidActionException("game.isFull");
-                player.putIfAbsent(client.getId(), client);
-                getFields().putIfAbsent(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(),client.getId()));
+                player.put(client.getId(), client);
+                fields.put(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(),client.getId()));
                 game.addPlayer();
                 break;
             case SPECTATOR:
@@ -133,7 +133,6 @@ public class GameHandler implements Translator {
                 this.startShip.remove(client);
             }
             this.spectator.remove(client);
-
     }
 
     /**
@@ -149,16 +148,6 @@ public class GameHandler implements Translator {
         return clients;
     }
 
-    @Nonnull
-    private Map<Integer, Client> player() {
-        return player;
-    }
-
-    @Nonnull
-    private Map<Integer, Client> spectator() {
-        return spectator;
-    }
-
     /**
      * @return all players
      */
@@ -170,11 +159,6 @@ public class GameHandler implements Translator {
     @Nonnull
     public Collection<Client> getSpectators() {
         return spectator.values();
-    }
-
-    @Nonnull
-    public Map<Integer, Field> getFields() {
-        return fields;
     }
 
     @Nonnull
@@ -276,6 +260,12 @@ public class GameHandler implements Translator {
     public void addShotPlacement(int clientId,@Nonnull Collection<Shot> shots) throws GameException {
         if(shots.size() > getConfiguration().getShotCount()){
             throw new NotAllowedException("game.player.toManyShots");
+        }
+        for (Shot shot: shots){
+            if(!player.containsKey(shot.getClientId())){
+                shots.remove(shot);
+                LOGGER.warn("Player {} for shot from {} does not exist", shot.getClientId(), clientId);
+            }
         }
         this.shots.put(clientId,shots);
         if(shots.size() < getConfiguration().getShotCount()){

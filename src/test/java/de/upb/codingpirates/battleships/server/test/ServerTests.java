@@ -23,10 +23,12 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 public class ServerTests {
-    public static final Configuration DEFAULT = new Configuration(4, 10, 10, 4, 1, 1, 1000, 100, new HashMap<Integer, ShipType>(){{put(0,new ShipType(Lists.newArrayList(new Point2D(1,1),new Point2D(2,1),new Point2D(1,2))));}}, 1, PenaltyType.POINTLOSS);
+    public static final Configuration DEFAULT = new Configuration(4, 10, 10, 4, 1, 1, 10000, 100, new HashMap<Integer, ShipType>(){{put(0,new ShipType(Lists.newArrayList(new Point2D(1,1),new Point2D(2,1),new Point2D(1,2))));}}, 1, PenaltyType.POINTLOSS);
 
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -36,7 +38,9 @@ public class ServerTests {
     private static ClientConnector connector2;
     private static int id1;
     private static int id2;
+    public static List<Integer> ids = Lists.newArrayList();
     private static int lobbySize;
+    public static Collection<de.upb.codingpirates.battleships.logic.Client> clients;
 
     @Test
     public void test() throws IllegalAccessException, IOException, InstantiationException {
@@ -72,12 +76,14 @@ public class ServerTests {
         while (timer > System.currentTimeMillis() - 1000){
         }
 
+
         connector.sendMessageToServer(new ServerJoinRequest("peter", ClientType.PLAYER));
         connector2.sendMessageToServer(new ServerJoinRequest("hans", ClientType.PLAYER));
 
         timer = System.currentTimeMillis();
         while (timer > System.currentTimeMillis() - 1000){
         }
+
 
         connector.sendMessageToServer(new LobbyRequest());
         connector2.sendMessageToServer(new LobbyRequest());
@@ -91,11 +97,11 @@ public class ServerTests {
         connector2.sendMessageToServer(new GameJoinPlayerRequest(lobbySize-1));
 
         timer = System.currentTimeMillis();
-        while (timer > System.currentTimeMillis() - 20000){
+        while (true){
         }
 
 
-        LOGGER.debug("finished connection test");
+        //LOGGER.debug("finished connection test");
     }
 
     public static ClientConnector getConnector() {
