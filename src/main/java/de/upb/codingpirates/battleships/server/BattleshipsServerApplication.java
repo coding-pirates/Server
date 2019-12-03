@@ -5,6 +5,7 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -69,6 +70,12 @@ public final class BattleshipsServerApplication extends Application {
         loader.setControllerFactory(injector::getInstance);
 
         return loader.load();
+    }
+
+    @Override
+    public void init() {
+        /* Stop the application once the last Stage is closed. */
+        Platform.setImplicitExit(true);
     }
 
     @Override
