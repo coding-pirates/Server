@@ -4,6 +4,11 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 
+/**
+ * The controller associated with the {@code main.fxml} file.
+ *
+ * @author Andre Blanke
+ */
 public final class MainController extends AbstractController<Parent> {
 
     @FXML

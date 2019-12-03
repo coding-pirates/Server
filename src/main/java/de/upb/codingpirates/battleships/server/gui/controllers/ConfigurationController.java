@@ -39,7 +39,8 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 /**
- * The controller associated with the {@code main.fxml} file.
+ * The controller associated with the {@code configuration.fxml} file which allows the creation of
+ * {@link Configuration} objects and starting of configured games.
  *
  * @author Andre Blanke
  */
@@ -105,7 +106,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Inject
-    public ConfigurationController(@NotNull final Gson gson) {
+    private ConfigurationController(@NotNull final Gson gson) {
         this.gson = gson;
     }
 
@@ -430,8 +431,8 @@ public final class ConfigurationController extends AbstractController<Parent> {
             shotCountSpinner.getValue(),
             hitPointsSpinner.getValue(),
             sunkPointsSpinner.getValue(),
-            roundTimeSpinner.getValue(),
-            visualizationTimeSpinner.getValue(),
+            (long) roundTimeSpinner.getValue()         * 1_000, /* Convert s to ms. */
+            (long) visualizationTimeSpinner.getValue() * 1_000,
             getShipTypesFromControls(),
             penaltyMinusPointsSpinner.getValue(),
             penaltyTypeComboBox.getSelectionModel().getSelectedItem()
@@ -470,12 +471,13 @@ public final class ConfigurationController extends AbstractController<Parent> {
                 .getValueFactory()
                 .setValue(configuration.getSunkPoints());
 
+        /* Convert ms to s. */
         roundTimeSpinner
                 .getValueFactory()
-                .setValue((int) configuration.getRoundTime());
+                .setValue((int) configuration.getRoundTime() / 1_000);
         visualizationTimeSpinner
                 .getValueFactory()
-                .setValue((int) configuration.getVisualizationTime());
+                .setValue((int) configuration.getVisualizationTime() / 1_000);
 
         setControlsFromShipTypes(configuration.getShipTypes());
 
@@ -560,10 +562,26 @@ public final class ConfigurationController extends AbstractController<Parent> {
     }
     // </editor-fold>
 
+    private void displayInvalidNameAlert(final String invalidName) {
+        final Alert alert = new Alert(AlertType.ERROR);
+
+        alert.setContentText(resourceBundle.getString("game.name.invalidNameAlert.contentText"));
+        alert.setTitle(resourceBundle.getString("game.name.invalidNameAlert.title"));
+        alert.setHeaderText(resourceBundle.getString("game.name.invalidNameAlert.header"));
+
+        alert.showAndWait();
+    }
+
     @FXML
     @SuppressWarnings("unused")
     private void onStartNewGameButtonAction() {
         final Configuration configuration;
+
+        final String gameName = gameNameTextField.getText().trim();
+        if (gameName.isEmpty()) {
+            displayInvalidNameAlert(gameName);
+            return;
+        }
 
         try {
             configuration = getConfigurationFromControls();

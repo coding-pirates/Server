@@ -1,32 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.SeparatorMenuItem?>
-<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.VBox?>
 
-<BorderPane
+<VBox
     xmlns:fx="http://javafx.com/fxml"
     fx:controller="de.upb.codingpirates.battleships.server.gui.controllers.MainController"
-    fx:id="root">
-  <top>
-    <MenuBar>
-      <Menu text="%menuBar.menu.file.text">
-        <MenuItem
-          onAction="#onExportConfigurationMenuItemAction"
-          text="%menuBar.menu.file.exportConfiguration.text"/>
-        <MenuItem
-          onAction="#onImportConfigurationMenuItemAction"
-          text="%menuBar.menu.file.importConfiguration.text"/>
-        <SeparatorMenuItem/>
-        <MenuItem
-          onAction="#onExitMenuItemAction"
-          text="%menuBar.menu.file.exit.text"/>
-      </Menu>
-    </MenuBar>
-  </top>
-  <right>
-    <fx:include fx:id="configuration" resources="lang.configuration" source="configuration.fxml"/>
-  </right>
-</BorderPane>
+    fx:id="root"
+    stylesheets="@/css/main.css">
+  <MenuBar>
+    <Menu text="%menuBar.menu.file.text">
+      <MenuItem
+        onAction="#onExportConfigurationMenuItemAction"
+        text="%menuBar.menu.file.exportConfiguration.text"/>
+      <MenuItem
+        onAction="#onImportConfigurationMenuItemAction"
+        text="%menuBar.menu.file.importConfiguration.text"/>
+      <SeparatorMenuItem/>
+      <MenuItem
+        onAction="#onExitMenuItemAction"
+        text="%menuBar.menu.file.exit.text"/>
+    </Menu>
+  </MenuBar>
+  <TabPane>
+    <Tab
+        closable="false"
+        text="%tab.overview.text">
+      <VBox>
+        <VBox>
+          <VBox.margin>
+            <Insets topRightBottomLeft="5"/>
+          </VBox.margin>
+          <Label
+            styleClass="table-header"
+            text="%overview.game.table.header">
+            <VBox.margin>
+              <Insets bottom="5"/>
+            </VBox.margin>
+          </Label>
+          <TableView>
+            <placeholder>
+              <Label text="%overview.game.table.placeholder"/>
+            </placeholder>
+          </TableView>
+        </VBox>
+        <VBox>
+          <VBox.margin>
+            <Insets topRightBottomLeft="5"/>
+          </VBox.margin>
+          <Label
+            styleClass="table-header"
+            text="%overview.player.table.header">
+            <VBox.margin>
+              <Insets bottom="5"/>
+            </VBox.margin>
+          </Label>
+          <TableView>
+            <placeholder>
+              <Label text="%overview.player.table.placeholder"/>
+            </placeholder>
+          </TableView>
+        </VBox>
+      </VBox>
+    </Tab>
+    <Tab
+        closable="false"
+        text="%tab.configuration.text">
+      <fx:include fx:id="configuration" resources="lang.configuration" source="configuration.fxml"/>
+    </Tab>
+  </TabPane>
+</VBox>
