@@ -433,8 +433,8 @@ public final class ConfigurationController extends AbstractController<Parent> {
             shotCountSpinner.getValue(),
             hitPointsSpinner.getValue(),
             sunkPointsSpinner.getValue(),
-            roundTimeSpinner.getValue(),
-            visualizationTimeSpinner.getValue(),
+            (long) roundTimeSpinner.getValue()         * 1_000, /* Convert s to ms. */
+            (long) visualizationTimeSpinner.getValue() * 1_000,
             getShipTypesFromControls(),
             penaltyMinusPointsSpinner.getValue(),
             penaltyTypeComboBox.getSelectionModel().getSelectedItem()
@@ -473,12 +473,13 @@ public final class ConfigurationController extends AbstractController<Parent> {
                 .getValueFactory()
                 .setValue(configuration.getSunkPoints());
 
+        /* Convert ms to s. */
         roundTimeSpinner
                 .getValueFactory()
-                .setValue((int) configuration.getRoundTime());
+                .setValue((int) configuration.getRoundTime() / 1_000);
         visualizationTimeSpinner
                 .getValueFactory()
-                .setValue((int) configuration.getVisualizationTime());
+                .setValue((int) configuration.getVisualizationTime() / 1_000);
 
         setControlsFromShipTypes(configuration.getShipTypes());
 
