@@ -16,7 +16,9 @@ import de.upb.codingpirates.battleships.network.message.request.GameJoinPlayerRe
 import de.upb.codingpirates.battleships.network.message.request.LobbyRequest;
 import de.upb.codingpirates.battleships.network.message.request.ServerJoinRequest;
 import de.upb.codingpirates.battleships.network.network.module.ClientNetworkModule;
-import de.upb.codingpirates.battleships.server.network.ServerApplication;
+import de.upb.codingpirates.battleships.network.util.DefaultReaderMethod;
+import de.upb.codingpirates.battleships.network.util.ClientReaderMethod;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
@@ -97,7 +99,7 @@ public class ServerTests {
         connector2.sendMessageToServer(new GameJoinPlayerRequest(lobbySize-1));
 
         timer = System.currentTimeMillis();
-        while (true){
+        while (timer > System.currentTimeMillis() - 50000){
         }
 
 
@@ -148,6 +150,7 @@ public class ServerTests {
             this.install(new ClientNetworkModule());
 
             this.bind(ConnectionHandler.class).to(ClientConnector.class).in(Singleton.class);
+            this.bind(ClientReaderMethod.class).to(DefaultReaderMethod.class);
         }
     }
 
