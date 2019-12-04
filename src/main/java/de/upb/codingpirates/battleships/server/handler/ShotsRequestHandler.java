@@ -10,10 +10,13 @@ import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 
 public class ShotsRequestHandler extends ExceptionMessageHandler<ShotsRequest> {
+    private static final Logger LOGGER = LogManager.getLogger();
     @Nonnull
     private ClientManager clientManager;
     @Nonnull

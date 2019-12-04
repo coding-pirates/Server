@@ -320,7 +320,6 @@ public class GameHandler implements Translator {
                 break;
             case VISUALIZATION:
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().getVisualizationTime()) {
-                    clientManager.sendMessageToClients(new RoundStartNotification(), getAllClients());
                     this.stage = GameStage.SHOTS;
                     this.timeStamp = System.currentTimeMillis();
                     this.sendUpdateNotification();
@@ -330,10 +329,13 @@ public class GameHandler implements Translator {
                         this.ships.remove(clientId);
                         this.removeDeadPlayer(clientId);
                     });
+                    if(ships.size() <= 1){
+                        this.stage = GameStage.FINISHED;
+                    }else {
+                        clientManager.sendMessageToClients(new RoundStartNotification(), getAllClients());
+                    }
                 }
-                if(ships.size() <= 1){
-                    this.stage = GameStage.FINISHED;
-                }
+
                 break;
             case SHOTS:
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().getRoundTime()) {

@@ -54,7 +54,7 @@ public class GameJoinPlayerRequestHandler extends ExceptionMessageHandler<GameJo
         clientManager.sendMessageToClient(new GameJoinPlayerResponse(message.getGameId()), clientManager.getClient(connectionId.getInt()));
         long timer = System.currentTimeMillis();//TODO REMOVE
         //noinspection StatementWithEmptyBody//TODO REMOVE
-        while (timer > System.currentTimeMillis() - 1000L) {//TODO REMOVE
+        while (timer > System.currentTimeMillis() - 1000) {//TODO REMOVE
         }//TODO REMOVE
         if(!gameManager.launchGame(message.getGameId())){//TODO REMOVE
             LOGGER.error("to less player");//TODO REMOVE
