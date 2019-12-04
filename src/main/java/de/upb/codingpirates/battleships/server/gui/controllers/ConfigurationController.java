@@ -23,7 +23,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import com.google.gson.Gson;
+
 import com.google.inject.Inject;
 
 import org.apache.logging.log4j.LogManager;
@@ -137,7 +140,8 @@ public final class ConfigurationController extends AbstractController<Parent> {
      * @return A unique label for the n-th {@link ShipType}.
      */
     @NotNull
-    private static String toShipTypeLabel(int n) {
+    @VisibleForTesting
+    static String toShipTypeLabel(int n) {
         final StringBuilder shipTypeLabelBuilder = new StringBuilder();
 
         for (; n >= 0; n = (n / LATIN_ALPHABET_LENGTH) - 1) {
