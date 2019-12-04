@@ -14,7 +14,7 @@ import de.upb.codingpirates.battleships.network.id.IntId;
 import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.notification.ErrorNotification;
 import de.upb.codingpirates.battleships.server.network.ServerApplication;
-import de.upb.codingpirates.battleships.server.util.Markers;
+import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import de.upb.codingpirates.battleships.server.util.Translator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -70,7 +70,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      */
     @Nonnull
     public Client create(int id,@Nonnull String name,@Nonnull ClientType clientType) throws InvalidActionException {
-        LOGGER.debug(Markers.CLIENT, "create client with id: {}, type {}", id, clientType);
+        LOGGER.debug(ServerMarker.CLIENT, "create client with id: {}, type {}", id, clientType);
         if (this.clients.containsKey(id)) {
             throw new InvalidActionException("game.clientManager.createClient.idExists");
         }
@@ -111,7 +111,7 @@ public class ClientManager implements ConnectionHandler, Translator {
                 this.connectionManager.send(new IntId(id), message);
             }
         } catch (IOException e) {
-            LOGGER.error(Markers.CONNECTION, "could not send message", e);
+            LOGGER.error(ServerMarker.CONNECTION, "could not send message", e);
         }
     }
 
@@ -127,7 +127,7 @@ public class ClientManager implements ConnectionHandler, Translator {
                 this.connectionManager.send(new IntId(client), message);
             }
         } catch (IOException e) {
-            LOGGER.error(Markers.CONNECTION, "could not send message", e);
+            LOGGER.error(ServerMarker.CONNECTION, "could not send message", e);
         }
     }
 
@@ -143,7 +143,7 @@ public class ClientManager implements ConnectionHandler, Translator {
                 this.connectionManager.send(client, message);
             }
         } catch (IOException e) {
-            LOGGER.error(Markers.CONNECTION, "could not send message", e);
+            LOGGER.error(ServerMarker.CONNECTION, "could not send message", e);
         }
     }
 
@@ -159,7 +159,7 @@ public class ClientManager implements ConnectionHandler, Translator {
                 this.connectionManager.send(new IntId(client.getId()), message);
             }
         } catch (IOException e) {
-            LOGGER.error(Markers.CONNECTION, "could not send message", e);
+            LOGGER.error(ServerMarker.CONNECTION, "could not send message", e);
         }
     }
 
@@ -220,7 +220,7 @@ public class ClientManager implements ConnectionHandler, Translator {
         if (e.getConnectionId() != null) {
             this.sendMessageToId(new ErrorNotification(e.getErrorType(), e.getMessageId(), this.translate(e.getMessage())), e.getConnectionId());
         } else {
-            LOGGER.warn(Markers.CLIENT, "could not send ErrorNotification. Could not identify source client");
+            LOGGER.warn(ServerMarker.CLIENT, "could not send ErrorNotification. Could not identify source client");
         }
     }
 

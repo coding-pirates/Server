@@ -14,7 +14,7 @@ import de.upb.codingpirates.battleships.network.message.request.GameJoinPlayerRe
 import de.upb.codingpirates.battleships.network.message.response.GameJoinPlayerResponse;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
-import de.upb.codingpirates.battleships.server.util.Markers;
+import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -37,7 +37,7 @@ public class GameJoinPlayerRequestHandler extends ExceptionMessageHandler<GameJo
 
     @Override
     public void handleMessage(@Nonnull GameJoinPlayerRequest message, Id connectionId) throws GameException {
-        LOGGER.debug(Markers.CLIENT, "Handle GameJoinPlayerRequest from {}, for game {}", connectionId, message.getGameId());
+        LOGGER.debug(ServerMarker.CLIENT, "Handle GameJoinPlayerRequest from {}, for game {}", connectionId, message.getGameId());
         if (!clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.PLAYER)) {
             throw new NotAllowedException("game.handler.gameJoinPlayerRequest.noPlayer");
         } else if (gameManager.getGame(message.getGameId()).getGame().getState().equals(GameState.IN_PROGRESS)) {

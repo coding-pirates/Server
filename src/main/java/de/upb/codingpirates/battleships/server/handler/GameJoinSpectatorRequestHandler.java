@@ -13,7 +13,7 @@ import de.upb.codingpirates.battleships.network.message.request.GameJoinSpectato
 import de.upb.codingpirates.battleships.network.message.response.GameJoinSpectatorResponse;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
-import de.upb.codingpirates.battleships.server.util.Markers;
+import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,7 +35,7 @@ public class GameJoinSpectatorRequestHandler extends ExceptionMessageHandler<Gam
 
     @Override
     public void handleMessage(GameJoinSpectatorRequest message, Id connectionId) throws GameException {
-        LOGGER.debug(Markers.CLIENT, "Handle GameJoinSpactatorRequest from {}, for game {}", connectionId, message.getGameId());
+        LOGGER.debug(ServerMarker.CLIENT, "Handle GameJoinSpactatorRequest from {}, for game {}", connectionId, message.getGameId());
 
         if (!clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.SPECTATOR)) {
             throw new NotAllowedException("game.handler.gameJoinSpectatorRequest.noSpectator");

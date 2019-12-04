@@ -10,8 +10,8 @@ import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
-import de.upb.codingpirates.battleships.server.util.Markers;
 import de.upb.codingpirates.battleships.server.util.Properties;
+import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import de.upb.codingpirates.battleships.server.util.Translator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -326,7 +326,7 @@ public class GameHandler implements Translator {
                     this.sendUpdateNotification();
 
                     this.deadPlayer.forEach(clientId -> {
-                        LOGGER.info(Markers.GAME, "{} has lost",clientId);
+                        LOGGER.info(ServerMarker.GAME, "{} has lost",clientId);
                         this.ships.remove(clientId);
                         this.removeDeadPlayer(clientId);
                     });
@@ -478,7 +478,7 @@ public class GameHandler implements Translator {
                         this.hitShots.add(shot);
                         this.shipToShots.computeIfAbsent(hit.getShip(), (ship -> Lists.newArrayList())).add(hit.getShot());
                         sunkShips.add(hit.getShip());
-                        LOGGER.info(Markers.INGAME,"Ship has been sunk of {}",shot.getClientId());
+                        LOGGER.info(ServerMarker.INGAME,"Ship has been sunk of {}",shot.getClientId());
                         break;
                     case NONE:
                         for (Shot shot1 : this.hitShots) {

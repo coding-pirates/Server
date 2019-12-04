@@ -11,7 +11,7 @@ import de.upb.codingpirates.battleships.network.message.report.ConnectionClosedR
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
-import de.upb.codingpirates.battleships.server.util.Markers;
+import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -33,7 +33,7 @@ public class ConnectionClosedReportHandler implements MessageHandler<ConnectionC
 
     @Override
     public void handle(ConnectionClosedReport message, Id connectionId) throws InvalidActionException {
-        LOGGER.debug(Markers.HANDLER, "Handle ConnectionClosedReport for {}", connectionId);
+        LOGGER.debug(ServerMarker.HANDLER, "Handle ConnectionClosedReport for {}", connectionId);
         this.clientManager.disconnect(connectionId.getInt());
         GameHandler handler = gameManager.getGameHandlerForClientId(connectionId.getInt());
         gameManager.removeClientFromGame(connectionId.getInt());

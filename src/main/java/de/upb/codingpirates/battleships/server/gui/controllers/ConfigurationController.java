@@ -6,8 +6,10 @@ import de.upb.codingpirates.battleships.logic.Configuration;
 import de.upb.codingpirates.battleships.logic.PenaltyType;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
+import de.upb.codingpirates.battleships.network.ConnectionHandler;
+import de.upb.codingpirates.battleships.server.ClientManager;
+import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.gui.control.Alerts;
-import de.upb.codingpirates.battleships.server.network.ServerApplication;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -101,13 +103,17 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
     private final Gson gson;
 
-    private ServerApplication server;
+    private GameManager gameManager;
+
+    private ClientManager clientManager;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Inject
-    private ConfigurationController(@NotNull final Gson gson) {
+    private ConfigurationController(@NotNull final Gson gson, GameManager gameManager, ConnectionHandler clientManager) {
         this.gson = gson;
+        this.gameManager = gameManager;
+        this.clientManager = (ClientManager)clientManager;
     }
 
     private static final int LATIN_ALPHABET_LENGTH = 26;
@@ -585,17 +591,11 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
         try {
             configuration = getConfigurationFromControls();
-            if(server == null){
-                server = new ServerApplication();
-            }
         } catch (final InvalidShipTypeConfigurationException exception) {
             displayInvalidConfigurationAlert(exception.invalidConfiguration);
             return;
-        } catch (IllegalAccessException | InstantiationException e) {
-            e.printStackTrace();
-            return;
         }
-        server.getGameManager().createGame(configuration,gameNameTextField.getText(),false);
+        this.gameManager.createGame(configuration,gameNameTextField.getText(),false);
     }
 
     /**
