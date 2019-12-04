@@ -1,5 +1,6 @@
 package de.upb.codingpirates.battleships.server.handler;
 
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
@@ -29,7 +30,9 @@ public class PointsRequestHandler extends ExceptionMessageHandler<PointsRequest>
     @Override
     public void handleMessage(PointsRequest message, Id connectionId) throws GameException {
         Map<Integer, Integer> score = gameManager.getGameHandlerForClientId(connectionId.getInt()).getScore();
-        clientManager.sendMessageToId(new PointsResponse(score), connectionId);
+        Map<Integer, Integer> score2 = Maps.newHashMap();
+        score.forEach((clientId, points)->score.put(clientId, points/4));
+        clientManager.sendMessageToId(new PointsResponse(score2), connectionId);
     }
 
     @Override
