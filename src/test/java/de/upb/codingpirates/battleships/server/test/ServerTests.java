@@ -68,9 +68,9 @@ public class ServerTests {
         client = ServerTests.Client.main();
         client2 = ServerTests.Client.main();
 
+
         connector = (ClientConnector) client.getHandler();
         connector2 = (ClientConnector) client2.getHandler();
-
 
         connector.connect(InetAddress.getLocalHost().getHostAddress(), Properties.PORT);
         connector2.connect(InetAddress.getLocalHost().getHostAddress(), Properties.PORT);
