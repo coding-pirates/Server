@@ -510,7 +510,7 @@ public class GameHandler implements Translator {
             }
         }
         if(hitToPoint.containsKey(HitType.SUNK)){
-            for(Map.Entry<Shot, List<Integer>> entry : hitToPoint.get(HitType.HIT).entrySet()) {
+            for(Map.Entry<Shot, List<Integer>> entry : hitToPoint.get(HitType.SUNK).entrySet()) {
                 int points = getConfiguration().getSunkPoints() / entry.getValue().size();
                 entry.getValue().forEach( client ->
                         score.compute(client, (id, point) -> {

@@ -284,9 +284,12 @@ public class ServerTests {
 
     private static List<Shot> getShots(Configuration configuration){
         List<Shot> shots = Lists.newArrayList();
-        shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(2, 4)));
-        shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(3, 3)));
-        shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(4,4)));
+        if(RANDOM.nextBoolean()) {
+            shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(3, 4)));
+        }else {
+            shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(3, 3)));
+            shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(4, 3)));
+        }
         return shots;
     }
 }
