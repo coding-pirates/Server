@@ -41,22 +41,24 @@ public class ServerTests {
     private static boolean finished = true;
 
     @Test
-    public void test() throws IllegalAccessException, IOException, InstantiationException {
-        new Thread(() -> {
-            ServerApplication server = null;
-            try {
-                server = new ServerApplication();
-            } catch (InstantiationException | IllegalAccessException e) {
-                e.printStackTrace();
-            }
-            server.getGameManager().createGame(TEST_CONFIG, "test", false);
-            long timer = System.currentTimeMillis();
-            while (timer > System.currentTimeMillis() - 20000){
+    public void test() throws IOException {
+        if(!TestProperties.isServerOnline) {
+            new Thread(() -> {
+                ServerApplication server = null;
+                try {
+                    server = new ServerApplication();
+                } catch (InstantiationException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+                server.getGameManager().createGame(TEST_CONFIG, "test", false);
+                long timer = System.currentTimeMillis();
+                while (timer > System.currentTimeMillis() - 20000) {
 
-            }
-        }).start();
-        long timer = 0;
-        timer = System.currentTimeMillis();
+                }
+            }).start();
+        }
+
+        long timer = System.currentTimeMillis();
         while (timer > System.currentTimeMillis() - 1000){
         }
         LOGGER.debug("start connection test");
