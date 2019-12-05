@@ -58,6 +58,7 @@ public final class BattleshipsServerApplication extends Application {
      * @throws MissingResourceException If a {@code ResourceBundle} with the same name as the view
      *                                  could not be found.
      */
+    @SuppressWarnings("SameParameterValue")
     private <T extends Parent> T loadView(@NotNull final String name)
             throws IOException, MissingResourceException {
         final String fxmlPath       = String.format("/fxml/%s.fxml", name);

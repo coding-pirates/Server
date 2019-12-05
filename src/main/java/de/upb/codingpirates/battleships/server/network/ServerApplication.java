@@ -16,7 +16,7 @@ public class ServerApplication extends NetworkApplication {
     @Nonnull
     private final GameManager gameManager;
 
-    @SuppressWarnings({"RedundantCast", "ConstantConditions"})
+    @SuppressWarnings({"ConstantConditions"})
     public ServerApplication() throws InstantiationException, IllegalAccessException, IllegalStateException {
         LOGGER.debug("Starting server module");
         this.useModule(ServerModule.class).run();

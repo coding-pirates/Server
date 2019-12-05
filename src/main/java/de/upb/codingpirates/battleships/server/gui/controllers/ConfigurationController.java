@@ -750,12 +750,46 @@ public final class ConfigurationController extends AbstractController<Parent> {
             return marks.size() >= MINIMUM_SHIP_TYPE_SIZE;
         }
 
+        /**
+         * Normalizes a given {@link Collection} of {@link Point2D}s by moving them as close as possible to the origin
+         * of the cartesian coordinate system as possible.
+         *
+         * The provided {@code points} {@code Collection} will not be modified.
+         *
+         * @param points The {@link Collection} of {@link Point2D}s to normalize.
+         *
+         * @return A new {@code Collection} of {@link Point2D} objects which have been moved as close as possible to
+         *         the origin of the coordinate system.
+         */
+        @NotNull
+        @Contract(pure = true)
+        private static Collection<Point2D> normalize(@NotNull final Collection<Point2D> points) {
+            if (points.isEmpty())
+                return points;
+            final int minX = Collections.min(points, Comparator.comparing(Point2D::getX)).getX();
+            final int minY = Collections.min(points, Comparator.comparing(Point2D::getY)).getY();
+
+            return points
+                .stream()
+                .map(point -> new Point2D(point.getX() - minX, point.getY() - minY))
+                .collect(toList());
+        }
+
+        /**
+         * Converts this {@code ShipTypeConfiguration} to a {@link ShipType}.
+         *
+         * @return A normalized {@link ShipType} based on this {@code ShipTypeConfiguration}.
+         *
+         * @throws InvalidShipTypeConfigurationException If this {@code ShipTypeConfiguration} does not have the minimum
+         *                                               size required or the individual points do not form a single
+         *                                               connected structure.
+         */
         @NotNull
         @Contract(value = " -> new", pure = true)
         private ShipType toShipType() throws InvalidShipTypeConfigurationException {
             if (!hasMinimumSize() || !checkMarksConnected())
                 throw new InvalidShipTypeConfigurationException(this);
-            return new ShipType(marks);
+            return new ShipType(normalize(marks));
         }
         // </editor-fold>
     }
