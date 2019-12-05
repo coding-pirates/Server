@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class ServerTests {
-    public static final Configuration TEST_CONFIG = new Configuration(4, 10, 10, 4, 1, 1, 10000, 100, new HashMap<Integer, ShipType>(){{put(0,new ShipType(Lists.newArrayList(new Point2D(1,1),new Point2D(2,1),new Point2D(1,2))));}}, 1, PenaltyType.POINTLOSS);
+    public static final Configuration TEST_CONFIG = new Configuration(TestProperties.playerCount, 10, 10, 4, 1, 1, 5000, 100, new HashMap<Integer, ShipType>(){{put(0,new ShipType(Lists.newArrayList(new Point2D(1,1),new Point2D(2,1),new Point2D(1,2))));}}, 1, PenaltyType.POINTLOSS);
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Random RANDOM = new Random();
