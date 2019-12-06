@@ -9,15 +9,21 @@ import java.net.UnknownHostException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 class TestProperties {
-
+    //you can edit following attributes for testing
     static final int playerCount = 2;
-    static final String hostAddress;
-    static final boolean isServerOnline;
-
+    static final boolean simple = true;
     /**
      * set this address if you want to test on a server with different ip
      */
     private static final String preferedHostAddress = null;
+
+
+
+    //do not edit
+    static final String hostAddress;
+    static final boolean isServerOnline;
+
+
 
     static {
         //noinspection ConstantConditions

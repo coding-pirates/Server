@@ -288,11 +288,19 @@ public class ServerTests {
 
     private static List<Shot> getShots(Configuration configuration){
         List<Shot> shots = Lists.newArrayList();
-        if(RANDOM.nextBoolean()) {
-            shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(3, 4)));
+        if(TestProperties.simple){
+            shots.add(new Shot(ids.get(0), new Point2D(3, 4)));
+            shots.add(new Shot(ids.get(0), new Point2D(3, 3)));
+            shots.add(new Shot(ids.get(0), new Point2D(4, 3)));
+
+
         }else {
-            shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(3, 3)));
-            shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(4, 3)));
+            if (RANDOM.nextBoolean()) {
+                shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(3, 4)));
+            } else {
+                shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(3, 3)));
+                shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(4, 3)));
+            }
         }
         return shots;
     }
