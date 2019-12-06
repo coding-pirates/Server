@@ -60,7 +60,6 @@ public class ServerTests {
         }
 
 
-
         long timer = System.currentTimeMillis();
         while (timer > System.currentTimeMillis() - 1000){
         }
@@ -74,6 +73,9 @@ public class ServerTests {
             while (timer > System.currentTimeMillis() - 100){
             }
         }
+
+
+
 
         for(int i = 0;i< TestProperties.playerCount;i++) {
             connectorstmp.get(i).sendMessageToServer(new ServerJoinRequest(names[i], ClientType.PLAYER));
@@ -100,8 +102,6 @@ public class ServerTests {
         }
         while (!finished.get()){
         }
-
-
 
         //LOGGER.debug("finished connection test");
     }
