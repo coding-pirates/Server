@@ -31,7 +31,7 @@ public class PointsRequestHandler extends ExceptionMessageHandler<PointsRequest>
     public void handleMessage(PointsRequest message, Id connectionId) throws GameException {
         Map<Integer, Integer> score = gameManager.getGameHandlerForClientId(connectionId.getInt()).getScore();
         Map<Integer, Integer> score2 = Maps.newHashMap();
-        score.forEach((clientId, points)->score.put(clientId, points/4));
+        score.forEach((clientId, points)->score2.put(clientId, points/4));
         clientManager.sendMessageToId(new PointsResponse(score2), connectionId);
     }
 
