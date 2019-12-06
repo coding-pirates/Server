@@ -58,6 +58,8 @@ public class ServerTests {
             }).start();
         }
 
+
+
         long timer = System.currentTimeMillis();
         while (timer > System.currentTimeMillis() - 1000){
         }
