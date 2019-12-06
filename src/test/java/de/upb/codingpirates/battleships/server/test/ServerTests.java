@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ServerTests {
     public static final Configuration TEST_CONFIG = new Configuration(TestProperties.playerCount, 10, 10, 4, 1, 1, 5000, 100, new HashMap<Integer, ShipType>(){{put(0,new ShipType(Lists.newArrayList(new Point2D(1,1),new Point2D(2,1),new Point2D(1,2))));}}, 1, PenaltyType.POINTLOSS);
@@ -38,7 +39,7 @@ public class ServerTests {
 
 
     private static int lobbySize = 0;
-    private static boolean finished = true;
+    private static final AtomicBoolean finished = new AtomicBoolean(true);
 
     @Test
     public void test() throws IOException {
@@ -97,7 +98,7 @@ public class ServerTests {
 
         while (timer > System.currentTimeMillis() - 10000){
         }
-        while (!finished){
+        while (!finished.get()){
         }
 
 
@@ -124,7 +125,9 @@ public class ServerTests {
         @Override
         public void handleGameInitNotification(GameInitNotification message, int clientId) {
             LOGGER.info("GameInitNotification");
-            finished = false;
+            synchronized (finished) {
+                finished.set(false);
+            }
             configuration = message.getConfiguration();
             try {
                 connectors.get(clientId).sendMessageToServer(new PlaceShipsRequest(getPlacement(message.getConfiguration())));
@@ -146,7 +149,9 @@ public class ServerTests {
         @Override
         public void handleFinishNotification(FinishNotification message, int clientId) {
             LOGGER.info("FinishNotification");
-            finished = true;
+            synchronized (finished) {
+                finished.set(true);
+            }
         }
 
         @Override
