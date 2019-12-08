@@ -39,8 +39,8 @@ import de.upb.codingpirates.battleships.logic.Configuration;
 import de.upb.codingpirates.battleships.logic.PenaltyType;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
+import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.gui.control.Alerts;
-import de.upb.codingpirates.battleships.server.network.ServerApplication;
 
 import static java.util.stream.Collectors.*;
 
@@ -105,17 +105,18 @@ public final class ConfigurationController extends AbstractController<Parent> {
     @FXML
     private TextField gameNameTextField;
 
-    private final Gson gson;
-
-    private ServerApplication server;
+    private final Gson        gson;
+    private final GameManager gameManager;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Inject
-    private ConfigurationController(@NotNull final Gson gson) {
-        this.gson = gson;
+    private ConfigurationController(@NotNull final Gson gson, @NotNull final GameManager gameManager) {
+        this.gson        = gson;
+        this.gameManager = gameManager;
     }
 
+    // <editor-fold desc="toShipTypeLabel">
     private static final int LATIN_ALPHABET_LENGTH = 26;
 
     /**
@@ -150,6 +151,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
         }
         return shipTypeLabelBuilder.toString();
     }
+    // </editor-fold>
 
     // <editor-fold desc="Initialization">
     private ShipTypeConfiguration getSelectedShipTypeConfiguration() {
@@ -574,7 +576,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
         alert.setContentText(resourceBundle.getString("game.name.invalidNameAlert.contentText"));
         alert.setTitle(resourceBundle.getString("game.name.invalidNameAlert.title"));
-        alert.setHeaderText(resourceBundle.getString("game.name.invalidNameAlert.header"));
+        alert.setHeaderText(String.format(resourceBundle.getString("game.name.invalidNameAlert.header"), invalidName));
 
         alert.showAndWait();
     }
@@ -592,17 +594,11 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
         try {
             configuration = getConfigurationFromControls();
-            if(server == null){
-                server = new ServerApplication();
-            }
+
+            gameManager.createGame(configuration,gameNameTextField.getText(),false);
         } catch (final InvalidShipTypeConfigurationException exception) {
             displayInvalidConfigurationAlert(exception.invalidConfiguration);
-            return;
-        } catch (IllegalAccessException | InstantiationException e) {
-            e.printStackTrace();
-            return;
         }
-        server.getGameManager().createGame(configuration,gameNameTextField.getText(),false);
     }
 
     /**

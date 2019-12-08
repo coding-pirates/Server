@@ -11,9 +11,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
@@ -29,13 +26,11 @@ public final class BattleshipsServerApplication extends Application {
     private final Injector injector = Guice.createInjector();
 
     /**
-     * The title of the JavaFX application {@link Stage}.
+     * The title of this JavaFX application {@link Stage}.
      * 
      * @see #start(Stage) 
      */
     private static final String TITLE = "Battleships Server";
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     public static void main(final String[] args) {
         launch(args);
