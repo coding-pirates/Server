@@ -23,13 +23,12 @@ import de.upb.codingpirates.battleships.network.id.IntIdManager;
 import de.upb.codingpirates.battleships.network.message.notification.ContinueNotification;
 import de.upb.codingpirates.battleships.network.message.notification.PauseNotification;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
-import de.upb.codingpirates.battleships.server.network.ServerApplication;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 
 /**
- * handles all game related tasks
- * <p>
- * get an instance with {@link ServerApplication#getGameManager()}
+ * Handles all {@link Game}-related functionality.
+ *
+ * @author Paul Becker
  */
 public class GameManager {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -165,7 +164,7 @@ public class GameManager {
     /**
      * @return all existing games
      */
-    public Collection<GameHandler> getAllGames() {
+    public Collection<GameHandler> getGameHandlers() {
         return this.games.values();
     }
 

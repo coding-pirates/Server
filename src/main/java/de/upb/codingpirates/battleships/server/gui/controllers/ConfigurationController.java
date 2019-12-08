@@ -1,13 +1,17 @@
 package de.upb.codingpirates.battleships.server.gui.controllers;
 
-import com.google.gson.Gson;
-import com.google.inject.Inject;
-import de.upb.codingpirates.battleships.logic.Configuration;
-import de.upb.codingpirates.battleships.logic.PenaltyType;
-import de.upb.codingpirates.battleships.logic.Point2D;
-import de.upb.codingpirates.battleships.logic.ShipType;
-import de.upb.codingpirates.battleships.server.gui.control.Alerts;
-import de.upb.codingpirates.battleships.server.network.ServerApplication;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.IntStream;
+
+import javax.inject.Inject;
+
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -20,20 +24,23 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
+
+import com.google.common.annotations.VisibleForTesting;
+
+import com.google.gson.Gson;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.IntStream;
+import de.upb.codingpirates.battleships.logic.Configuration;
+import de.upb.codingpirates.battleships.logic.PenaltyType;
+import de.upb.codingpirates.battleships.logic.Point2D;
+import de.upb.codingpirates.battleships.logic.ShipType;
+import de.upb.codingpirates.battleships.server.GameManager;
+import de.upb.codingpirates.battleships.server.gui.control.Alerts;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -570,7 +577,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
         alert.setContentText(resourceBundle.getString("game.name.invalidNameAlert.contentText"));
         alert.setTitle(resourceBundle.getString("game.name.invalidNameAlert.title"));
-        alert.setHeaderText(resourceBundle.getString("game.name.invalidNameAlert.header"));
+        alert.setHeaderText(String.format(resourceBundle.getString("game.name.invalidNameAlert.header"), invalidName));
 
         alert.showAndWait();
     }

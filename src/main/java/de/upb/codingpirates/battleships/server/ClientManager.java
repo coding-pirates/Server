@@ -7,13 +7,13 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.inject.Inject;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,14 +28,11 @@ import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.id.IntId;
 import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.notification.ErrorNotification;
-import de.upb.codingpirates.battleships.server.network.ServerApplication;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import de.upb.codingpirates.battleships.server.util.Translator;
 
 /**
- * handles all client related tasks
- * <p>
- * get an instance with {@link ServerApplication#getClientManager()}
+ * Handles all {@link Client}-related functionality.
  */
 public class ClientManager implements ConnectionHandler, Translator {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -53,7 +50,8 @@ public class ClientManager implements ConnectionHandler, Translator {
      * maps client id to player
      */
     @Nonnull
-    private final Map<Integer, Client> player = Collections.synchronizedMap(Maps.newHashMap());
+    private final ObservableMap<Integer, Client> player =
+        FXCollections.synchronizedObservableMap(FXCollections.observableHashMap());
 
     /**
      * maps client id to spectator

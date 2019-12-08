@@ -17,7 +17,6 @@ import com.google.inject.Injector;
 import org.jetbrains.annotations.NotNull;
 
 import de.upb.codingpirates.battleships.server.gui.util.ResourceBundleWrapper;
-import de.upb.codingpirates.battleships.server.network.ServerModule;
 
 /**
  * @author Andre Blanke
