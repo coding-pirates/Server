@@ -1,7 +1,16 @@
 package de.upb.codingpirates.battleships.server.game;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nonnull;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
@@ -10,15 +19,8 @@ import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
-import de.upb.codingpirates.battleships.server.util.Properties;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import de.upb.codingpirates.battleships.server.util.Translator;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import javax.annotation.Nonnull;
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class GameHandler implements Translator {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -95,6 +97,8 @@ public class GameHandler implements Translator {
     @Nonnull
     private final Map<Ship, List<Shot>> shipToShots = Collections.synchronizedMap(Maps.newHashMap());
 
+    private static final int MAX_SPECTATOR_COUNT = Integer.MAX_VALUE;
+
     public GameHandler(@Nonnull String name, int id, @Nonnull Configuration config, boolean tournament, @Nonnull ClientManager clientManager) {
         this.game = new Game(name, id, GameState.LOBBY, config, tournament);
         this.tournament = tournament;
@@ -115,7 +119,7 @@ public class GameHandler implements Translator {
                 game.addPlayer();
                 break;
             case SPECTATOR:
-                if (spectator.size() >= Properties.MAXSPECTATOR)
+                if (spectator.size() >= MAX_SPECTATOR_COUNT)
                     throw new InvalidActionException("game.isFull");
                 spectator.putIfAbsent(client.getId(), client);
         }
@@ -141,9 +145,9 @@ public class GameHandler implements Translator {
     @Nonnull
     public List<Client> getAllClients() {
         List<Client> clients = Lists.newArrayList();
-        if(player.size() > 0)
+        if (player.size() > 0)
             clients.addAll(getPlayers());
-        if(spectator.size() > 0)
+        if (spectator.size() > 0)
             clients.addAll(getSpectators());
         return clients;
     }
