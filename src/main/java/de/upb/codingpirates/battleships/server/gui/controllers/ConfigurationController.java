@@ -485,7 +485,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
                 .getValueFactory()
                 .setValue((int) configuration.getVisualizationTime() / 1_000);
 
-        setControlsFromShipTypes(configuration.getShipTypes());
+        setControlsFromShipTypes(configuration.getShips());
 
         penaltyMinusPointsSpinner
                 .getValueFactory()
