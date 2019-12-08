@@ -42,8 +42,7 @@ import de.upb.codingpirates.battleships.logic.ShipType;
 import de.upb.codingpirates.battleships.server.gui.control.Alerts;
 import de.upb.codingpirates.battleships.server.network.ServerApplication;
 
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.*;
 
 /**
  * The controller associated with the {@code configuration.fxml} file which allows the creation of
@@ -617,7 +616,8 @@ public final class ConfigurationController extends AbstractController<Parent> {
      *
      * @author Andre Blanke
      */
-    private static final class ShipTypeConfiguration {
+    @VisibleForTesting
+    static final class ShipTypeConfiguration {
 
         private int width;
         private int height;
@@ -644,7 +644,8 @@ public final class ConfigurationController extends AbstractController<Parent> {
         }
 
         @Contract(pure = true)
-        private ShipTypeConfiguration(@NotNull final String label, @NotNull final Set<Point2D> marks) {
+        @VisibleForTesting
+        ShipTypeConfiguration(@NotNull final String label, @NotNull final Set<Point2D> marks) {
             this.label = label;
             this.marks = marks;
 
@@ -723,7 +724,8 @@ public final class ConfigurationController extends AbstractController<Parent> {
             }
         }
 
-        private boolean checkMarksConnected() {
+        @VisibleForTesting
+        boolean checkMarksConnected() {
             final boolean[][] markMatrix = new boolean[width][height];
             final boolean[][] visited    = new boolean[width][height];
 
@@ -763,7 +765,8 @@ public final class ConfigurationController extends AbstractController<Parent> {
          */
         @NotNull
         @Contract(pure = true)
-        private static Collection<Point2D> normalize(@NotNull final Collection<Point2D> points) {
+        @VisibleForTesting
+        static Set<Point2D> normalize(@NotNull final Set<Point2D> points) {
             if (points.isEmpty())
                 return points;
             final int minX = Collections.min(points, Comparator.comparing(Point2D::getX)).getX();
@@ -772,7 +775,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
             return points
                 .stream()
                 .map(point -> new Point2D(point.getX() - minX, point.getY() - minY))
-                .collect(toList());
+                .collect(toSet());
         }
 
         /**
