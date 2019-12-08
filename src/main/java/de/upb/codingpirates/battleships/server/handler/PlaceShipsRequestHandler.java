@@ -10,7 +10,7 @@ import de.upb.codingpirates.battleships.network.message.request.PlaceShipsReques
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
-import de.upb.codingpirates.battleships.server.util.Markers;
+import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -31,7 +31,7 @@ public class PlaceShipsRequestHandler extends ExceptionMessageHandler<PlaceShips
 
     @Override
     public void handleMessage(PlaceShipsRequest message, Id connectionId) throws GameException {
-        LOGGER.debug(Markers.HANDLER, "handle PlaceShipsRequest from {}", connectionId.getInt());
+        LOGGER.debug(ServerMarker.HANDLER, "handle PlaceShipsRequest from {}", connectionId.getInt());
         GameHandler gamehandler = gameManager.getGameHandlerForClientId(connectionId.getInt());
         gamehandler.addShipPlacement(connectionId.getInt(), message.getPositions());
     }

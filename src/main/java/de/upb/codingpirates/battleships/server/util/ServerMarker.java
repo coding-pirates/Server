@@ -3,7 +3,7 @@ package de.upb.codingpirates.battleships.server.util;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
-public final class Markers {
+public class ServerMarker {
 
     public static final Marker CLIENT = MarkerManager.getMarker("Client Handling");
     public static final Marker CONNECTION = MarkerManager.getMarker("Connection Handling");
@@ -11,6 +11,4 @@ public final class Markers {
     public static final Marker INGAME = MarkerManager.getMarker("In Game");
     public static final Marker HANDLER = MarkerManager.getMarker("Message Handler");
 
-    private Markers() {
-    }
 }

@@ -10,8 +10,8 @@ import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
-import de.upb.codingpirates.battleships.server.util.Markers;
 import de.upb.codingpirates.battleships.server.util.Properties;
+import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import de.upb.codingpirates.battleships.server.util.Translator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -110,8 +110,8 @@ public class GameHandler implements Translator {
             case PLAYER:
                 if (player.size() >= game.getConfig().getMaxPlayerCount())
                     throw new InvalidActionException("game.isFull");
-                player.putIfAbsent(client.getId(), client);
-                getFields().putIfAbsent(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(),client.getId()));
+                player.put(client.getId(), client);
+                fields.put(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(),client.getId()));
                 game.addPlayer();
                 break;
             case SPECTATOR:
@@ -133,7 +133,6 @@ public class GameHandler implements Translator {
                 this.startShip.remove(client);
             }
             this.spectator.remove(client);
-
     }
 
     /**
@@ -149,16 +148,6 @@ public class GameHandler implements Translator {
         return clients;
     }
 
-    @Nonnull
-    private Map<Integer, Client> player() {
-        return player;
-    }
-
-    @Nonnull
-    private Map<Integer, Client> spectator() {
-        return spectator;
-    }
-
     /**
      * @return all players
      */
@@ -170,11 +159,6 @@ public class GameHandler implements Translator {
     @Nonnull
     public Collection<Client> getSpectators() {
         return spectator.values();
-    }
-
-    @Nonnull
-    public Map<Integer, Field> getFields() {
-        return fields;
     }
 
     @Nonnull
@@ -277,6 +261,12 @@ public class GameHandler implements Translator {
         if(shots.size() > getConfiguration().getShotCount()){
             throw new NotAllowedException("game.player.toManyShots");
         }
+        for (Shot shot: shots){
+            if(!player.containsKey(shot.getClientId())){
+                shots.remove(shot);
+                LOGGER.warn("Player {} for shot from {} does not exist", shot.getClientId(), clientId);
+            }
+        }
         this.shots.put(clientId,shots);
         if(shots.size() < getConfiguration().getShotCount()){
             throw new InvalidActionException("game.player.toLessShots");
@@ -330,20 +320,22 @@ public class GameHandler implements Translator {
                 break;
             case VISUALIZATION:
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().getVisualizationTime()) {
-                    clientManager.sendMessageToClients(new RoundStartNotification(), getAllClients());
                     this.stage = GameStage.SHOTS;
                     this.timeStamp = System.currentTimeMillis();
                     this.sendUpdateNotification();
 
                     this.deadPlayer.forEach(clientId -> {
-                        LOGGER.info(Markers.GAME, "{} has lost",clientId);
+                        LOGGER.info(ServerMarker.GAME, "{} has lost",clientId);
                         this.ships.remove(clientId);
                         this.removeDeadPlayer(clientId);
                     });
+                    if(ships.size() <= 1){
+                        this.stage = GameStage.FINISHED;
+                    }else {
+                        clientManager.sendMessageToClients(new RoundStartNotification(), getAllClients());
+                    }
                 }
-                if(ships.size() <= 1){
-                    this.stage = GameStage.FINISHED;
-                }
+
                 break;
             case SHOTS:
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().getRoundTime()) {
@@ -359,6 +351,8 @@ public class GameHandler implements Translator {
                     id = winner.get().getKey();
                 }
                 LOGGER.debug("Game {} has finished",game.getId());
+                Map<Integer, Integer> score = Maps.newHashMap();
+                this.score.forEach((clientId, points)->score.put(clientId, points/4));
                 this.clientManager.sendMessageToClients(new FinishNotification(score,id),getAllClients());
                 this.game.setState(GameState.FINISHED);
                 break;
@@ -488,7 +482,7 @@ public class GameHandler implements Translator {
                         this.hitShots.add(shot);
                         this.shipToShots.computeIfAbsent(hit.getShip(), (ship -> Lists.newArrayList())).add(hit.getShot());
                         sunkShips.add(hit.getShip());
-                        LOGGER.info(Markers.INGAME,"Ship has been sunk of {}",shot.getClientId());
+                        LOGGER.info(ServerMarker.INGAME,"Ship has been sunk of {}",shot.getClientId());
                         break;
                     case NONE:
                         for (Shot shot1 : this.hitShots) {
@@ -518,7 +512,7 @@ public class GameHandler implements Translator {
             }
         }
         if(hitToPoint.containsKey(HitType.SUNK)){
-            for(Map.Entry<Shot, List<Integer>> entry : hitToPoint.get(HitType.HIT).entrySet()) {
+            for(Map.Entry<Shot, List<Integer>> entry : hitToPoint.get(HitType.SUNK).entrySet()) {
                 int points = getConfiguration().getSunkPoints() / entry.getValue().size();
                 entry.getValue().forEach( client ->
                         score.compute(client, (id, point) -> {
@@ -586,8 +580,10 @@ public class GameHandler implements Translator {
      * send spectator & player update notifications
      */
     private void sendUpdateNotification(){
-        this.clientManager.sendMessageToClients(new PlayerUpdateNotification(hitShots, this.score, this.sunkShots), player.values());
-        this.clientManager.sendMessageToClients(new SpectatorUpdateNotification(hitShots,score,this.sunkShots,missedShots),spectator.values());
+        Map<Integer, Integer> score = Maps.newHashMap();
+        this.score.forEach((clientId, points)->score.put(clientId, points/4));
+        this.clientManager.sendMessageToClients(new PlayerUpdateNotification(hitShots, score, this.sunkShots), player.values());
+        this.clientManager.sendMessageToClients(new SpectatorUpdateNotification(hitShots,score,sunkShots,missedShots),spectator.values());
     }
 
     /**

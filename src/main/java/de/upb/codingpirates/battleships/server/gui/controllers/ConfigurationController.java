@@ -1,15 +1,13 @@
 package de.upb.codingpirates.battleships.server.gui.controllers;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.IntStream;
-
+import com.google.gson.Gson;
+import com.google.inject.Inject;
+import de.upb.codingpirates.battleships.logic.Configuration;
+import de.upb.codingpirates.battleships.logic.PenaltyType;
+import de.upb.codingpirates.battleships.logic.Point2D;
+import de.upb.codingpirates.battleships.logic.ShipType;
+import de.upb.codingpirates.battleships.server.gui.control.Alerts;
+import de.upb.codingpirates.battleships.server.network.ServerApplication;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -22,27 +20,23 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
-
-import com.google.common.annotations.VisibleForTesting;
-
-import com.google.gson.Gson;
-
-import com.google.inject.Inject;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import de.upb.codingpirates.battleships.logic.Configuration;
-import de.upb.codingpirates.battleships.logic.PenaltyType;
-import de.upb.codingpirates.battleships.logic.Point2D;
-import de.upb.codingpirates.battleships.logic.ShipType;
-import de.upb.codingpirates.battleships.server.GameManager;
-import de.upb.codingpirates.battleships.server.gui.control.Alerts;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.IntStream;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * The controller associated with the {@code configuration.fxml} file which allows the creation of
@@ -576,7 +570,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
         alert.setContentText(resourceBundle.getString("game.name.invalidNameAlert.contentText"));
         alert.setTitle(resourceBundle.getString("game.name.invalidNameAlert.title"));
-        alert.setHeaderText(String.format(resourceBundle.getString("game.name.invalidNameAlert.header"), invalidName));
+        alert.setHeaderText(resourceBundle.getString("game.name.invalidNameAlert.header"));
 
         alert.showAndWait();
     }
@@ -612,8 +606,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
      *
      * @author Andre Blanke
      */
-    @VisibleForTesting
-    static final class ShipTypeConfiguration {
+    private static final class ShipTypeConfiguration {
 
         private int width;
         private int height;
@@ -640,8 +633,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
         }
 
         @Contract(pure = true)
-        @VisibleForTesting
-        ShipTypeConfiguration(@NotNull final String label, @NotNull final Set<Point2D> marks) {
+        private ShipTypeConfiguration(@NotNull final String label, @NotNull final Set<Point2D> marks) {
             this.label = label;
             this.marks = marks;
 
@@ -720,8 +712,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
             }
         }
 
-        @VisibleForTesting
-        boolean checkMarksConnected() {
+        private boolean checkMarksConnected() {
             final boolean[][] markMatrix = new boolean[width][height];
             final boolean[][] visited    = new boolean[width][height];
 
@@ -748,47 +739,12 @@ public final class ConfigurationController extends AbstractController<Parent> {
             return marks.size() >= MINIMUM_SHIP_TYPE_SIZE;
         }
 
-        /**
-         * Normalizes a given {@link Collection} of {@link Point2D}s by moving them as close as possible to the origin
-         * of the cartesian coordinate system as possible.
-         *
-         * The provided {@code points} {@code Collection} will not be modified.
-         *
-         * @param points The {@link Collection} of {@link Point2D}s to normalize.
-         *
-         * @return A new {@code Collection} of {@link Point2D} objects which have been moved as close as possible to
-         *         the origin of the coordinate system.
-         */
-        @NotNull
-        @Contract(pure = true)
-        @VisibleForTesting
-        static Set<Point2D> normalize(@NotNull final Set<Point2D> points) {
-            if (points.isEmpty())
-                return points;
-            final int minX = Collections.min(points, Comparator.comparing(Point2D::getX)).getX();
-            final int minY = Collections.min(points, Comparator.comparing(Point2D::getY)).getY();
-
-            return points
-                .stream()
-                .map(point -> new Point2D(point.getX() - minX, point.getY() - minY))
-                .collect(toSet());
-        }
-
-        /**
-         * Converts this {@code ShipTypeConfiguration} to a {@link ShipType}.
-         *
-         * @return A normalized {@link ShipType} based on this {@code ShipTypeConfiguration}.
-         *
-         * @throws InvalidShipTypeConfigurationException If this {@code ShipTypeConfiguration} does not have the minimum
-         *                                               size required or the individual points do not form a single
-         *                                               connected structure.
-         */
         @NotNull
         @Contract(value = " -> new", pure = true)
         private ShipType toShipType() throws InvalidShipTypeConfigurationException {
             if (!hasMinimumSize() || !checkMarksConnected())
                 throw new InvalidShipTypeConfigurationException(this);
-            return new ShipType(normalize(marks));
+            return new ShipType(marks);
         }
         // </editor-fold>
     }
