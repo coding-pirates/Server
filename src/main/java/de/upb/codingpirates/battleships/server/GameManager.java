@@ -1,10 +1,20 @@
 package de.upb.codingpirates.battleships.server;
 
+import java.util.*;
+
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableMap;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.inject.Inject;
+
 import de.upb.codingpirates.battleships.logic.*;
-import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.id.IntIdManager;
 import de.upb.codingpirates.battleships.network.message.notification.ContinueNotification;
@@ -12,13 +22,6 @@ import de.upb.codingpirates.battleships.network.message.notification.PauseNotifi
 import de.upb.codingpirates.battleships.server.game.GameHandler;
 import de.upb.codingpirates.battleships.server.network.ServerApplication;
 import de.upb.codingpirates.battleships.server.util.Markers;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableMap;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import javax.annotation.Nonnull;
-import java.util.*;
 
 /**
  * handles all game related tasks
@@ -34,19 +37,19 @@ public class GameManager {
     private final IntIdManager idManager;
 
     /**
-     * maps game id to gamehandler
+     * Maps ids associated with {@link Game} objects to their {@link GameHandler}.
      */
     private final ObservableMap<Integer, GameHandler> games =
         FXCollections.synchronizedObservableMap(FXCollections.observableHashMap());
 
     /**
-     * maps client id to gameid
+     * Maps client ids to the ids of {@link Game}s they are participating in.
      */
     private final Map<Integer, Integer> clientToGame = Collections.synchronizedMap(Maps.newHashMap());
 
     @Inject
-    public GameManager(@Nonnull ConnectionHandler handler, @Nonnull IntIdManager idManager) {
-        this.clientManager = (ClientManager) handler;
+    public GameManager(@Nonnull ClientManager handler, @Nonnull IntIdManager idManager) {
+        this.clientManager = handler;
         this.idManager = idManager;
         new Timer().schedule(new TimerTask() {
             @Override
@@ -86,36 +89,40 @@ public class GameManager {
      */
     public void addClientToGame(int gameId, @Nonnull Client client, @Nonnull ClientType clientType) throws InvalidActionException {
         LOGGER.debug(Markers.GAME, "Adding client {}, with type {}, to game {}", client.getId(), clientType, gameId);
-        if (this.games.containsKey(gameId)) {
-            this.games.get(gameId).addClient(clientType, client);
-            this.clientToGame.putIfAbsent(client.getId(), gameId);
-        } else {
+
+        if (!this.games.containsKey(gameId)) {
             LOGGER.error(Markers.GAME, "Can't find game {}", gameId);
             throw new InvalidActionException("game.gameManager.noGame");
         }
+        this.games.get(gameId).addClient(clientType, client);
+        this.clientToGame.putIfAbsent(client.getId(), gameId);
     }
 
     /**
-     * removes client from participating games
+     * Removes the {@link Client} with the provided {@code clientId} from the game it is participating in.
      *
-     * @param client
-     * @throws InvalidActionException if client does not participate
+     * @param clientId The id of the {@link Client} that is to be removed from its game.
+     *
+     * @throws InvalidActionException If the {@link Client} belonging to the provided {@code clientId} is not currently
+     *                                participating in a game.
      */
-    public void removeClientFromGame(int client) throws InvalidActionException {
-        LOGGER.debug(Markers.CLIENT, "Remove client {} from active game", client);
-        if (clientToGame.containsKey(client)) {
-            this.games.get(this.clientToGame.remove(client)).removeClient(client);
+    public void removeClientFromGame(int clientId) throws InvalidActionException {
+        LOGGER.debug(Markers.CLIENT, "Remove client {} from active game", clientId);
+        if (clientToGame.containsKey(clientId)) {
+            this.games.get(this.clientToGame.remove(clientId)).removeClient(clientId);
         } else {
-            LOGGER.warn(Markers.CLIENT, "Client {} does not participate in a game", client);
+            LOGGER.warn(Markers.CLIENT, "Client {} does not participate in a game", clientId);
             throw new InvalidActionException("game.gameManager.noGameForClient");
         }
     }
 
     /**
-     * launches game with id
+     * Launches the {@link Game} associated with the provided {@code gameId} under the circumstance that its current
+     * player count is at least two.
      *
-     * @param gameId gameId
-     * @return {@code false} if player count is under 2
+     * @param gameId The id associated with the {@link Game} which is to be launched.
+     *
+     * @return {@code true} if the game was successfully launched, otherwise {@code false}.
      */
     public boolean launchGame(int gameId) {
         LOGGER.debug(Markers.GAME, "launched game {}, {}", gameId, this.games.get(gameId).getGame().getName());
@@ -126,6 +133,8 @@ public class GameManager {
      * pauses game with id
      *
      * @param gameId gameId
+     *               
+     * @see #continueGame(int) 
      */
     public void pauseGame(int gameId) {
         LOGGER.debug(Markers.GAME, "paused game {}, {}", gameId, this.games.get(gameId).getGame().getName());
@@ -134,32 +143,27 @@ public class GameManager {
     }
 
     /**
-     * continue game with id
+     * Continues the (previously paused) {@link Game} associated with the provided {@code gameId}.
      *
-     * @param gameId gameId
+     * @param gameId The id of the {@link Game} that is to be continued.
+     *               
+     * @see #pauseGame(int) 
      */
     public void continueGame(int gameId) {
-        LOGGER.debug(Markers.GAME, "continued game {}, {}", gameId, this.games.get(gameId).getGame().getName());
+        LOGGER.debug(Markers.GAME, "Continuing game {}, {}", gameId, this.games.get(gameId).getGame().getName());
         this.games.get(gameId).continueGame();
         clientManager.sendMessageToClients(new ContinueNotification(), this.games.get(gameId).getAllClients());
     }
 
     /**
-     * continue game with id
+     * Aborts the {@link Game} associated with the provided {@code gameId}.
      *
-     * @param gameId gameId
+     * @param gameId The id of the {@link Game} that is to be aborted.
      * @param points if {@code false} all points will be set to 0
      */
     public void abortGame(int gameId, boolean points) {
-        LOGGER.debug(Markers.GAME, "abort game {}, {}", gameId, this.games.get(gameId).getGame().getName());
+        LOGGER.debug(Markers.GAME, "Aborting game {}, {}", gameId, this.games.get(gameId).getGame().getName());
         this.games.get(gameId).abortGame(points);
-    }
-
-    /**
-     * @return all existing games
-     */
-    public Collection<GameHandler> getAllGames() {
-        return this.games.values();
     }
 
     /**
@@ -221,7 +225,11 @@ public class GameManager {
         return -1;
     }
 
-    public ObservableMap<Integer, GameHandler> getGames() {
+    public Collection<GameHandler> getGameHandlers() {
+        return games.values();
+    }
+
+    public ObservableMap<Integer, GameHandler> getGameMappings() {
         return games;
     }
 }

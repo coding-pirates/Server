@@ -1,8 +1,23 @@
 package de.upb.codingpirates.battleships.server;
 
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableMap;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
@@ -16,15 +31,6 @@ import de.upb.codingpirates.battleships.network.message.notification.ErrorNotifi
 import de.upb.codingpirates.battleships.server.network.ServerApplication;
 import de.upb.codingpirates.battleships.server.util.Markers;
 import de.upb.codingpirates.battleships.server.util.Translator;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
 
 /**
  * handles all client related tasks
@@ -47,7 +53,8 @@ public class ClientManager implements ConnectionHandler, Translator {
      * maps client id to player
      */
     @Nonnull
-    private final Map<Integer, Client> player = Collections.synchronizedMap(Maps.newHashMap());
+    private final ObservableMap<Integer, Client> player =
+        FXCollections.synchronizedObservableMap(FXCollections.observableHashMap());
 
     /**
      * maps client id to spectator
@@ -69,7 +76,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      * @throws InvalidActionException if the id exists
      */
     @Nonnull
-    public Client create(int id,@Nonnull String name,@Nonnull ClientType clientType) throws InvalidActionException {
+    public Client create(int id, @Nonnull String name, @Nonnull ClientType clientType) throws InvalidActionException {
         LOGGER.debug(Markers.CLIENT, "create client with id: {}, type {}", id, clientType);
         if (this.clients.containsKey(id)) {
             throw new InvalidActionException("game.clientManager.createClient.idExists");
@@ -224,4 +231,7 @@ public class ClientManager implements ConnectionHandler, Translator {
         }
     }
 
+    public ObservableMap<Integer, Client> getPlayerMappings() {
+        return player;
+    }
 }

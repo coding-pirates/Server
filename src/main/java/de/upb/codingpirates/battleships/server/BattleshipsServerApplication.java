@@ -17,13 +17,14 @@ import com.google.inject.Injector;
 import org.jetbrains.annotations.NotNull;
 
 import de.upb.codingpirates.battleships.server.gui.util.ResourceBundleWrapper;
+import de.upb.codingpirates.battleships.server.network.ServerModule;
 
 /**
  * @author Andre Blanke
  */
 public final class BattleshipsServerApplication extends Application {
 
-    private final Injector injector = Guice.createInjector();
+    private final Injector injector = Guice.createInjector(new ServerModule());
 
     /**
      * The title of this JavaFX application {@link Stage}.

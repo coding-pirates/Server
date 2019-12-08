@@ -6,9 +6,11 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.SeparatorMenuItem?>
-<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox
@@ -46,7 +48,19 @@
               <Insets bottom="5"/>
             </VBox.margin>
           </Label>
-          <TableView>
+          <TableView fx:id="gameTableView">
+            <columns>
+              <TableColumn text="%overview.game.table.columns.name.text">
+                <cellValueFactory>
+                  <PropertyValueFactory property="name"/>
+                </cellValueFactory>
+              </TableColumn>
+              <TableColumn text="%overview.game.table.columns.state.text">
+                <cellValueFactory>
+                  <PropertyValueFactory property="state"/>
+                </cellValueFactory>
+              </TableColumn>
+            </columns>
             <placeholder>
               <Label text="%overview.game.table.placeholder"/>
             </placeholder>
@@ -63,7 +77,7 @@
               <Insets bottom="5"/>
             </VBox.margin>
           </Label>
-          <TableView>
+          <TableView fx:id="playerTableView">
             <placeholder>
               <Label text="%overview.player.table.placeholder"/>
             </placeholder>

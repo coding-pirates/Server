@@ -38,7 +38,7 @@ public class LobbyRequestHandler extends ExceptionMessageHandler<LobbyRequest> {
     public void handleMessage(LobbyRequest message, Id connectionId) throws NotAllowedException {
         LOGGER.debug("Handle LobbyRequest for {}", connectionId);
         if (clientManager.getClient(connectionId.getInt()) != null) {
-            List<Game> games = gameManager.getAllGames().stream().map((GameHandler::getGame)).collect(Collectors.toList());
+            List<Game> games = gameManager.getGameHandlers().stream().map(GameHandler::getGame).collect(Collectors.toList());
             clientManager.sendMessageToId(new LobbyResponse(games), connectionId);
         } else {
             throw new NotAllowedException("game.handler.lobbyRequestHandler.notRegistered");
