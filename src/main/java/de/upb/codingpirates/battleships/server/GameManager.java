@@ -1,8 +1,19 @@
 package de.upb.codingpirates.battleships.server;
 
+import java.util.*;
+
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableMap;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.inject.Inject;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
@@ -14,11 +25,6 @@ import de.upb.codingpirates.battleships.network.message.notification.PauseNotifi
 import de.upb.codingpirates.battleships.server.game.GameHandler;
 import de.upb.codingpirates.battleships.server.network.ServerApplication;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import javax.annotation.Nonnull;
-import java.util.*;
 
 /**
  * handles all game related tasks
@@ -36,7 +42,8 @@ public class GameManager {
     /**
      * maps game id to gamehandler
      */
-    private final Map<Integer, GameHandler> games = Collections.synchronizedMap(Maps.newHashMap());
+    private final ObservableMap<Integer, GameHandler> games =
+        FXCollections.synchronizedObservableMap(FXCollections.observableHashMap());
     /**
      * maps client id to gameid
      */
@@ -221,4 +228,7 @@ public class GameManager {
         return -1;
     }
 
+    public ObservableMap<Integer, GameHandler> getGameMappings() {
+        return games;
+    }
 }
