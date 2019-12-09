@@ -5,6 +5,7 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import de.upb.codingpirates.battleships.logic.GameState;
 import javafx.application.Platform;
 import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
@@ -108,7 +109,7 @@ public final class MainController extends AbstractController<Parent> {
                 final Dragboard dragboard = event.getDragboard();
                 final Object    content   = dragboard.getContent(SERIALIZED_MIME_TYPE);
 
-                if (row.isEmpty() || !(content instanceof Client))
+                if (row.isEmpty() || !(content instanceof Client) || (row.getItem().getState() != GameState.LOBBY))
                     return;
 
                 try {
