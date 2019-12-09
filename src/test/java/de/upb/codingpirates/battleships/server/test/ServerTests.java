@@ -60,6 +60,7 @@ public class ServerTests {
         }
 
 
+
         long timer = System.currentTimeMillis();
         while (timer > System.currentTimeMillis() - 1000){
         }
@@ -294,9 +295,9 @@ public class ServerTests {
     private static List<Shot> getShots(Configuration configuration){
         List<Shot> shots = Lists.newArrayList();
         if(TestProperties.simple){
-            shots.add(new Shot(ids.get(0), new Point2D(3, 4)));
-            shots.add(new Shot(ids.get(0), new Point2D(3, 3)));
-            shots.add(new Shot(ids.get(0), new Point2D(4, 3)));
+            shots.add(new Shot(ids.get(0), new Point2D(2, 3)));
+            shots.add(new Shot(ids.get(0), new Point2D(2, 2)));
+            shots.add(new Shot(ids.get(0), new Point2D(3, 2)));
 
 
         }else {
