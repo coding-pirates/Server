@@ -33,6 +33,8 @@ import de.upb.codingpirates.battleships.server.util.Translator;
 
 /**
  * Handles all {@link Client}-related functionality.
+ *
+ * @author Paul Becker
  */
 public class ClientManager implements ConnectionHandler, Translator {
     private static final Logger LOGGER = LogManager.getLogger();

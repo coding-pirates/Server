@@ -42,14 +42,19 @@
             <Insets topRightBottomLeft="5"/>
           </VBox.margin>
           <Label
-            styleClass="table-header"
-            text="%overview.game.table.header">
+              styleClass="table-header"
+              text="%overview.game.table.header">
             <VBox.margin>
               <Insets bottom="5"/>
             </VBox.margin>
           </Label>
           <TableView fx:id="gameTableView">
             <columns>
+              <TableColumn text="%overview.game.table.columns.id.text">
+                <cellValueFactory>
+                  <PropertyValueFactory property="id"/>
+                </cellValueFactory>
+              </TableColumn>
               <TableColumn text="%overview.game.table.columns.name.text">
                 <cellValueFactory>
                   <PropertyValueFactory property="name"/>
@@ -58,6 +63,16 @@
               <TableColumn text="%overview.game.table.columns.state.text">
                 <cellValueFactory>
                   <PropertyValueFactory property="state"/>
+                </cellValueFactory>
+              </TableColumn>
+              <TableColumn text="%overview.game.table.columns.currentPlayerCount">
+                <cellValueFactory>
+                  <PropertyValueFactory property="currentPlayerCount"/>
+                </cellValueFactory>
+              </TableColumn>
+              <TableColumn text="%overview.game.table.columns.maxPlayerCount">
+                <cellValueFactory>
+                  <PropertyValueFactory property="maxPlayerCount"/>
                 </cellValueFactory>
               </TableColumn>
             </columns>
@@ -71,13 +86,25 @@
             <Insets topRightBottomLeft="5"/>
           </VBox.margin>
           <Label
-            styleClass="table-header"
-            text="%overview.player.table.header">
+              styleClass="table-header"
+              text="%overview.player.table.header">
             <VBox.margin>
               <Insets bottom="5"/>
             </VBox.margin>
           </Label>
           <TableView fx:id="playerTableView">
+            <columns>
+              <TableColumn text="%overview.player.table.columns.id.text">
+                <cellValueFactory>
+                  <PropertyValueFactory property="id"/>
+                </cellValueFactory>
+              </TableColumn>
+              <TableColumn text="%overview.player.table.columns.name.text">
+                <cellValueFactory>
+                  <PropertyValueFactory property="name"/>
+                </cellValueFactory>
+              </TableColumn>
+            </columns>
             <placeholder>
               <Label text="%overview.player.table.placeholder"/>
             </placeholder>
