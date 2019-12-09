@@ -3,6 +3,7 @@ package de.upb.codingpirates.battleships.server;
 import de.upb.codingpirates.battleships.server.gui.util.ResourceBundleWrapper;
 import de.upb.codingpirates.battleships.server.network.ServerApplication;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -76,6 +77,10 @@ public final class BattleshipsServerApplication extends Application {
 
     @Override
     public void start(@NotNull final Stage stage) throws Exception {
+        stage.setOnCloseRequest(event -> {
+            Platform.exit();
+            System.exit(0);
+        });
         stage.setScene(new Scene(loadView("main")));
         stage.setTitle(TITLE);
 
