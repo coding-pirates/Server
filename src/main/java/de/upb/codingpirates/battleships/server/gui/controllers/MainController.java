@@ -5,7 +5,6 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
-import de.upb.codingpirates.battleships.logic.GameState;
 import javafx.application.Platform;
 import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
@@ -25,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Game;
+import de.upb.codingpirates.battleships.logic.GameState;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
@@ -92,8 +92,6 @@ public final class MainController extends AbstractController<Parent> {
     }
 
     private void initializeTableViews() {
-        playerTableView.getItems().add(new Client(0, "test"));
-
         gameTableView.setRowFactory(tableView -> {
             final TableRow<Game> row = new TableRow<>();
 
@@ -114,7 +112,6 @@ public final class MainController extends AbstractController<Parent> {
 
                 try {
                     gameManager.getGame(row.getItem().getId()).addClient(ClientType.PLAYER, (Client) content);
-                    tableView.refresh();
                 } catch (final InvalidActionException exception) {
                     LOGGER.error(exception);
                 }

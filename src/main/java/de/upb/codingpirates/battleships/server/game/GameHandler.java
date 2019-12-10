@@ -116,7 +116,7 @@ public class GameHandler implements Translator {
                     throw new InvalidActionException("game.isFull");
                 player.put(client.getId(), client);
                 fields.put(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(),client.getId()));
-                game.addPlayer();
+                game.incrementCurrentPlayerCount();
                 break;
             case SPECTATOR:
                 if (spectator.size() >= MAX_SPECTATOR_COUNT)
@@ -132,7 +132,7 @@ public class GameHandler implements Translator {
             if (this.player.containsKey(client)) {
                 this.player.remove(client);
                 this.fields.remove(client);
-                this.game.removePlayer();
+                this.game.decrementCurrentPlayerCount();
                 this.ships.remove(client);
                 this.startShip.remove(client);
             }
