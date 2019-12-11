@@ -97,10 +97,18 @@ public class GameHandler implements Translator {
     @Nonnull
     private final Map<Ship, List<Shot>> shipToShots = Collections.synchronizedMap(Maps.newHashMap());
 
+    /**
+     * The minimum amount of {@link Client}s with {@link ClientType#PLAYER} required in order to launch a game using
+     * the {@link #launchGame()} method.
+     *
+     * @see #launchGame()
+     */
+    public static final int MIN_PLAYER_COUNT    = 2;
+
     private static final int MAX_SPECTATOR_COUNT = Integer.MAX_VALUE;
 
     public GameHandler(@Nonnull String name, int id, @Nonnull Configuration config, boolean tournament, @Nonnull ClientManager clientManager) {
-        this.game = new Game(name, id, GameState.LOBBY, config, tournament);
+        this.game = new Game(id, name, GameState.LOBBY, config, tournament);
         this.tournament = tournament;
         this.clientManager = clientManager;
     }
@@ -371,7 +379,7 @@ public class GameHandler implements Translator {
      */
     public boolean launchGame() {
         if (this.game.getState() == GameState.LOBBY) {
-            if (this.player.size() < 2) {
+            if (this.player.size() < MIN_PLAYER_COUNT) {
                 return false;
             }
             this.game.setState(GameState.IN_PROGRESS);

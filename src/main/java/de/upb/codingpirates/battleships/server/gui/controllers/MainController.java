@@ -5,12 +5,15 @@ import java.util.ResourceBundle;
 
 import javax.inject.Inject;
 
+import de.upb.codingpirates.battleships.server.gui.control.Alerts;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
@@ -19,6 +22,7 @@ import javafx.scene.input.TransferMode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import de.upb.codingpirates.battleships.logic.ClientType;
@@ -64,6 +68,8 @@ public final class MainController extends AbstractController<Parent> {
     // <editor-fold desc="Initialization">
     @Override
     public void initialize(final URL url, final ResourceBundle resourceBundle) {
+        super.initialize(url, resourceBundle);
+
         clientManager
             .getPlayerMappings()
             .addListener(this::onPlayerMappingsChange);
@@ -91,9 +97,78 @@ public final class MainController extends AbstractController<Parent> {
 
     }
 
+    @NotNull
+    @Contract("_ -> new")
+    private ContextMenu newGameTableRowContextMenu(@NotNull final TableRow<Game> row) {
+        final MenuItem launchItem      = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.launch.text"));
+        final MenuItem pauseResumeItem = new MenuItem();
+        final MenuItem abortItem       = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.abort.text"));
+
+        row.itemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue == null)
+                return;
+
+            final GameHandler handler;
+            final Game game = row.getItem();
+
+            try {
+                handler = gameManager.getGame(game.getId());
+            } catch (final InvalidActionException exception) {
+                throw new RuntimeException(exception);
+            }
+
+            final BooleanBinding inProgress = game.stateProperty().isEqualTo(GameState.IN_PROGRESS);
+            final BooleanBinding paused     = game.stateProperty().isEqualTo(GameState.PAUSED);
+
+
+            launchItem
+                .disableProperty()
+                .bind(game.currentPlayerCountProperty().lessThan(GameHandler.MIN_PLAYER_COUNT));
+            launchItem
+                .setOnAction(event -> handler.launchGame());
+
+            pauseResumeItem
+                .disableProperty()
+                .bind(Bindings.not(inProgress.or(paused)));
+            pauseResumeItem
+                .textProperty()
+                .bind(
+                    Bindings
+                        .when(paused)
+                        .then(resourceBundle.getString("overview.game.table.contextMenu.resume.text"))
+                        .otherwise(resourceBundle.getString("overview.game.table.contextMenu.pause.text")));
+            pauseResumeItem
+                .setOnAction(event -> {
+                    if (game.getState() == GameState.PAUSED)
+                        handler.continueGame();
+                    else
+                        handler.pauseGame();
+                });
+
+            abortItem
+                .disableProperty()
+                .bind(game.stateProperty().isEqualTo(GameState.FINISHED));
+            abortItem
+                .setOnAction(event ->
+                    Alerts
+                        .alert(
+                            resourceBundle.getString("overview.game.table.contextMenu.abort.alert.title"),
+                            resourceBundle.getString("overview.game.table.contextMenu.abort.alert.headerText"),
+                            resourceBundle.getString("overview.game.table.contextMenu.abort.alert.contentText"),
+                            AlertType.CONFIRMATION,
+                            ButtonType.YES,
+                            ButtonType.NO)
+                        .showAndWait()
+                        .ifPresent(alertResult -> handler.abortGame(alertResult == ButtonType.YES)));
+        });
+        return new ContextMenu(launchItem, pauseResumeItem, abortItem);
+    }
+
     private void initializeTableViews() {
         gameTableView.setRowFactory(tableView -> {
             final TableRow<Game> row = new TableRow<>();
+
+            row.setContextMenu(newGameTableRowContextMenu(row));
 
             row.setOnDragOver(event -> {
                 final Dragboard dragboard = event.getDragboard();
