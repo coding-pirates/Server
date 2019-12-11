@@ -351,9 +351,7 @@ public class GameHandler implements Translator {
                     id = winner.get().getKey();
                 }
                 LOGGER.debug("Game {} has finished",game.getId());
-                Map<Integer, Integer> score = Maps.newHashMap();
-                this.score.forEach((clientId, points)->score.put(clientId, points/4));
-                this.clientManager.sendMessageToClients(new FinishNotification(score,id),getAllClients());
+                this.clientManager.sendMessageToClients(new FinishNotification(this.score, id),getAllClients());
                 this.game.setState(GameState.FINISHED);
                 break;
             default:
@@ -580,10 +578,8 @@ public class GameHandler implements Translator {
      * send spectator & player update notifications
      */
     private void sendUpdateNotification(){
-        Map<Integer, Integer> score = Maps.newHashMap();
-        this.score.forEach((clientId, points)->score.put(clientId, points/4));
-        this.clientManager.sendMessageToClients(new PlayerUpdateNotification(hitShots, score, this.sunkShots), player.values());
-        this.clientManager.sendMessageToClients(new SpectatorUpdateNotification(hitShots,score,sunkShots,missedShots),spectator.values());
+        this.clientManager.sendMessageToClients(new PlayerUpdateNotification(this.hitShots, score, this.sunkShots), this.player.values());
+        this.clientManager.sendMessageToClients(new SpectatorUpdateNotification(this.hitShots, this.score, this.sunkShots, this.missedShots), this.spectator.values());
     }
 
     /**
