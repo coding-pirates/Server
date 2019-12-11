@@ -4,9 +4,9 @@ package de.upb.codingpirates.battleships.server.test;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.client.Handler;
-import de.upb.codingpirates.battleships.client.network.AbstractClientModule;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
 import de.upb.codingpirates.battleships.client.network.ClientConnector;
+import de.upb.codingpirates.battleships.client.network.ClientModule;
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.Properties;
 import de.upb.codingpirates.battleships.network.exceptions.BattleshipException;
@@ -14,8 +14,6 @@ import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.report.ConnectionClosedReport;
 import de.upb.codingpirates.battleships.network.message.request.*;
 import de.upb.codingpirates.battleships.network.message.response.*;
-import de.upb.codingpirates.battleships.network.util.ClientReaderMethod;
-import de.upb.codingpirates.battleships.network.util.DefaultReaderMethod;
 import de.upb.codingpirates.battleships.server.network.ServerApplication;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -66,7 +64,7 @@ public class ServerTests {
         LOGGER.debug("start connection test");
 
         for(int i = 0;i< TestProperties.playerCount;i++) {
-            ClientConnector connector = ClientApplication.create(ClientModule.class);
+            ClientConnector connector = ClientApplication.create(new TestClientModule());
             connector.connect(TestProperties.hostAddress, Properties.PORT);
             connectorstmp.add(connector);
             timer = System.currentTimeMillis();
@@ -106,18 +104,10 @@ public class ServerTests {
         LOGGER.debug("finished connection test");
     }
 
-    public static class ClientModule extends AbstractClientModule<ClientConnector> {
+    public static class TestClientModule extends ClientModule<ClientConnector> {
 
-        public ClientModule() {
-            super(ClientConnector.class);
-        }
-
-        @Override
-        protected void configure() {
-            super.configure();
-
-            this.bind(Handler.class).toInstance(new MessageHandler());
-            this.bind(ClientReaderMethod.class).to(DefaultReaderMethod.class);
+        public TestClientModule() {
+            super(ClientConnector.class,MessageHandler.class);
         }
     }
 
