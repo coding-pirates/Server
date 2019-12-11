@@ -8,7 +8,7 @@ import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
-import de.upb.codingpirates.battleships.network.id.IntIdManager;
+import de.upb.codingpirates.battleships.network.id.IdManager;
 import de.upb.codingpirates.battleships.network.message.notification.ContinueNotification;
 import de.upb.codingpirates.battleships.network.message.notification.PauseNotification;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
@@ -31,7 +31,7 @@ public class GameManager {
     @Nonnull
     private final ClientManager clientManager;
     @Nonnull
-    private final IntIdManager idManager;
+    private final IdManager idManager;
 
     /**
      * maps game id to gamehandler
@@ -43,7 +43,7 @@ public class GameManager {
     private final Map<Integer, Integer> clientToGame = Collections.synchronizedMap(Maps.newHashMap());
 
     @Inject
-    public GameManager(@Nonnull ConnectionHandler handler, @Nonnull IntIdManager idManager) {
+    public GameManager(@Nonnull ConnectionHandler handler, @Nonnull IdManager idManager) {
         this.clientManager = (ClientManager) handler;
         this.idManager = idManager;
         new Timer().schedule(new TimerTask() {

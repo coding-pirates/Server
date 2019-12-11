@@ -10,7 +10,6 @@ import de.upb.codingpirates.battleships.network.connectionmanager.ServerConnecti
 import de.upb.codingpirates.battleships.network.exceptions.BattleshipException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.id.Id;
-import de.upb.codingpirates.battleships.network.id.IntId;
 import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.notification.ErrorNotification;
 import de.upb.codingpirates.battleships.server.network.ServerApplication;
@@ -108,7 +107,7 @@ public class ClientManager implements ConnectionHandler, Translator {
     public void sendMessageToAll(Message message) {
         try {
             for (int id : this.clients.keySet()) {
-                this.connectionManager.send(new IntId(id), message);
+                this.connectionManager.send(new Id(id), message);
             }
         } catch (IOException e) {
             LOGGER.error(ServerMarker.CONNECTION, "could not send message", e);
@@ -124,7 +123,7 @@ public class ClientManager implements ConnectionHandler, Translator {
     public void sendMessageToInts(Message message, Collection<Integer> clients) {
         try {
             for (int client : clients) {
-                this.connectionManager.send(new IntId(client), message);
+                this.connectionManager.send(new Id(client), message);
             }
         } catch (IOException e) {
             LOGGER.error(ServerMarker.CONNECTION, "could not send message", e);
@@ -156,7 +155,7 @@ public class ClientManager implements ConnectionHandler, Translator {
     public void sendMessageToClients(Message message, Collection<Client> clients) {
         try {
             for (Client client : clients) {
-                this.connectionManager.send(new IntId(client.getId()), message);
+                this.connectionManager.send(new Id(client.getId()), message);
             }
         } catch (IOException e) {
             LOGGER.error(ServerMarker.CONNECTION, "could not send message", e);
