@@ -84,10 +84,15 @@ public class GameManager {
     public void addClientToGame(int gameId, @Nonnull Client client, @Nonnull ClientType clientType) throws GameException {
         LOGGER.debug(ServerMarker.GAME, "Adding client {}, with type {}, to game {}", client.getId(), clientType, gameId);
         if(this.clientToGame.containsKey(client.getId())){
-            if(clientType.equals(ClientType.PLAYER))
+            if(clientType.equals(ClientType.PLAYER)) {
+                GameHandler handler = this.games.get(this.clientToGame.get(client.getId()));
+                if(handler.getGame().getState().equals(GameState.FINISHED)){
+                    this.clientToGame.remove(client.getId());
+                }
                 throw new NotAllowedException("game.gameManager.alreadyIngame");
-            else
+            } else {
                 this.clientToGame.remove(client.getId());
+            }
         }
         if (this.games.containsKey(gameId)) {
             this.games.get(gameId).addClient(clientType, client);
