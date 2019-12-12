@@ -3,7 +3,6 @@ package de.upb.codingpirates.battleships.server.gui.controllers;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import de.upb.codingpirates.battleships.logic.Configuration;
-import de.upb.codingpirates.battleships.logic.PenaltyType;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
