@@ -3,12 +3,15 @@ package de.upb.codingpirates.battleships.server.test;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import de.upb.codingpirates.battleships.client.Handler;
 import de.upb.codingpirates.battleships.client.network.AbstractClientModule;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
 import de.upb.codingpirates.battleships.client.network.ClientConnector;
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.Properties;
+import de.upb.codingpirates.battleships.network.dispatcher.MessageDispatcher;
 import de.upb.codingpirates.battleships.network.exceptions.BattleshipException;
 import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.report.ConnectionClosedReport;
@@ -16,7 +19,8 @@ import de.upb.codingpirates.battleships.network.message.request.*;
 import de.upb.codingpirates.battleships.network.message.response.*;
 import de.upb.codingpirates.battleships.network.util.ClientReaderMethod;
 import de.upb.codingpirates.battleships.network.util.DefaultReaderMethod;
-import de.upb.codingpirates.battleships.server.network.ServerApplication;
+import de.upb.codingpirates.battleships.server.GameManager;
+import de.upb.codingpirates.battleships.server.ServerModule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
@@ -45,13 +49,10 @@ public class ServerTests {
     public void test() throws IOException {
         if(!TestProperties.isServerOnline) {
             new Thread(() -> {
-                ServerApplication server = null;
-                try {
-                    server = new ServerApplication();
-                } catch (InstantiationException | IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-                server.getGameManager().createGame(TEST_CONFIG, "test", false);
+                Injector injector = Guice.createInjector(new ServerModule());
+                injector.getInstance(MessageDispatcher.class);
+                GameManager manager = injector.getInstance(GameManager.class);
+                manager.createGame(TEST_CONFIG, "test", false);
                 long timer = System.currentTimeMillis();
                 while (timer > System.currentTimeMillis() - 20000) {
 
