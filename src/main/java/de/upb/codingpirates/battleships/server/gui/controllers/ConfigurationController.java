@@ -46,8 +46,8 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 /**
- * The controller associated with the {@code configuration.fxml} file which allows the creation of
- * {@link Configuration} objects and starting of configured games.
+ * The controller associated with the {@code configuration.fxml} file which allows the creation of {@link Configuration}
+ * objects and starting of configured games.
  *
  * @author Andre Blanke
  */
@@ -620,8 +620,17 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
         private final Set<Point2D> marks;
 
+        /**
+         * The (preferably) unique label of this {@code ShipTypeConfiguration} displayed by the {@link #toString()}.
+         * 
+         * @see #toShipTypeLabel(int) 
+         */
         private final String label;
 
+        /**
+         * The default {@link #width} and {@link #height} a newly instantiated {@code ShipTypeConfiguration} should
+         * have.
+         */
         private static final int DEFAULT_WIDTH_AND_HEIGHT = 5;
 
         /**
@@ -674,7 +683,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
         /**
          * @inheritDoc
          *
-         * @return The label of this {@code ShipType} when displayed inside of {@link #shipTypeEditingComboBox}.
+         * @return The label of this {@code ShipType}, used for display inside of {@link #shipTypeEditingComboBox}.
          */
         @Override
         @Contract(pure = true)
@@ -682,18 +691,36 @@ public final class ConfigurationController extends AbstractController<Parent> {
             return label;
         }
 
+        /**
+         * Removes all {@link Point2D} objects from the {@link #marks} collection which lie outside the bounds set by
+         * the {@link #width} and {@link #height} attributes.
+         */
         private void removeInvalidMarks() {
             marks.removeIf(point -> (point.getX() >= width) || (point.getY() >= height));
         }
 
-        private static final Point2D[] NEIGHBOR_OFFSETS = {
-            new Point2D(-1, 0), /* Left   */
-            new Point2D( 0, 1), /* Top    */
-            new Point2D( 1, 0), /* Right  */
-            new Point2D( 0, -1) /* Bottom */
-        };
-
         // <editor-fold desc="toShipType()">
+        /**
+         * Checks whether the depth-first search should be continued for the point {@code (x, y)}.
+         *
+         * The search should be continued if the provided point {@code (x, y)} is within the bounds of the matrix,
+         * a {@link Point2D} object representing this point exists inside the {@link #marks} collection, and if it has
+         * not yet been visited.
+         *
+         * @param marks A matrix representation of the {@link #marks} collection.
+         *
+         * @param visited A matrix representing the {@link Point2D} objects of the {@link #marks} collection which
+         *                have already been visited by a previous iteration of the algorithm.
+         *
+         * @param x The x coordinate of the point which is to be checked for a continuation of the depth-first search.
+         *
+         * @param y The y coordinate of the point which is to be checked for a continuation of the depth-first search.
+         *
+         * @return {@code true} if the depth-first search should be continued for the point {@code (x, y)},
+         *         otherwise {@code false}.
+         *
+         * @see #dfs(boolean[][], boolean[][], int, int) 
+         */
         @Contract(pure = true)
         private boolean shouldTraverse(
                 @NotNull final boolean[][] marks,
@@ -703,6 +730,31 @@ public final class ConfigurationController extends AbstractController<Parent> {
             return ((x >= 0) && (x < width)) && ((y >= 0) && (y < height)) && marks[x][y] && !visited[x][y];
         }
 
+        /**
+         * An array of {@link Point2D} objects containing the offsets used to reach a neighboring {@code Point2D} from
+         * another {@code Point2D} object.
+         */
+        private static final Point2D[] NEIGHBOR_OFFSETS = {
+                new Point2D(-1, 0), /* Left   */
+                new Point2D( 0, 1), /* Top    */
+                new Point2D( 1, 0), /* Right  */
+                new Point2D( 0, -1) /* Bottom */
+        };
+
+        /**
+         * Recursively executes a depth-first search starting at the point {@code (x, y)}.
+         *
+         * @param marks A matrix representation of the {@link #marks} collection.
+         *
+         * @param visited A matrix representing the {@link Point2D} objects of the {@link #marks} collection which
+         *                have already been visited by a previous iteration of the algorithm.
+         *
+         * @param x The x starting coordinate of the point from which to start the depth-first search.
+         *
+         * @param y The y starting coordinate of the point from which to start the depth-first search.
+         *
+         * @see #checkMarksConnected()
+         */
         private void dfs(
                 @NotNull final boolean[][] marks,
                 @NotNull final boolean[][] visited,
@@ -719,6 +771,18 @@ public final class ConfigurationController extends AbstractController<Parent> {
             }
         }
 
+        /**
+         * Checks whether or not the individual {@link Point2D} objects inside the {@link #marks} collection are all
+         * directly adjacent to each other.
+         *
+         * Two {@link Point2D}s are considered directly adjacent if and only if one can be reached from the other by
+         * going up, down, left, or right and vice versa.
+         *
+         * @return {@code true} if all {@link Point2D} objects inside the {@link #marks} collection are adjacent,
+         *         otherwise {@code false}.
+         *
+         * @see #toShipType()
+         */
         private boolean checkMarksConnected() {
             final boolean[][] markMatrix = new boolean[width][height];
             final boolean[][] visited    = new boolean[width][height];
@@ -740,12 +804,31 @@ public final class ConfigurationController extends AbstractController<Parent> {
             return true;
         }
 
+        /**
+         * Checks whether this {@code ShipTypeConfiguration} consists of the minimum amount of {@link Point2D} objects
+         * according to the product vision.
+         *
+         * @return {@code true} if this {@code ShipTypeConfiguration} has the minimum size, otherwise {@code false}.
+         *
+         * @see #toShipType()
+         */
         @Contract(pure = true)
         @SuppressWarnings("BooleanMethodIsAlwaysInverted")
         private boolean hasMinimumSize() {
             return marks.size() >= MINIMUM_SHIP_TYPE_SIZE;
         }
 
+        /**
+         * Converts this {@code ShipTypeConfiguration} into a {@link ShipType}
+         *
+         * @return A new {@link ShipType} representing this {@link ShipTypeConfiguration}.
+         *
+         * @throws InvalidShipTypeConfigurationException If this {@code ShipTypeConfiguration} is not of the minimum
+         *                                               size or the individual {@link Point2D} are not directly
+         *                                               adjacent to each other.
+         *
+         * @see InvalidShipTypeConfigurationException
+         */
         @NotNull
         @Contract(value = " -> new", pure = true)
         private ShipType toShipType() throws InvalidShipTypeConfigurationException {
@@ -756,10 +839,22 @@ public final class ConfigurationController extends AbstractController<Parent> {
         // </editor-fold>
     }
 
+    /**
+     * An exception thrown to indicate that a {@link ShipTypeConfiguration} is not valid (e.g. because some it is too
+     * small or because the individual parts that make up the ship are not connected) and thus cannot be converted
+     * into a {@link ShipType}.
+     *
+     * @see ShipTypeConfiguration#toShipType()
+     */
     private static final class InvalidShipTypeConfigurationException extends RuntimeException {
 
         private final ShipTypeConfiguration invalidConfiguration;
 
+        /**
+         * Instantiates a new {@code InvalidShipTypeConfigurationException}.
+         *
+         * @param invalidConfiguration The invalid {@link ShipTypeConfiguration} which caused this exception.
+         */
         private InvalidShipTypeConfigurationException(@NotNull final ShipTypeConfiguration invalidConfiguration) {
             this.invalidConfiguration = invalidConfiguration;
         }
