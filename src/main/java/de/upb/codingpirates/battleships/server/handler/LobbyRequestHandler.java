@@ -1,6 +1,7 @@
 package de.upb.codingpirates.battleships.server.handler;
 
 import com.google.inject.Inject;
+import de.upb.codingpirates.battleships.logic.Game;
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.Id;
