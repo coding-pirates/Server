@@ -4,8 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
-
-import com.google.inject.Inject;
+import javax.inject.Inject;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,7 +12,6 @@ import org.apache.logging.log4j.Logger;
 import de.upb.codingpirates.battleships.logic.Game;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.Id;
-import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.request.LobbyRequest;
 import de.upb.codingpirates.battleships.network.message.response.LobbyResponse;
 import de.upb.codingpirates.battleships.server.ClientManager;

@@ -3,8 +3,7 @@ package de.upb.codingpirates.battleships.server.handler;
 import java.util.List;
 
 import javax.annotation.Nonnull;
-
-import com.google.inject.Inject;
+import javax.inject.Inject;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

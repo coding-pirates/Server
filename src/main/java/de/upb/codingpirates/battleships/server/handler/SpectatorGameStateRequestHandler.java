@@ -1,8 +1,7 @@
 package de.upb.codingpirates.battleships.server.handler;
 
 import javax.annotation.Nonnull;
-
-import com.google.inject.Inject;
+import javax.inject.Inject;
 
 import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.logic.GameState;
