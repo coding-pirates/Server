@@ -60,14 +60,13 @@ public class ServerTests {
         }
 
 
-
         long timer = System.currentTimeMillis();
         while (timer > System.currentTimeMillis() - 1000){
         }
         LOGGER.debug("start connection test");
 
         for(int i = 0;i< TestProperties.playerCount;i++) {
-            ClientConnector connector = ClientApplication.create(ClientModule.class);
+            ClientConnector connector = ClientApplication.create(new TestClientModule());
             connector.connect(TestProperties.hostAddress, Properties.PORT);
             connectorstmp.add(connector);
             timer = System.currentTimeMillis();
@@ -104,21 +103,13 @@ public class ServerTests {
         while (!finished.get()){
         }
 
-        //LOGGER.debug("finished connection test");
+        LOGGER.debug("finished connection test");
     }
 
-    public static class ClientModule extends AbstractClientModule<ClientConnector> {
+    public static class TestClientModule extends ClientModule<ClientConnector> {
 
-        public ClientModule() {
-            super(ClientConnector.class);
-        }
-
-        @Override
-        protected void configure() {
-            super.configure();
-
-            this.bind(Handler.class).toInstance(new MessageHandler());
-            this.bind(ClientReaderMethod.class).to(DefaultReaderMethod.class);
+        public TestClientModule() {
+            super(ClientConnector.class,MessageHandler.class);
         }
     }
 
@@ -288,24 +279,48 @@ public class ServerTests {
 
     private static Map<Integer, PlacementInfo> getPlacement(Configuration configuration){
         Map<Integer, PlacementInfo> ships = Maps.newConcurrentMap();
-        ships.put(0,new PlacementInfo(new Point2D(2,2), Rotation.NONE));
+        if(TestProperties.simple){
+            ships.put(0,new PlacementInfo(new Point2D(2,2), Rotation.NONE));
+        }else {
+            PlacementInfo info = new PlacementInfo(new Point2D(RANDOM.nextInt(configuration.getWidth() - 3), RANDOM.nextInt(configuration.getHeight() - 3)), Rotation.NONE);
+            ships.put(0, info);
+            placementInfos.add(info);
+        }
         return ships;
     }
+
+    private static List<PlacementInfo> placementInfos = Lists.newArrayList();
 
     private static List<Shot> getShots(Configuration configuration){
         List<Shot> shots = Lists.newArrayList();
         if(TestProperties.simple){
-            shots.add(new Shot(ids.get(0), new Point2D(2, 3)));
-            shots.add(new Shot(ids.get(0), new Point2D(2, 2)));
-            shots.add(new Shot(ids.get(0), new Point2D(3, 2)));
-
-
+            shots.add(new Shot(ids.get(0), new Point2D(3, 4)));
+            shots.add(new Shot(ids.get(0), new Point2D(3, 3)));
+            shots.add(new Shot(ids.get(0), new Point2D(4, 3)));
         }else {
-            if (RANDOM.nextBoolean()) {
-                shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(3, 4)));
-            } else {
-                shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(3, 3)));
-                shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(4, 3)));
+            switch (TestProperties.testCase){
+                case 0:
+                    if (RANDOM.nextBoolean()) {
+                        shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(3, 4)));
+                    } else {
+                        shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(3, 3)));
+                        shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())), new Point2D(4, 3)));
+                    }
+                    break;
+                case 1:
+//                    if(RANDOM.nextInt(3) == 0){
+                        Point2D hit = placementInfos.get(RANDOM.nextInt(placementInfos.size())).getPosition();
+                        LOGGER.error(hit);
+                        shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())),hit.getPointWithOffset(RANDOM.nextInt(3),RANDOM.nextInt(3))));
+                    shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())),hit.getPointWithOffset(RANDOM.nextInt(3),RANDOM.nextInt(3))));
+                    shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())),hit.getPointWithOffset(RANDOM.nextInt(3),RANDOM.nextInt(3))));
+                    break;
+//                    }
+                default:
+                    shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())),new Point2D(RANDOM.nextInt(configuration.getWidth()),RANDOM.nextInt(configuration.getHeight()))));
+                    shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())),new Point2D(RANDOM.nextInt(configuration.getWidth()),RANDOM.nextInt(configuration.getHeight()))));
+                    shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())),new Point2D(RANDOM.nextInt(configuration.getWidth()),RANDOM.nextInt(configuration.getHeight()))));
+                    break;
             }
         }
         return shots;

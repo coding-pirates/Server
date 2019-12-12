@@ -22,7 +22,7 @@ public class ServerApplication extends NetworkApplication {
     @SuppressWarnings({"ConstantConditions"})
     public ServerApplication() throws InstantiationException, IllegalAccessException, IllegalStateException {
         LOGGER.info(ServerMarker.CONNECTION,"Starting server module");
-        this.useModule(ServerModule.class).run();
+        this.useModule(new ServerModule()).run();
         this.clientManager = (ClientManager) this.getHandler();
         if (clientManager == null) throw new IllegalStateException("ClientManager is null");
         this.gameManager = this.injector.getInstance(GameManager.class);
