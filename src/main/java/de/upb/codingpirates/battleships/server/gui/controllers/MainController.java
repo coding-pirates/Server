@@ -112,7 +112,7 @@ public final class MainController extends AbstractController<Parent> {
             final Game game = row.getItem();
 
             try {
-                handler = gameManager.getGame(game.getId());
+                handler = gameManager.getGameHandler(game.getId());
             } catch (final InvalidActionException exception) {
                 throw new RuntimeException(exception);
             }
@@ -186,7 +186,7 @@ public final class MainController extends AbstractController<Parent> {
                     return;
 
                 try {
-                    gameManager.getGame(row.getItem().getId()).addClient(ClientType.PLAYER, (Client) content);
+                    gameManager.getGameHandler(row.getItem().getId()).addClient(ClientType.PLAYER, (Client) content);
                 } catch (final InvalidActionException exception) {
                     LOGGER.error(exception);
                 }

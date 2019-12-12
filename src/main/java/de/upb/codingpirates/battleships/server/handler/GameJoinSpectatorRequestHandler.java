@@ -1,41 +1,36 @@
 package de.upb.codingpirates.battleships.server.handler;
 
+import javax.annotation.Nonnull;
+
 import com.google.inject.Inject;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.ClientType;
-import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.Id;
-import de.upb.codingpirates.battleships.network.message.ExceptionMessageHandler;
-import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.request.GameJoinSpectatorRequest;
 import de.upb.codingpirates.battleships.network.message.response.GameJoinSpectatorResponse;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
-import javax.annotation.Nonnull;
-
-public class GameJoinSpectatorRequestHandler extends ExceptionMessageHandler<GameJoinSpectatorRequest> {
+public final class GameJoinSpectatorRequestHandler extends AbstractServerMessageHandler<GameJoinSpectatorRequest> {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    @Nonnull
-    private final ClientManager clientManager;
-    @Nonnull
-    private final GameManager gameManager;
-
     @Inject
-    public GameJoinSpectatorRequestHandler(@Nonnull ConnectionHandler handler, @Nonnull GameManager gameManager) {
-        this.clientManager = (ClientManager) handler;
-        this.gameManager = gameManager;
+    public GameJoinSpectatorRequestHandler(@Nonnull final ClientManager clientManager,
+                                           @Nonnull final GameManager   gameManager) {
+        super(clientManager, gameManager, GameJoinSpectatorRequest.class);
     }
 
     @Override
-    public void handleMessage(GameJoinSpectatorRequest message, Id connectionId) throws GameException {
-        LOGGER.debug(ServerMarker.CLIENT, "Handle GameJoinSpactatorRequest from {}, for game {}", connectionId, message.getGameId());
+    public void handleMessage(@Nonnull final GameJoinSpectatorRequest message,
+                              @Nonnull final Id connectionId) throws GameException {
+        LOGGER.debug(ServerMarker.CLIENT, "Handling GameJoinSpectatorRequest from clientId {}, for gameId {}.", connectionId, message.getGameId());
 
         if (!clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.SPECTATOR)) {
             throw new NotAllowedException("game.handler.gameJoinSpectatorRequest.noSpectator");
@@ -47,10 +42,5 @@ public class GameJoinSpectatorRequestHandler extends ExceptionMessageHandler<Gam
         }
         gameManager.addClientToGame(message.getGameId(), client, ClientType.SPECTATOR);
         clientManager.sendMessageToClient(new GameJoinSpectatorResponse(message.getGameId()), clientManager.getClient(connectionId.getInt()));
-    }
-
-    @Override
-    public boolean canHandle(Message message) {
-        return message instanceof GameJoinSpectatorRequest;
     }
 }
