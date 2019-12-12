@@ -1,5 +1,7 @@
 package de.upb.codingpirates.battleships.server.gui.control;
 
+import javax.annotation.Nonnull;
+
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
@@ -8,8 +10,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 
 import com.google.common.base.Throwables;
-
-import org.jetbrains.annotations.NotNull;
 
 /**
  * A utility class containing static methods for creating ready-to-show JavaFX {@link Alert}s.
@@ -22,7 +22,7 @@ public final class Alerts {
     private Alerts() {
     }
 
-    @NotNull
+    @Nonnull
     public static Alert alert(
             final String        title,
             final String        headerText,
@@ -37,7 +37,7 @@ public final class Alerts {
         return alert;
     }
 
-    @NotNull
+    @Nonnull
     public static Alert exceptionAlert(
             final String title,
             final String headerText,

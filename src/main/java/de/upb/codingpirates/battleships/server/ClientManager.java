@@ -222,9 +222,9 @@ public class ClientManager implements ConnectionHandler, Translator {
     }
 
     @Override
-    public void handleBattleshipException(BattleshipException e) {
-        if (e.getConnectionId() != null) {
-            this.sendMessageToId(new ErrorNotification(e.getErrorType(), e.getMessageId(), this.translate(e.getMessage())), e.getConnectionId());
+    public void handleBattleshipException(@Nonnull final BattleshipException exception) {
+        if (exception.getConnectionId() != null) {
+            this.sendMessageToId(new ErrorNotification(exception.getErrorType(), exception.getMessageId(), this.translate(exception.getMessage())), exception.getConnectionId());
         } else {
             LOGGER.warn(ServerMarker.CLIENT, "could not send ErrorNotification. Could not identify source client");
         }

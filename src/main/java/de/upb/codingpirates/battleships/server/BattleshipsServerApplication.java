@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import javax.annotation.Nonnull;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -13,8 +15,6 @@ import javafx.stage.Stage;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-
-import org.jetbrains.annotations.NotNull;
 
 import de.upb.codingpirates.battleships.server.gui.util.ResourceBundleWrapper;
 
@@ -32,7 +32,7 @@ public final class BattleshipsServerApplication extends Application {
      */
     private static final String TITLE = "Battleships Server";
 
-    public static void main(final String[] args) {
+    public static void main(final String... args) {
         launch(args);
     }
 
@@ -54,7 +54,7 @@ public final class BattleshipsServerApplication extends Application {
      *                                  could not be found.
      */
     @SuppressWarnings("SameParameterValue")
-    private <T extends Parent> T loadView(@NotNull final String name)
+    private <T extends Parent> T loadView(@Nonnull final String name)
             throws IOException, MissingResourceException {
         final String fxmlPath       = String.format("/fxml/%s.fxml", name);
         final String bundleBaseName = String.format("lang.%s", name);
@@ -69,7 +69,7 @@ public final class BattleshipsServerApplication extends Application {
     }
 
     @Override
-    public void start(@NotNull final Stage stage) throws Exception {
+    public void start(@Nonnull final Stage stage) throws Exception {
         stage.setOnCloseRequest(event -> {
             Platform.exit();
             System.exit(0);

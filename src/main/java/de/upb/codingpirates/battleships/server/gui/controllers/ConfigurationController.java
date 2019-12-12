@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
 import javafx.beans.value.ObservableValue;
@@ -33,7 +34,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 import de.upb.codingpirates.battleships.logic.Configuration;
 import de.upb.codingpirates.battleships.logic.PenaltyType;
@@ -112,7 +112,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Inject
-    private ConfigurationController(@NotNull final Gson gson, @NotNull final GameManager gameManager) {
+    private ConfigurationController(@Nonnull final Gson gson, @Nonnull final GameManager gameManager) {
         this.gson        = gson;
         this.gameManager = gameManager;
     }
@@ -140,7 +140,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
      *
      * @return A unique label for the n-th {@link ShipType}.
      */
-    @NotNull
+    @Nonnull
     @VisibleForTesting
     static String toShipTypeLabel(int n) {
         final StringBuilder shipTypeLabelBuilder = new StringBuilder();
@@ -164,7 +164,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
     private static final Color COLOR_MARKED   = Color.DARKGRAY;
     private static final Color COLOR_UNMARKED = Color.TEAL;
 
-    private void populateShipConfigurationGrid(@NotNull final ShipTypeConfiguration config) {
+    private void populateShipConfigurationGrid(@Nonnull final ShipTypeConfiguration config) {
         shipConfigurationGrid.getChildren().clear();
 
         for (int x = 0; x < config.width; ++x) {
@@ -352,7 +352,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
     }
     // </editor-fold>
 
-    private void displayInvalidConfigurationAlert(@NotNull final ShipTypeConfiguration invalidConfiguration) {
+    private void displayInvalidConfigurationAlert(@Nonnull final ShipTypeConfiguration invalidConfiguration) {
         Alert alert = new Alert(AlertType.ERROR);
 
         alert.setTitle(
@@ -393,7 +393,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
     private ExtensionFilter configurationExtensionFilter;
 
-    @NotNull
+    @Nonnull
     @Contract(pure = true)
     private FileChooser newConfigurationFileChooser(final String title) {
         final FileChooser fileChooser = new FileChooser();
@@ -413,7 +413,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
             .collect(toMap(Function.identity(), i -> configurations.get(i).toShipType()));
     }
 
-    private void setControlsFromShipTypes(@NotNull final Map<Integer, ShipType> shipTypes) {
+    private void setControlsFromShipTypes(@Nonnull final Map<Integer, ShipType> shipTypes) {
         shipTypeEditingComboBox
             .getItems()
             .setAll(ShipTypeConfiguration.fromShipTypes(shipTypes.values()));
@@ -431,7 +431,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
      *
      * @see #setControlsFromConfiguration(Configuration)
      */
-    @NotNull
+    @Nonnull
     @Contract(" -> new")
     private Configuration getConfigurationFromControls() throws InvalidShipTypeConfigurationException {
         return new Configuration(
@@ -461,7 +461,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
      *
      * @see #getConfigurationFromControls()
      */
-    private void setControlsFromConfiguration(@NotNull final Configuration configuration) {
+    private void setControlsFromConfiguration(@Nonnull final Configuration configuration) {
         maxPlayerCountSpinner
                 .getValueFactory()
                 .setValue(configuration.getMaxPlayerCount());
@@ -639,17 +639,17 @@ public final class ConfigurationController extends AbstractController<Parent> {
         private static final int MINIMUM_SHIP_TYPE_SIZE   = 2;
 
         @Contract(pure = true)
-        private ShipTypeConfiguration(@NotNull final String label) {
+        private ShipTypeConfiguration(@Nonnull final String label) {
             this(label, new HashSet<>());
         }
 
         @Contract(pure = true)
-        private ShipTypeConfiguration(@NotNull final String label, @NotNull final Collection<Point2D> marks) {
+        private ShipTypeConfiguration(@Nonnull final String label, @Nonnull final Collection<Point2D> marks) {
             this(label, new HashSet<>(marks));
         }
 
         @Contract(pure = true)
-        private ShipTypeConfiguration(@NotNull final String label, @NotNull final Set<Point2D> marks) {
+        private ShipTypeConfiguration(@Nonnull final String label, @Nonnull final Set<Point2D> marks) {
             this.label = label;
             this.marks = marks;
 
@@ -668,8 +668,8 @@ public final class ConfigurationController extends AbstractController<Parent> {
             height = Math.max(height, DEFAULT_WIDTH_AND_HEIGHT);
         }
 
-        @NotNull
-        private static Collection<ShipTypeConfiguration> fromShipTypes(@NotNull final Collection<ShipType> shipTypes) {
+        @Nonnull
+        private static Collection<ShipTypeConfiguration> fromShipTypes(@Nonnull final Collection<ShipType> shipTypes) {
             final List<ShipTypeConfiguration> shipTypeConfigurations = new ArrayList<>(shipTypes.size());
 
             int i = 0;
@@ -723,8 +723,8 @@ public final class ConfigurationController extends AbstractController<Parent> {
          */
         @Contract(pure = true)
         private boolean shouldTraverse(
-                @NotNull final boolean[][] marks,
-                @NotNull final boolean[][] visited,
+                @Nonnull final boolean[][] marks,
+                @Nonnull final boolean[][] visited,
                 final int x,
                 final int y) {
             return ((x >= 0) && (x < width)) && ((y >= 0) && (y < height)) && marks[x][y] && !visited[x][y];
@@ -756,8 +756,8 @@ public final class ConfigurationController extends AbstractController<Parent> {
          * @see #checkMarksConnected()
          */
         private void dfs(
-                @NotNull final boolean[][] marks,
-                @NotNull final boolean[][] visited,
+                @Nonnull final boolean[][] marks,
+                @Nonnull final boolean[][] visited,
                 final int x,
                 final int y) {
             visited[x][y] = true;
@@ -829,7 +829,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
          *
          * @see InvalidShipTypeConfigurationException
          */
-        @NotNull
+        @Nonnull
         @Contract(value = " -> new", pure = true)
         private ShipType toShipType() throws InvalidShipTypeConfigurationException {
             if (!hasMinimumSize() || !checkMarksConnected())
@@ -855,7 +855,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
          *
          * @param invalidConfiguration The invalid {@link ShipTypeConfiguration} which caused this exception.
          */
-        private InvalidShipTypeConfigurationException(@NotNull final ShipTypeConfiguration invalidConfiguration) {
+        private InvalidShipTypeConfigurationException(@Nonnull final ShipTypeConfiguration invalidConfiguration) {
             this.invalidConfiguration = invalidConfiguration;
         }
     }

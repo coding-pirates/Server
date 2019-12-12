@@ -3,6 +3,7 @@ package de.upb.codingpirates.battleships.server.gui.controllers;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
 import de.upb.codingpirates.battleships.server.gui.control.Alerts;
@@ -23,7 +24,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.logic.Client;
@@ -60,7 +60,7 @@ public final class MainController extends AbstractController<Parent> {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Inject
-    public MainController(@NotNull final ClientManager clientManager, @NotNull final GameManager gameManager) {
+    public MainController(@Nonnull final ClientManager clientManager, @Nonnull final GameManager gameManager) {
         this.clientManager = clientManager;
         this.gameManager   = gameManager;
     }
@@ -81,7 +81,7 @@ public final class MainController extends AbstractController<Parent> {
     }
 
     private void onPlayerMappingsChange(
-            @NotNull final MapChangeListener.Change<? extends Integer, ? extends Client> change) {
+            @Nonnull final MapChangeListener.Change<? extends Integer, ? extends Client> change) {
         if (change.wasAdded())
             playerTableView.getItems().add(change.getValueAdded());
         else if (change.wasRemoved())
@@ -89,7 +89,7 @@ public final class MainController extends AbstractController<Parent> {
     }
 
     private void onGameMappingsChange(
-            @NotNull final MapChangeListener.Change<? extends Integer, ? extends GameHandler> change) {
+            @Nonnull final MapChangeListener.Change<? extends Integer, ? extends GameHandler> change) {
         if (change.wasAdded())
             gameTableView.getItems().add(change.getValueAdded().getGame());
         else if (change.wasRemoved())
@@ -97,9 +97,9 @@ public final class MainController extends AbstractController<Parent> {
 
     }
 
-    @NotNull
+    @Nonnull
     @Contract("_ -> new")
-    private ContextMenu newGameTableRowContextMenu(@NotNull final TableRow<Game> row) {
+    private ContextMenu newGameTableRowContextMenu(@Nonnull final TableRow<Game> row) {
         final MenuItem launchItem      = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.launch.text"));
         final MenuItem pauseResumeItem = new MenuItem();
         final MenuItem abortItem       = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.abort.text"));

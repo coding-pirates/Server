@@ -4,7 +4,7 @@ import java.util.Enumeration;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import org.jetbrains.annotations.NotNull;
+import javax.annotation.Nonnull;
 
 /**
  * Wraps a {@link ResourceBundle} and delegates all lookups to a {@code ResourceBundle} instance
@@ -34,17 +34,17 @@ public final class ResourceBundleWrapper extends ResourceBundle {
 
     private final ResourceBundle bundle;
 
-    public ResourceBundleWrapper(@NotNull final ResourceBundle bundle) {
+    public ResourceBundleWrapper(@Nonnull final ResourceBundle bundle) {
         this.bundle = bundle;
     }
 
-    @NotNull
+    @Nonnull
     @Override
-    protected Object handleGetObject(@NotNull final String key) {
+    protected Object handleGetObject(@Nonnull final String key) {
         return bundle.getObject(key);
     }
 
-    @NotNull
+    @Nonnull
     @Override
     public Enumeration<String> getKeys() {
         return bundle.getKeys();
