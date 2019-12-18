@@ -13,8 +13,6 @@ import de.upb.codingpirates.battleships.network.message.response.PointsResponse;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 
-import static java.util.stream.Collectors.toMap;
-
 public final class PointsRequestHandler extends AbstractServerMessageHandler<PointsRequest> {
 
     @Inject
@@ -24,19 +22,11 @@ public final class PointsRequestHandler extends AbstractServerMessageHandler<Poi
     }
 
     @Override
-    public void handleMessage(@Nonnull final PointsRequest message,
-                              @Nonnull final Id connectionId) throws GameException {
+    public void handleMessage(PointsRequest message, Id connectionId) throws GameException {
         final Map<Integer, Integer> scores =
             gameManager
                 .getGameHandlerForClientId(connectionId.getInt())
                 .getScore();
-
-        final Map<Integer, Integer> transmittedScores =
-            scores
-                .entrySet()
-                .stream()
-                .collect(toMap(Entry::getKey, entry -> entry.getValue() / 4));
-
-        clientManager.sendMessageToId(new PointsResponse(transmittedScores), connectionId);
+        clientManager.sendMessageToId(new PointsResponse(scores), connectionId);
     }
 }

@@ -19,7 +19,7 @@ import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
-import de.upb.codingpirates.battleships.network.id.IntIdManager;
+import de.upb.codingpirates.battleships.network.id.IdManager;
 import de.upb.codingpirates.battleships.network.message.notification.ContinueNotification;
 import de.upb.codingpirates.battleships.network.message.notification.PauseNotification;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
@@ -36,7 +36,7 @@ public class GameManager {
     @Nonnull
     private final ClientManager clientManager;
     @Nonnull
-    private final IntIdManager idManager;
+    private final IdManager idManager;
 
     /**
      * maps game id to gamehandler
@@ -49,7 +49,7 @@ public class GameManager {
     private final Map<Integer, Integer> clientToGame = Collections.synchronizedMap(Maps.newHashMap());
 
     @Inject
-    public GameManager(@Nonnull ConnectionHandler handler, @Nonnull IntIdManager idManager) {
+    public GameManager(@Nonnull ConnectionHandler handler, @Nonnull IdManager idManager) {
         this.clientManager = (ClientManager) handler;
         this.idManager = idManager;
         new Timer().schedule(new TimerTask() {
@@ -90,7 +90,15 @@ public class GameManager {
     public void addClientToGame(int gameId, @Nonnull Client client, @Nonnull ClientType clientType) throws GameException {
         LOGGER.debug(ServerMarker.GAME, "Adding client {}, with type {}, to game {}", client.getId(), clientType, gameId);
         if(this.clientToGame.containsKey(client.getId())){
-            throw new NotAllowedException("game.gameManager.alreadyIngame");
+            if(clientType.equals(ClientType.PLAYER)) {
+                GameHandler handler = this.games.get(this.clientToGame.get(client.getId()));
+                if(handler.getGame().getState().equals(GameState.FINISHED)){
+                    this.clientToGame.remove(client.getId());
+                }
+                throw new NotAllowedException("game.gameManager.alreadyIngame");
+            } else {
+                this.clientToGame.remove(client.getId());
+            }
         }
         if (this.gameHandlersById.containsKey(gameId)) {
             this.gameHandlersById.get(gameId).addClient(clientType, client);
