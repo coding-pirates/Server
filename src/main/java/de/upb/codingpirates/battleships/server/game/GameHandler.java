@@ -134,7 +134,7 @@ public class GameHandler implements Translator {
      */
     private static final int MAX_SPECTATOR_COUNT = Integer.MAX_VALUE;
 
-    public GameHandler(@Nonnull String name, int id, @Nonnull Configuration config, boolean tournament, @Nonnull ClientManager clientManager) {
+    public GameHandler(@Nonnull final String name, final int id, @Nonnull final Configuration config, final boolean tournament, @Nonnull final ClientManager clientManager) {
         this.game          = new Game(id, name, GameState.LOBBY, config, tournament);
         this.clientManager = clientManager;
 
@@ -143,6 +143,16 @@ public class GameHandler implements Translator {
         currentPlayerCountProperty
             .addListener((observable, oldValue, newValue) -> game.setCurrentPlayerCount(newValue.intValue()));
     }
+
+    /*
+     * Usually these properties would be part of the Game class, however, this is not possible because the Game class
+     * is common to all platforms and not all the platforms it is used on, Android in particular, implement JavaFX,
+     * which is why the currentPlayerCountProperty and stateProperty are now part of the GameHandler rather than the
+     * Game class.
+     *
+     * Listeners are set up on these properties which mirror any changes occurring to the currentPlayerCountProperty
+     * an stateProperty to the fields of the Game object wrapped by this GameHandler to keep the values synchronized.
+     */
 
     // <editor-fold desc="currentPlayerCountProperty">
     private final IntegerProperty currentPlayerCountProperty = new SimpleIntegerProperty();
