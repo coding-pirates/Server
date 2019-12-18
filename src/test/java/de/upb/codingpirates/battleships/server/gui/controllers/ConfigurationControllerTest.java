@@ -52,6 +52,7 @@ public final class ConfigurationControllerTest {
 
         @NotNull
         @Contract(pure = true)
+        @SuppressWarnings("unused")
         public static Stream<Arguments> testCheckMarksConnected() {
             return Stream.of(
                 Arguments.of(

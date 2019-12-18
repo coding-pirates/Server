@@ -6,7 +6,6 @@ import java.util.ResourceBundle;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
-import de.upb.codingpirates.battleships.server.gui.control.Alerts;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -33,6 +32,7 @@ import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionExc
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
+import de.upb.codingpirates.battleships.server.gui.control.Alerts;
 
 /**
  * The controller associated with the {@code main.fxml} file.
@@ -117,13 +117,12 @@ public final class MainController extends AbstractController<Parent> {
                 throw new RuntimeException(exception);
             }
 
-            final BooleanBinding inProgress = game.stateProperty().isEqualTo(GameState.IN_PROGRESS);
-            final BooleanBinding paused     = game.stateProperty().isEqualTo(GameState.PAUSED);
-
+            final BooleanBinding inProgress = handler.stateProperty().isEqualTo(GameState.IN_PROGRESS);
+            final BooleanBinding paused     = handler.stateProperty().isEqualTo(GameState.PAUSED);
 
             launchItem
                 .disableProperty()
-                .bind(game.currentPlayerCountProperty().lessThan(GameHandler.MIN_PLAYER_COUNT));
+                .bind(handler.currentPlayerCountProperty().lessThan(GameHandler.MIN_PLAYER_COUNT));
             launchItem
                 .setOnAction(event -> handler.launchGame());
 
@@ -147,7 +146,7 @@ public final class MainController extends AbstractController<Parent> {
 
             abortItem
                 .disableProperty()
-                .bind(game.stateProperty().isEqualTo(GameState.FINISHED));
+                .bind(handler.stateProperty().isEqualTo(GameState.FINISHED));
             abortItem
                 .setOnAction(event ->
                     Alerts

@@ -11,7 +11,7 @@ import de.upb.codingpirates.battleships.network.network.module.ServerNetworkModu
 import de.upb.codingpirates.battleships.server.handler.*;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 
-public class ServerModule extends AbstractModule {
+public final class ServerModule extends AbstractModule {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -19,7 +19,7 @@ public class ServerModule extends AbstractModule {
     protected void configure() {
         this.install(new ServerNetworkModule());
 
-        LOGGER.info(ServerMarker.CONNECTION,"Binding server classes");
+        LOGGER.info(ServerMarker.CONNECTION, "Binding server classes");
 
         //bind interface ConnectionHandler to Class ClientManager in one instance
         this.bind(ConnectionHandler.class).to(ClientManager.class).in(Singleton.class);

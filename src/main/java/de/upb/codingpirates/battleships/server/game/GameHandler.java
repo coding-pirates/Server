@@ -5,6 +5,11 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -26,6 +31,7 @@ import de.upb.codingpirates.battleships.server.util.Translator;
  * @author Paul Becker
  */
 public class GameHandler implements Translator {
+
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Nonnull
@@ -129,9 +135,48 @@ public class GameHandler implements Translator {
     private static final int MAX_SPECTATOR_COUNT = Integer.MAX_VALUE;
 
     public GameHandler(@Nonnull String name, int id, @Nonnull Configuration config, boolean tournament, @Nonnull ClientManager clientManager) {
-        this.game = new Game(id, name, GameState.LOBBY, config, tournament);
+        this.game          = new Game(id, name, GameState.LOBBY, config, tournament);
         this.clientManager = clientManager;
+
+        stateProperty()
+            .addListener((observable, oldValue, newValue) -> game.setState(newValue));
+        currentPlayerCountProperty
+            .addListener((observable, oldValue, newValue) -> game.setCurrentPlayerCount(newValue.intValue()));
     }
+
+    // <editor-fold desc="currentPlayerCountProperty">
+    private final IntegerProperty currentPlayerCountProperty = new SimpleIntegerProperty();
+
+    public void incrementCurrentPlayerCount() {
+        if (currentPlayerCountProperty.get() < Integer.MAX_VALUE)
+            currentPlayerCountProperty.add(1);
+    }
+
+    public void decrementCurrentPlayerCount() {
+        if (currentPlayerCountProperty.get() > 0)
+            currentPlayerCountProperty.subtract(1);
+    }
+
+    public IntegerProperty currentPlayerCountProperty() {
+        return currentPlayerCountProperty;
+    }
+    // </editor-fold>
+
+    // <editor-fold desc="stateProperty">
+    private final ObjectProperty<GameState> stateProperty = new SimpleObjectProperty<>();
+
+    public GameState getState() {
+        return stateProperty.get();
+    }
+
+    public void setState(@Nonnull final GameState state) {
+        stateProperty.set(state);
+    }
+
+    public ObjectProperty<GameState> stateProperty() {
+        return stateProperty;
+    }
+    // </editor-fold>
 
     /**
      * adds the client as the spectator or player to the game
@@ -144,7 +189,7 @@ public class GameHandler implements Translator {
                     throw new InvalidActionException("game.isFull");
                 playersById.put(client.getId(), client);
                 fieldsByPlayerId.put(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(),client.getId()));
-                game.incrementCurrentPlayerCount();
+                incrementCurrentPlayerCount();
                 break;
             case SPECTATOR:
                 if (spectatorsById.size() >= MAX_SPECTATOR_COUNT)
@@ -164,9 +209,10 @@ public class GameHandler implements Translator {
         if (this.playersById.containsKey(clientId)) {
             this.playersById.remove(clientId);
             this.fieldsByPlayerId.remove(clientId);
-            this.game.decrementCurrentPlayerCount();
             this.ships.remove(clientId);
             this.startShip.remove(clientId);
+
+            decrementCurrentPlayerCount();
         }
         this.spectatorsById.remove(clientId);
     }
@@ -291,17 +337,17 @@ public class GameHandler implements Translator {
      * @throws GameException if to many shots have been placed or the shots for the player has already been placed
      */
     public void addShotPlacement(int clientId,@Nonnull Collection<Shot> shots) throws GameException {
-        if(shots.size() > getConfiguration().getShotCount()){
+        if (shots.size() > getConfiguration().getShotCount()) {
             throw new NotAllowedException("game.player.toManyShots");
         }
         for (Shot shot: shots){
-            if(!playersById.containsKey(shot.getClientId())){
+            if(!playersById.containsKey(shot.getClientId())) {
                 shots.remove(shot);
                 LOGGER.warn("Player {} for shot from {} does not exist", shot.getClientId(), clientId);
             }
         }
-        this.shots.put(clientId,shots);
-        if(shots.size() < getConfiguration().getShotCount()){
+        this.shots.put(clientId, shots);
+        if (shots.size() < getConfiguration().getShotCount()) {
             throw new InvalidActionException("game.player.toLessShots");
         }
     }
@@ -611,8 +657,8 @@ public class GameHandler implements Translator {
      * send spectator & player update notifications
      */
     private void sendUpdateNotification(){
-        this.clientManager.sendMessageToClients(new PlayerUpdateNotification(this.hitShots, score, this.sunkShots), this.player.values());
-        this.clientManager.sendMessageToClients(new SpectatorUpdateNotification(this.hitShots, this.score, this.sunkShots, this.missedShots), this.spectator.values());
+        this.clientManager.sendMessageToClients(new PlayerUpdateNotification(this.hitShots, score, this.sunkShots), this.playersById.values());
+        this.clientManager.sendMessageToClients(new SpectatorUpdateNotification(this.hitShots, this.score, this.sunkShots, this.missedShots), this.spectatorsById.values());
     }
 
     /**

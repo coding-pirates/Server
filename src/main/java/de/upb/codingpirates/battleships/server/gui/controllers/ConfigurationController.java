@@ -42,8 +42,7 @@ import de.upb.codingpirates.battleships.logic.ShipType;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.gui.control.Alerts;
 
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.*;
 
 /**
  * The controller associated with the {@code configuration.fxml} file which allows the creation of {@link Configuration}
@@ -613,7 +612,8 @@ public final class ConfigurationController extends AbstractController<Parent> {
      *
      * @author Andre Blanke
      */
-    private static final class ShipTypeConfiguration {
+    @VisibleForTesting
+    static final class ShipTypeConfiguration {
 
         private int width;
         private int height;
@@ -649,7 +649,8 @@ public final class ConfigurationController extends AbstractController<Parent> {
         }
 
         @Contract(pure = true)
-        private ShipTypeConfiguration(@Nonnull final String label, @Nonnull final Set<Point2D> marks) {
+        @VisibleForTesting
+        ShipTypeConfiguration(@Nonnull final String label, @Nonnull final Set<Point2D> marks) {
             this.label = label;
             this.marks = marks;
 
@@ -678,6 +679,19 @@ public final class ConfigurationController extends AbstractController<Parent> {
                 ++i;
             }
             return shipTypeConfigurations;
+        }
+
+        @VisibleForTesting
+        static Set<Point2D> normalize(@Nonnull final Set<Point2D> marks) {
+            if (marks.isEmpty())
+                return marks;
+            final Point2D minX = Collections.min(marks, Comparator.comparingInt(Point2D::getX));
+            final Point2D minY = Collections.min(marks, Comparator.comparingInt(Point2D::getY));
+
+            return marks
+                .stream()
+                .map(mark -> new Point2D(mark.getX() - minX.getX(), mark.getY() - minY.getY()))
+                .collect(toSet());
         }
 
         /**
@@ -783,7 +797,8 @@ public final class ConfigurationController extends AbstractController<Parent> {
          *
          * @see #toShipType()
          */
-        private boolean checkMarksConnected() {
+        @VisibleForTesting
+        boolean checkMarksConnected() {
             final boolean[][] markMatrix = new boolean[width][height];
             final boolean[][] visited    = new boolean[width][height];
 

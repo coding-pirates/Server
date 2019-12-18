@@ -14,8 +14,6 @@ import org.apache.logging.log4j.Logger;
 
 import org.junit.jupiter.api.Test;
 
-import de.upb.codingpirates.battleships.client.Handler;
-import de.upb.codingpirates.battleships.client.network.AbstractClientModule;
 import de.upb.codingpirates.battleships.client.ListenerHandler;
 import de.upb.codingpirates.battleships.client.listener.*;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
@@ -27,9 +25,6 @@ import de.upb.codingpirates.battleships.network.dispatcher.MessageDispatcher;
 import de.upb.codingpirates.battleships.network.exceptions.BattleshipException;
 import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.request.*;
-import de.upb.codingpirates.battleships.network.message.response.*;
-import de.upb.codingpirates.battleships.network.util.ClientReaderMethod;
-import de.upb.codingpirates.battleships.network.util.DefaultReaderMethod;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.ServerModule;
 import de.upb.codingpirates.battleships.network.message.response.LobbyResponse;

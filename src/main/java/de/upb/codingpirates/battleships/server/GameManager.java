@@ -91,7 +91,7 @@ public class GameManager {
         LOGGER.debug(ServerMarker.GAME, "Adding client {}, with type {}, to game {}", client.getId(), clientType, gameId);
         if(this.clientToGame.containsKey(client.getId())){
             if(clientType.equals(ClientType.PLAYER)) {
-                GameHandler handler = this.games.get(this.clientToGame.get(client.getId()));
+                GameHandler handler = this.gameHandlersById.get(this.clientToGame.get(client.getId()));
                 if(handler.getGame().getState().equals(GameState.FINISHED)){
                     this.clientToGame.remove(client.getId());
                 }
