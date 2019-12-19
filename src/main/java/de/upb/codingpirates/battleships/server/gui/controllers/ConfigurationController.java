@@ -1,18 +1,14 @@
 package de.upb.codingpirates.battleships.server.gui.controllers;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.IntStream;
-
-import javax.annotation.Nonnull;
-import javax.inject.Inject;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.Gson;
+import de.upb.codingpirates.battleships.logic.Configuration;
+import de.upb.codingpirates.battleships.logic.PenaltyType;
+import de.upb.codingpirates.battleships.logic.Point2D;
+import de.upb.codingpirates.battleships.logic.ShipType;
+import de.upb.codingpirates.battleships.server.GameManager;
+import de.upb.codingpirates.battleships.server.exceptions.InvalidGameSizeException;
+import de.upb.codingpirates.battleships.server.gui.control.Alerts;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -25,22 +21,21 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
-
-import com.google.common.annotations.VisibleForTesting;
-
-import com.google.gson.Gson;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.jetbrains.annotations.Contract;
 
-import de.upb.codingpirates.battleships.logic.Configuration;
-import de.upb.codingpirates.battleships.logic.PenaltyType;
-import de.upb.codingpirates.battleships.logic.Point2D;
-import de.upb.codingpirates.battleships.logic.ShipType;
-import de.upb.codingpirates.battleships.server.GameManager;
-import de.upb.codingpirates.battleships.server.gui.control.Alerts;
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.*;
 
@@ -581,6 +576,16 @@ public final class ConfigurationController extends AbstractController<Parent> {
         alert.showAndWait();
     }
 
+    private void displayInvalidGameSize(final int actualGameSize, final int minSize) {
+        final Alert alert = new Alert(AlertType.ERROR);
+
+        alert.setContentText(String.format(resourceBundle.getString("game.size.invalidSizeAlert.contentText"),minSize));
+        alert.setTitle(resourceBundle.getString("game.size.invalidSizeAlert.title"));
+        alert.setHeaderText(String.format(resourceBundle.getString("game.size.invalidSizeAlert.header"), actualGameSize));
+
+        alert.showAndWait();
+    }
+
     @FXML
     @SuppressWarnings("unused")
     private void onStartNewGameButtonAction() {
@@ -598,6 +603,8 @@ public final class ConfigurationController extends AbstractController<Parent> {
             gameManager.createGame(configuration,gameNameTextField.getText(),false);
         } catch (final InvalidShipTypeConfigurationException exception) {
             displayInvalidConfigurationAlert(exception.invalidConfiguration);
+        } catch (InvalidGameSizeException exception){
+            displayInvalidGameSize(exception.getActualGameSize(),exception.getMinSize());
         }
     }
 

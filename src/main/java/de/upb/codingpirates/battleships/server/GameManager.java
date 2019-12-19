@@ -1,19 +1,7 @@
 package de.upb.codingpirates.battleships.server;
 
-import java.util.*;
-
-import javax.annotation.Nonnull;
-import javax.inject.Inject;
-
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableMap;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
@@ -22,8 +10,17 @@ import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedExcept
 import de.upb.codingpirates.battleships.network.id.IdManager;
 import de.upb.codingpirates.battleships.network.message.notification.ContinueNotification;
 import de.upb.codingpirates.battleships.network.message.notification.PauseNotification;
+import de.upb.codingpirates.battleships.server.exceptions.InvalidGameSizeException;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableMap;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
+import java.util.*;
 
 /**
  * Handles all {@link Game}-related functionality.
@@ -52,7 +49,7 @@ public class GameManager {
     public GameManager(@Nonnull ConnectionHandler handler, @Nonnull IdManager idManager) {
         this.clientManager = (ClientManager) handler;
         this.idManager = idManager;
-        new Timer().schedule(new TimerTask() {
+        new Timer("Server Main").schedule(new TimerTask() {
             @Override
             public void run() {
                 GameManager.this.run();
@@ -68,15 +65,13 @@ public class GameManager {
      * @param tournament
      * @return {@code -1} if game was created successful, {@code > 0} if the selected field size of the Configuration is too small
      */
-    public int createGame(@Nonnull Configuration configuration, @Nonnull String name, boolean tournament) {
-        int size = checkField(configuration);
-        if (size != -1) {
-            return size;
-        }
+    public GameHandler createGame(@Nonnull Configuration configuration, @Nonnull String name, boolean tournament) throws InvalidGameSizeException {
+        checkField(configuration);
         int id = this.idManager.generate().getInt();
         LOGGER.debug(ServerMarker.GAME, "Create game: {} with id: {}", name, id);
-        this.gameHandlersById.putIfAbsent(id, new GameHandler(name, id, configuration, tournament, clientManager));
-        return -1;
+        GameHandler gameHandler = new GameHandler(name, id, configuration, tournament, clientManager);
+        this.gameHandlersById.putIfAbsent(id, gameHandler);
+        return gameHandler;
     }
 
     /**
@@ -217,7 +212,7 @@ public class GameManager {
      * @param configuration the configuration which should be checked
      * @return {@code -1} if it fits, else recommendation for a field size;
      */
-    private int checkField(@Nonnull Configuration configuration) {//TODO better algorithm
+    private void checkField(@Nonnull Configuration configuration) throws InvalidGameSizeException {//TODO better algorithm
         Collection<ShipType> ships = configuration.getShips().values();
 
         List<BoundingBox> boxes = Lists.newArrayList();
@@ -230,9 +225,8 @@ public class GameManager {
 
         int maxFields = boxes.stream().mapToInt(BoundingBox::getSize).sum();
         if (maxFields > configuration.getHeight() * configuration.getWidth()) {
-            return (int) Math.sqrt(maxFields);
+            throw new InvalidGameSizeException(configuration.getHeight() * configuration.getWidth(),(int) Math.sqrt(maxFields));
         }
-        return -1;
     }
 
     public ObservableMap<Integer, GameHandler> getGameMappings() {

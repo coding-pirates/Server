@@ -1,21 +1,7 @@
 package de.upb.codingpirates.battleships.server.game;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nonnull;
-
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
@@ -25,12 +11,21 @@ import de.upb.codingpirates.battleships.network.message.request.PlaceShipsReques
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
-import de.upb.codingpirates.battleships.server.util.Translator;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.annotation.Nonnull;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Paul Becker
  */
-public class GameHandler implements Translator {
+public class GameHandler implements Handler, Runnable {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -267,7 +262,7 @@ public class GameHandler implements Translator {
 
     /** @return the {@link Configuration} from the {@link Game} object */
     @Nonnull
-    private Configuration getConfiguration() {
+    public Configuration getConfiguration() {
         return game.getConfig();
     }
 
@@ -390,6 +385,7 @@ public class GameHandler implements Translator {
      * {@link GameStage#FINISHED}:
      * sends {@link FinishNotification} and sets gameState to {@link GameState#FINISHED}
      */
+    @Override
     public void run() {
         if(!game.getState().equals(GameState.IN_PROGRESS))return;
         switch (this.stage) {
