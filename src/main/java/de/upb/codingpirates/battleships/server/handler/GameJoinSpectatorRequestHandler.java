@@ -1,21 +1,20 @@
 package de.upb.codingpirates.battleships.server.handler;
 
-import javax.annotation.Nonnull;
-import javax.inject.Inject;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.request.GameJoinSpectatorRequest;
-import de.upb.codingpirates.battleships.network.message.response.GameJoinSpectatorResponse;
+import de.upb.codingpirates.battleships.network.message.response.ResponseBuilder;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
 
 public final class GameJoinSpectatorRequestHandler extends AbstractServerMessageHandler<GameJoinSpectatorRequest> {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -40,6 +39,6 @@ public final class GameJoinSpectatorRequestHandler extends AbstractServerMessage
             return;
         }
         gameManager.addClientToGame(message.getGameId(), client, ClientType.SPECTATOR);
-        clientManager.sendMessageToClient(new GameJoinSpectatorResponse(message.getGameId()), clientManager.getClient(connectionId.getInt()));
+        clientManager.sendMessageToClient(ResponseBuilder.gameJoinSpectatorResponse(message.getGameId()), clientManager.getClient(connectionId.getInt()));
     }
 }

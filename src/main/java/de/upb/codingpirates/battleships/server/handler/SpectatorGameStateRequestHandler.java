@@ -1,18 +1,18 @@
 package de.upb.codingpirates.battleships.server.handler;
 
-import javax.annotation.Nonnull;
-import javax.inject.Inject;
-
 import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.logic.GameState;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.request.SpectatorGameStateRequest;
-import de.upb.codingpirates.battleships.network.message.response.SpectatorGameStateResponse;
+import de.upb.codingpirates.battleships.network.message.response.ResponseBuilder;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
+
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
 
 public final class SpectatorGameStateRequestHandler extends AbstractServerMessageHandler<SpectatorGameStateRequest> {
 
@@ -33,7 +33,7 @@ public final class SpectatorGameStateRequestHandler extends AbstractServerMessag
             throw new NotAllowedException("game.handler.spectatorGameStateRequest.wrongTime");
 
         clientManager.sendMessageToId(
-            new SpectatorGameStateResponse.Builder()
+            ResponseBuilder.spectatorGameStateResponse()
                 .players(handler.getPlayers())
                 .shots(handler.getShots())
                 .ships(handler.getStartShip())

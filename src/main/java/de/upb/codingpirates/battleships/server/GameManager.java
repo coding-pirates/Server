@@ -1,29 +1,24 @@
 package de.upb.codingpirates.battleships.server;
 
-import java.util.*;
-
-import javax.annotation.Nonnull;
-import javax.inject.Inject;
-
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableMap;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.IdManager;
-import de.upb.codingpirates.battleships.network.message.notification.ContinueNotification;
-import de.upb.codingpirates.battleships.network.message.notification.PauseNotification;
+import de.upb.codingpirates.battleships.network.message.notification.NotificationBuilder;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableMap;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
+import java.util.*;
 
 /**
  * Handles all {@link Game}-related functionality.
@@ -144,7 +139,7 @@ public class GameManager {
     public void pauseGame(int gameId) {
         LOGGER.debug(ServerMarker.GAME, "paused game {}, {}", gameId, this.gameHandlersById.get(gameId).getGame().getName());
         this.gameHandlersById.get(gameId).pauseGame();
-        clientManager.sendMessageToClients(new PauseNotification(), this.gameHandlersById.get(gameId).getAllClients());
+        clientManager.sendMessageToClients(NotificationBuilder.pauseNotification(), this.gameHandlersById.get(gameId).getAllClients());
     }
 
     /**
@@ -155,7 +150,7 @@ public class GameManager {
     public void continueGame(int gameId) {
         LOGGER.debug(ServerMarker.GAME, "continued game {}, {}", gameId, this.gameHandlersById.get(gameId).getGame().getName());
         this.gameHandlersById.get(gameId).continueGame();
-        clientManager.sendMessageToClients(new ContinueNotification(), this.gameHandlersById.get(gameId).getAllClients());
+        clientManager.sendMessageToClients(NotificationBuilder.continueNotification(), this.gameHandlersById.get(gameId).getAllClients());
     }
 
     /**

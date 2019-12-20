@@ -1,14 +1,14 @@
 package de.upb.codingpirates.battleships.server.handler;
 
-import javax.annotation.Nonnull;
-import javax.inject.Inject;
-
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.request.RemainingTimeRequest;
-import de.upb.codingpirates.battleships.network.message.response.RemainingTimeResponse;
+import de.upb.codingpirates.battleships.network.message.response.ResponseBuilder;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
+
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
 
 public final class RemainingTimeRequestHandler extends AbstractServerMessageHandler<RemainingTimeRequest> {
 
@@ -26,6 +26,6 @@ public final class RemainingTimeRequestHandler extends AbstractServerMessageHand
                 .getGameHandlerForClientId(connectionId.getInt())
                 .getRemainingTime();
 
-        clientManager.sendMessageToId(new RemainingTimeResponse(remainingTime), connectionId);
+        clientManager.sendMessageToId(ResponseBuilder.remainingTimeResponse(remainingTime), connectionId);
     }
 }
