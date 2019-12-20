@@ -38,6 +38,8 @@ public class TournamentHandler implements Handler{
     @Nonnull
     private final Map<Integer, GameHandler> games = Collections.synchronizedMap(Maps.newHashMap());
     @Nonnull
+    private final Map<Integer, Integer> score = Collections.synchronizedMap(Maps.newHashMap());
+    @Nonnull
     private final String name;
     private int gameSize = 0;
 
@@ -107,5 +109,10 @@ public class TournamentHandler implements Handler{
     @Override
     public Configuration getConfiguration() {
         return this.configuration;
+    }
+
+    @Nonnull
+    public Map<Integer, GameHandler> getGames() {
+        return games;
     }
 }

@@ -1,6 +1,5 @@
 package de.upb.codingpirates.battleships.server;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
@@ -8,9 +7,10 @@ import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.IdManager;
-import de.upb.codingpirates.battleships.server.exceptions.InvalidGameSizeException;
 import de.upb.codingpirates.battleships.network.message.notification.NotificationBuilder;
+import de.upb.codingpirates.battleships.server.exceptions.InvalidGameSizeException;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
+import de.upb.codingpirates.battleships.server.util.ConfigurationChecker;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
@@ -26,7 +26,7 @@ import java.util.*;
  *
  * @author Paul Becker
  */
-public class GameManager {
+public class GameManager implements ConfigurationChecker {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Nonnull
@@ -69,7 +69,7 @@ public class GameManager {
         int id = this.idManager.generate().getInt();
         LOGGER.debug(ServerMarker.GAME, "Create game: {} with id: {}", name, id);
         GameHandler gameHandler = new GameHandler(name, id, configuration, tournament, clientManager);
-        this.gameHandlersById.putIfAbsent(id, gameHandler);
+        this.gameHandlersById.put(id, gameHandler);
         return gameHandler;
     }
 
@@ -203,29 +203,6 @@ public class GameManager {
      */
     private void run() {
         this.gameHandlersById.values().forEach(GameHandler::run);
-    }
-
-    /**
-     * checks if the ships can fit into the field
-     *
-     * @param configuration the configuration which should be checked
-     * @return {@code -1} if it fits, else recommendation for a field size;
-     */
-    private void checkField(@Nonnull Configuration configuration) throws InvalidGameSizeException {//TODO better algorithm
-        Collection<ShipType> ships = configuration.getShips().values();
-
-        List<BoundingBox> boxes = Lists.newArrayList();
-
-        for (ShipType ship : ships) {
-            int x = ship.getPositions().stream().max((a, b) -> Math.max(Math.abs(a.getX()), Math.abs(b.getX()))).get().getX();
-            int y = ship.getPositions().stream().max((a, b) -> Math.max(Math.abs(a.getY()), Math.abs(b.getY()))).get().getY();
-            boxes.add(new BoundingBox(x + 1, y + 1));
-        }
-
-        int maxFields = boxes.stream().mapToInt(BoundingBox::getSize).sum();
-        if (maxFields > configuration.getHeight() * configuration.getWidth()) {
-            throw new InvalidGameSizeException(configuration.getHeight() * configuration.getWidth(),(int) Math.sqrt(maxFields));
-        }
     }
 
     public ObservableMap<Integer, GameHandler> getGameMappings() {

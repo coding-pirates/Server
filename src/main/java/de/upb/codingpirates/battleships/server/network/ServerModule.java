@@ -1,15 +1,16 @@
-package de.upb.codingpirates.battleships.server;
+package de.upb.codingpirates.battleships.server.network;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.network.module.ServerNetworkModule;
+import de.upb.codingpirates.battleships.server.ClientManager;
+import de.upb.codingpirates.battleships.server.GameManager;
+import de.upb.codingpirates.battleships.server.TournamentManager;
 import de.upb.codingpirates.battleships.server.handler.*;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public final class ServerModule extends AbstractModule {
 
@@ -25,6 +26,8 @@ public final class ServerModule extends AbstractModule {
         this.bind(ConnectionHandler.class).to(ClientManager.class).in(Singleton.class);
         //bind class GameManager in one instance
         this.bind(GameManager.class).in(Singleton.class);
+        //bind class TournamentManager in one instance
+        this.bind(TournamentManager.class).in(Singleton.class);
 
         //bind all message handler to one instance
         this.bind(ConnectionClosedReportHandler.class).in(Singleton.class);

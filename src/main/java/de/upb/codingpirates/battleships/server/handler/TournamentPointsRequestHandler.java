@@ -5,12 +5,19 @@ import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.request.TournamentPointsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
+import de.upb.codingpirates.battleships.server.TournamentManager;
 
 import javax.annotation.Nonnull;
+import javax.inject.Inject;
 
 public final class TournamentPointsRequestHandler extends AbstractServerMessageHandler<TournamentPointsRequest> {
-    public TournamentPointsRequestHandler(@Nonnull ClientManager clientManager, @Nonnull GameManager gameManager) {
+    @Nonnull
+    private final TournamentManager tournamentManager;
+
+    @Inject
+    public TournamentPointsRequestHandler(@Nonnull ClientManager clientManager, @Nonnull GameManager gameManager, @Nonnull TournamentManager tournamentManager) {
         super(clientManager, gameManager, TournamentPointsRequest.class);
+        this.tournamentManager = tournamentManager;
     }
 
     @Override
