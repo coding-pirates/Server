@@ -8,8 +8,8 @@ import de.upb.codingpirates.battleships.server.GameManager;
 
 import javax.annotation.Nonnull;
 
-public final class TournamnetPointsRequest extends AbstractServerMessageHandler<TournamentPointsRequest> {
-    public TournamnetPointsRequest(@Nonnull ClientManager clientManager, @Nonnull GameManager gameManager) {
+public final class TournamentPointsRequestHandler extends AbstractServerMessageHandler<TournamentPointsRequest> {
+    public TournamentPointsRequestHandler(@Nonnull ClientManager clientManager, @Nonnull GameManager gameManager) {
         super(clientManager, gameManager, TournamentPointsRequest.class);
     }
 
