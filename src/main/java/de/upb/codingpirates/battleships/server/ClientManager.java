@@ -1,23 +1,7 @@
 package de.upb.codingpirates.battleships.server;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.inject.Inject;
-
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableMap;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
@@ -26,9 +10,21 @@ import de.upb.codingpirates.battleships.network.exceptions.BattleshipException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.Message;
-import de.upb.codingpirates.battleships.network.message.notification.ErrorNotification;
+import de.upb.codingpirates.battleships.network.message.notification.NotificationBuilder;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import de.upb.codingpirates.battleships.server.util.Translator;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableMap;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Handles all {@link Client}-related functionality.
@@ -223,7 +219,7 @@ public class ClientManager implements ConnectionHandler, Translator {
     @Override
     public void handleBattleshipException(@Nonnull final BattleshipException exception) {
         if (exception.getConnectionId() != null) {
-            this.sendMessageToId(new ErrorNotification(exception.getErrorType(), exception.getMessageId(), this.translate(exception.getMessage())), exception.getConnectionId());
+            this.sendMessageToId(NotificationBuilder.errorNotification(exception.getErrorType(), exception.getMessageId(), this.translate(exception.getMessage())), exception.getConnectionId());
         } else {
             LOGGER.warn(ServerMarker.CLIENT, "could not send ErrorNotification. Could not identify source client");
         }

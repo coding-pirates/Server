@@ -1,21 +1,19 @@
 package de.upb.codingpirates.battleships.server.handler;
 
-import java.util.List;
-
-import javax.annotation.Nonnull;
-import javax.inject.Inject;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.id.Id;
-import de.upb.codingpirates.battleships.network.message.notification.LeaveNotification;
+import de.upb.codingpirates.battleships.network.message.notification.NotificationBuilder;
 import de.upb.codingpirates.battleships.network.message.report.ConnectionClosedReport;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
+import java.util.List;
 
 public final class ConnectionClosedReportHandler extends AbstractServerMessageHandler<ConnectionClosedReport> {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -39,6 +37,6 @@ public final class ConnectionClosedReportHandler extends AbstractServerMessageHa
                 .getGameHandlerForClientId(connectionId.getInt())
                 .getAllClients();
 
-        clientManager.sendMessageToClients(new LeaveNotification(connectionId.getInt()), clients);
+        clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(connectionId.getInt()), clients);
     }
 }
