@@ -41,6 +41,7 @@ public class TournamentHandler implements Handler{
     private final Map<Integer, Integer> score = Collections.synchronizedMap(Maps.newHashMap());
     @Nonnull
     private final String name;
+
     private int gameSize = 0;
 
     public TournamentHandler(@Nonnull String name, @Nonnull ClientManager clientManager, @Nonnull GameManager gameManager,@Nonnull Configuration configuration) {
@@ -76,7 +77,7 @@ public class TournamentHandler implements Handler{
 
     private void createGames(int amount) throws InvalidGameSizeException {
         for (int i = 0;i< amount;i++) {
-            GameHandler handler = gameManager.createGame(configuration, name + "_" + gameSize++, true);
+            GameHandler handler = gameManager.createGame(configuration, name + "_" + gameSize++, this);
             games.put(handler.getGame().getId(), handler);
         }
     }
@@ -114,5 +115,9 @@ public class TournamentHandler implements Handler{
     @Nonnull
     public Map<Integer, GameHandler> getGames() {
         return games;
+    }
+
+    public void gameFinished(int id){
+        games.get(id).getScore().forEach((client, score)-> this.score.compute(client,(client1, score1)->score+score1));
     }
 }

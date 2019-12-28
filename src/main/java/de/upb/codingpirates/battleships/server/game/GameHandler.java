@@ -10,6 +10,7 @@ import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
+import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -19,8 +20,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static de.upb.codingpirates.battleships.server.util.ServerProperties.MAX_SPECTATOR_COUNT;
+import static de.upb.codingpirates.battleships.server.util.ServerProperties.MIN_PLAYER_COUNT;
 
 /**
  * @author Paul Becker
@@ -30,7 +35,13 @@ public class GameHandler implements Handler, Runnable {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Nonnull
-    private ClientManager clientManager;
+    private final ClientManager clientManager;
+
+    @Nonnull
+    private final GameManager gameManager;
+
+    @Nullable
+    private final TournamentHandler tournamentHandler;
 
     /** The core {@link Game} object wrapped by this {@code GameHandler}. */
     @Nonnull
@@ -114,29 +125,20 @@ public class GameHandler implements Handler, Runnable {
     @Nonnull
     private final Map<Ship, List<Shot>> shipToShots = Collections.synchronizedMap(Maps.newHashMap());
 
-    /**
-     * The minimum amount of {@link Client}s with {@link ClientType#PLAYER} required in order to launch a game using
-     * the {@link #launchGame()} method.
-     *
-     * @see #launchGame()
-     */
-    public static final int MIN_PLAYER_COUNT = 2;
-
-    /**
-     * The maximum amount of {@link Client}s with {@link ClientType#SPECTATOR} which can spectate a {@link Game}.
-     *
-     * @see #addClient(ClientType, Client)
-     */
-    private static final int MAX_SPECTATOR_COUNT = Integer.MAX_VALUE;
-
-    public GameHandler(@Nonnull final String name, final int id, @Nonnull final Configuration config, final boolean tournament, @Nonnull final ClientManager clientManager) {
+    public GameHandler(@Nonnull final String name, final int id, @Nonnull final Configuration config, final boolean tournament, @Nonnull final ClientManager clientManager, @Nonnull GameManager gameManager, @Nullable TournamentHandler tournamentHandler) {
         this.game          = new Game(id, name, GameState.LOBBY, config, tournament);
         this.clientManager = clientManager;
+        this.gameManager = gameManager;
+        this.tournamentHandler = tournamentHandler;
 
         stateProperty()
             .addListener((observable, oldValue, newValue) -> game.setState(newValue));
         currentPlayerCountProperty
             .addListener((observable, oldValue, newValue) -> game.setCurrentPlayerCount(newValue.intValue()));
+    }
+
+    public GameHandler(@Nonnull final String name, final int id, @Nonnull final Configuration config, final boolean tournament, @Nonnull final ClientManager clientManager, @Nonnull GameManager gameManager) {
+        this(name, id, config, tournament, clientManager, gameManager, null);
     }
 
     /*
@@ -439,6 +441,9 @@ public class GameHandler implements Handler, Runnable {
                 LOGGER.debug("Game {} has finished",game.getId());
                 this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, winner),getAllClients());
                 this.game.setState(GameState.FINISHED);
+                if(this.tournamentHandler != null)
+                    this.tournamentHandler.gameFinished(this.game.getId());
+                this.gameManager.gameFinished(this.game.getId());
                 break;
             default:
                 break;

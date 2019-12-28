@@ -2,8 +2,6 @@ package de.upb.codingpirates.battleships.server.test;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import de.upb.codingpirates.battleships.client.ListenerHandler;
 import de.upb.codingpirates.battleships.client.listener.*;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
@@ -11,15 +9,11 @@ import de.upb.codingpirates.battleships.client.network.ClientConnector;
 import de.upb.codingpirates.battleships.client.network.ClientModule;
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.Properties;
-import de.upb.codingpirates.battleships.network.dispatcher.MessageDispatcher;
 import de.upb.codingpirates.battleships.network.exceptions.BattleshipException;
 import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.request.RequestBuilder;
 import de.upb.codingpirates.battleships.network.message.response.LobbyResponse;
 import de.upb.codingpirates.battleships.network.message.response.ServerJoinResponse;
-import de.upb.codingpirates.battleships.server.GameManager;
-import de.upb.codingpirates.battleships.server.exceptions.InvalidGameSizeException;
-import de.upb.codingpirates.battleships.server.network.ServerModule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
@@ -28,7 +22,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ServerTests {
+public class GameTest extends ServerTest{
     public static final Configuration TEST_CONFIG = new Configuration(TestProperties.playerCount, 10, 10, 4, 1, 1, 5000, 100, new HashMap<Integer, ShipType>(){{put(0,new ShipType(Lists.newArrayList(new Point2D(1,1),new Point2D(2,1),new Point2D(1,2))));}}, 1, PenaltyType.POINTLOSS);
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -43,29 +37,10 @@ public class ServerTests {
 
     private static int lobbySize = 0;
     private static final AtomicBoolean finished = new AtomicBoolean(true);
-    private static Thread serverthread;
-    private static boolean failed = false;
 
     @Test
-    public void test() throws IOException {
-        if(!TestProperties.isServerOnline) {
-            serverthread = new Thread(() -> {
-                Injector injector = Guice.createInjector(new ServerModule());
-                injector.getInstance(MessageDispatcher.class);
-                GameManager manager = injector.getInstance(GameManager.class);
-                try {
-                    manager.createGame(TEST_CONFIG, "test", false);
-                } catch (InvalidGameSizeException e) {
-                    failed = true;
-                    serverthread.stop();
-                }
-                while (true) {
-
-                }
-            });
-            serverthread.start();
-        }
-
+    public void gameTest() throws IOException {
+        serverStart();
 
         long timer = System.currentTimeMillis();
         while (timer > System.currentTimeMillis() - 1000){
@@ -107,15 +82,10 @@ public class ServerTests {
 
         while (timer > System.currentTimeMillis() - 10000){
         }
-        while (!finished.get() && !failed){
+        while (!finished.get() && !serverHasFailed()){
         }
 
-        if(serverthread != null){
-            serverthread.stop();
-        }
-
-        if (failed)
-            throw new IllegalStateException("Server could not create game");
+        checkServer();
 
         LOGGER.debug("finished connection test");
     }
