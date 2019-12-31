@@ -1,11 +1,9 @@
 package de.upb.codingpirates.battleships.server;
 
-import java.io.IOException;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
-
-import javax.annotation.Nonnull;
-
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import de.upb.codingpirates.battleships.network.dispatcher.MessageDispatcher;
+import de.upb.codingpirates.battleships.server.gui.util.ResourceBundleWrapper;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -13,27 +11,33 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-
-import de.upb.codingpirates.battleships.server.gui.util.ResourceBundleWrapper;
+import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 /**
  * @author Andre Blanke
  */
 public final class BattleshipsServerApplication extends Application {
 
-    private final Injector injector = Guice.createInjector(new ServerModule());
+    @Nonnull
+    private final Injector injector;
 
     /**
      * The title of this JavaFX application {@link Stage}.
-     * 
-     * @see #start(Stage) 
+     *
+     * @see #start(Stage)
      */
     private static final String TITLE = "Battleships Server";
 
     public static void main(final String... args) {
         launch(args);
+    }
+
+    public BattleshipsServerApplication() {
+        injector = Guice.createInjector(new ServerModule());
+        injector.getInstance(MessageDispatcher.class);
     }
 
     /**

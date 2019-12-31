@@ -77,13 +77,13 @@ public class ClientManager implements ConnectionHandler, Translator {
         }
 
         Client client = new Client(id, name);
-        this.clients.putIfAbsent(id, client);
+        this.clients.put(id, client);
         switch (clientType) {
             case PLAYER:
-                this.player.putIfAbsent(id, client);
+                this.player.put(id, client);
                 break;
             case SPECTATOR:
-                this.spectator.putIfAbsent(id, client);
+                this.spectator.put(id, client);
                 break;
         }
         return client;
@@ -213,6 +213,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      */
     @Nullable
     public Client getClient(int id) {
+        LOGGER.debug(clients.size());
         return this.clients.get(id);
     }
 
