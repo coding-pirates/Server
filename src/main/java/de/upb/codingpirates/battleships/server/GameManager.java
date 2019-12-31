@@ -3,7 +3,6 @@ package de.upb.codingpirates.battleships.server;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.logic.*;
-import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
@@ -44,8 +43,8 @@ public class GameManager {
     private final Map<Integer, Integer> clientToGame = Collections.synchronizedMap(Maps.newHashMap());
 
     @Inject
-    public GameManager(@Nonnull ConnectionHandler handler, @Nonnull IdManager idManager) {
-        this.clientManager = (ClientManager) handler;
+    public GameManager(@Nonnull ClientManager handler, @Nonnull IdManager idManager) {
+        this.clientManager = handler;
         this.idManager = idManager;
         new Timer().schedule(new TimerTask() {
             @Override
