@@ -2,8 +2,9 @@ package de.upb.codingpirates.battleships.server;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import de.upb.codingpirates.battleships.server.gui.util.ResourceBundleWrapper;
+import de.upb.codingpirates.battleships.network.dispatcher.MessageDispatcher;
 import de.upb.codingpirates.battleships.server.network.ServerModule;
+import de.upb.codingpirates.battleships.server.gui.util.ResourceBundleWrapper;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -21,7 +22,8 @@ import java.util.ResourceBundle;
  */
 public final class BattleshipsServerApplication extends Application {
 
-    private final Injector injector = Guice.createInjector(new ServerModule());
+    @Nonnull
+    private final Injector injector;
 
     /**
      * The title of this JavaFX application {@link Stage}.
@@ -32,6 +34,11 @@ public final class BattleshipsServerApplication extends Application {
 
     public static void main(final String... args) {
         launch(args);
+    }
+
+    public BattleshipsServerApplication() {
+        injector = Guice.createInjector(new ServerModule());
+        injector.getInstance(MessageDispatcher.class);
     }
 
     /**
