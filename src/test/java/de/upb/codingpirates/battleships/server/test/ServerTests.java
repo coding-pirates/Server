@@ -1,5 +1,5 @@
 package de.upb.codingpirates.battleships.server.test;
-
+/*
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Guice;
@@ -233,3 +233,5 @@ public class ServerTests {
         return shots;
     }
 }
+
+ */
