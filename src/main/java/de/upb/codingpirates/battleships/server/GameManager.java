@@ -69,10 +69,6 @@ public class GameManager {
      * @return {@code -1} if game was created successful, {@code > 0} if the selected field size of the Configuration is too small
      */
     public int createGame(@Nonnull Configuration configuration, @Nonnull String name, boolean tournament) {
-        int size = checkField(configuration);
-        if (size != -1) {
-            return size;
-        }
         int id = this.idManager.generate().getInt();
         LOGGER.debug(ServerMarker.GAME, "Create game: {} with id: {}", name, id);
         this.gameHandlersById.putIfAbsent(id, new GameHandler(name, id, configuration, tournament, clientManager));
@@ -209,30 +205,6 @@ public class GameManager {
      */
     private void run() {
         this.gameHandlersById.values().forEach(GameHandler::run);
-    }
-
-    /**
-     * checks if the ships can fit into the field
-     *
-     * @param configuration the configuration which should be checked
-     * @return {@code -1} if it fits, else recommendation for a field size;
-     */
-    private int checkField(@Nonnull Configuration configuration) {//TODO better algorithm
-        Collection<ShipType> ships = configuration.getShips().values();
-
-        List<BoundingBox> boxes = Lists.newArrayList();
-
-        for (ShipType ship : ships) {
-            int x = ship.getPositions().stream().max((a, b) -> Math.max(Math.abs(a.getX()), Math.abs(b.getX()))).get().getX();
-            int y = ship.getPositions().stream().max((a, b) -> Math.max(Math.abs(a.getY()), Math.abs(b.getY()))).get().getY();
-            boxes.add(new BoundingBox(x + 1, y + 1));
-        }
-
-        int maxFields = boxes.stream().mapToInt(BoundingBox::getSize).sum();
-        if (maxFields > configuration.getHeight() * configuration.getWidth()) {
-            return (int) Math.sqrt(maxFields);
-        }
-        return -1;
     }
 
     public ObservableMap<Integer, GameHandler> getGameMappings() {
