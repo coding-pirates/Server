@@ -1,8 +1,9 @@
 package de.upb.codingpirates.battleships.server.test;
 
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import de.upb.codingpirates.battleships.client.ListenerHandler;
 import de.upb.codingpirates.battleships.client.listener.*;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
@@ -10,12 +11,14 @@ import de.upb.codingpirates.battleships.client.network.ClientConnector;
 import de.upb.codingpirates.battleships.client.network.ClientModule;
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.Properties;
+import de.upb.codingpirates.battleships.network.dispatcher.MessageDispatcher;
 import de.upb.codingpirates.battleships.network.exceptions.BattleshipException;
 import de.upb.codingpirates.battleships.network.message.notification.*;
-import de.upb.codingpirates.battleships.network.message.request.*;
+import de.upb.codingpirates.battleships.network.message.request.RequestBuilder;
 import de.upb.codingpirates.battleships.network.message.response.LobbyResponse;
 import de.upb.codingpirates.battleships.network.message.response.ServerJoinResponse;
-import de.upb.codingpirates.battleships.server.network.ServerApplication;
+import de.upb.codingpirates.battleships.server.GameManager;
+import de.upb.codingpirates.battleships.server.ServerModule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
@@ -44,13 +47,10 @@ public class ServerTests {
     public void test() throws IOException {
         if(!TestProperties.isServerOnline) {
             new Thread(() -> {
-                ServerApplication server = null;
-                try {
-                    server = new ServerApplication();
-                } catch (InstantiationException | IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-                server.getGameManager().createGame(TEST_CONFIG, "test", false);
+                Injector injector = Guice.createInjector(new ServerModule());
+                injector.getInstance(MessageDispatcher.class);
+                GameManager manager = injector.getInstance(GameManager.class);
+                manager.createGame(TEST_CONFIG, "test", false);
                 long timer = System.currentTimeMillis();
                 while (timer > System.currentTimeMillis() - 20000) {
 
@@ -77,21 +77,21 @@ public class ServerTests {
 
 
         for(int i = 0;i< TestProperties.playerCount;i++) {
-            connectorstmp.get(i).sendMessageToServer(new ServerJoinRequest(names[i], ClientType.PLAYER));
+            connectorstmp.get(i).sendMessageToServer(RequestBuilder.serverJoinRequest(names[i], ClientType.PLAYER));
             timer = System.currentTimeMillis();
             while (timer > System.currentTimeMillis() - 10){
             }
         }
 
         for(int i = 0;i< TestProperties.playerCount;i++) {
-            connectorstmp.get(i).sendMessageToServer(new LobbyRequest());
+            connectorstmp.get(i).sendMessageToServer(RequestBuilder.lobbyRequest());
             timer = System.currentTimeMillis();
             while (timer > System.currentTimeMillis() - 100){
             }
         }
 
         for(int i = 0;i< TestProperties.playerCount;i++) {
-            connectorstmp.get(i).sendMessageToServer(new GameJoinPlayerRequest(lobbySize-1));
+            connectorstmp.get(i).sendMessageToServer(RequestBuilder.gameJoinPlayerRequest(lobbySize-1));
             timer = System.currentTimeMillis();
             while (timer > System.currentTimeMillis() - 100){
             }
@@ -122,7 +122,7 @@ public class ServerTests {
             }
             configuration = message.getConfiguration();
             try {
-                connectors.get(clientId).sendMessageToServer(new PlaceShipsRequest(getPlacement(message.getConfiguration())));
+                connectors.get(clientId).sendMessageToServer(RequestBuilder.placeShipsRequest(getPlacement(message.getConfiguration())));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -132,7 +132,7 @@ public class ServerTests {
         public void onGameStartNotification(GameStartNotification message, int clientId) {
             LOGGER.info("GameStartNotification");
             try {
-                connectors.get(clientId).sendMessageToServer(new ShotsRequest(getShots(configuration)));
+                connectors.get(clientId).sendMessageToServer(RequestBuilder.shotsRequest(getShots(configuration)));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -177,7 +177,7 @@ public class ServerTests {
         public void onRoundStartNotification(RoundStartNotification message, int clientId) {
             LOGGER.info("RoundStartNotification");
             try {
-                connectors.get(clientId).sendMessageToServer(new ShotsRequest(getShots(configuration)));
+                connectors.get(clientId).sendMessageToServer(RequestBuilder.shotsRequest(getShots(configuration)));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -200,11 +200,11 @@ public class ServerTests {
 
     private static List<Shot> getShots(Configuration configuration){
         List<Shot> shots = Lists.newArrayList();
-        if(TestProperties.simple){
+        if (TestProperties.simple){
             shots.add(new Shot(ids.get(0), new Point2D(3, 4)));
             shots.add(new Shot(ids.get(0), new Point2D(3, 3)));
             shots.add(new Shot(ids.get(0), new Point2D(4, 3)));
-        }else {
+        } else {
             switch (TestProperties.testCase){
                 case 0:
                     if (RANDOM.nextBoolean()) {
@@ -229,7 +229,6 @@ public class ServerTests {
                     shots.add(new Shot(ids.get(RANDOM.nextInt(ids.size())),new Point2D(RANDOM.nextInt(configuration.getWidth()),RANDOM.nextInt(configuration.getHeight()))));
                     break;
             }
-
         }
         return shots;
     }

@@ -1,41 +1,27 @@
 package de.upb.codingpirates.battleships.server.handler;
 
-import com.google.inject.Inject;
-import de.upb.codingpirates.battleships.network.ConnectionHandler;
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
+
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.id.Id;
-import de.upb.codingpirates.battleships.network.message.ExceptionMessageHandler;
-import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
-import de.upb.codingpirates.battleships.server.game.GameHandler;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
-import javax.annotation.Nonnull;
-
-public class ShotsRequestHandler extends ExceptionMessageHandler<ShotsRequest> {
-    private static final Logger LOGGER = LogManager.getLogger();
-    @Nonnull
-    private ClientManager clientManager;
-    @Nonnull
-    private GameManager gameManager;
+public final class ShotsRequestHandler extends AbstractServerMessageHandler<ShotsRequest> {
 
     @Inject
-    public ShotsRequestHandler(@Nonnull ConnectionHandler handler, @Nonnull GameManager gameManager) {
-        this.clientManager = (ClientManager) handler;
-        this.gameManager = gameManager;
+    public ShotsRequestHandler(@Nonnull final ClientManager clientManager,
+                               @Nonnull final GameManager gameManager) {
+        super(clientManager, gameManager, ShotsRequest.class);
     }
 
     @Override
-    public void handleMessage(ShotsRequest message, Id connectionId) throws GameException {
-        GameHandler gamehandler = gameManager.getGameHandlerForClientId(connectionId.getInt());
-        gamehandler.addShotPlacement(connectionId.getInt(), message.getShots());
-    }
-
-    @Override
-    public boolean canHandle(Message message) {
-        return message instanceof ShotsRequest;
+    public void handleMessage(@Nonnull final ShotsRequest message,
+                              @Nonnull final Id connectionId) throws GameException {
+        gameManager
+            .getGameHandlerForClientId(connectionId.getInt())
+            .addShotPlacement(connectionId.getInt(), message.getShots());
     }
 }

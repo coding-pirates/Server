@@ -10,9 +10,12 @@ import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
-import de.upb.codingpirates.battleships.server.util.Properties;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import de.upb.codingpirates.battleships.server.util.Translator;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,86 +23,166 @@ import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * @author Paul Becker
+ */
 public class GameHandler implements Translator {
+
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Nonnull
     private ClientManager clientManager;
-    /**
-     * game properties
-     */
+
+    /** The core {@link Game} object wrapped by this {@code GameHandler}. */
     @Nonnull
     private final Game game;
+
     /**
-     * if game owned by tournament
-     */
-    private boolean tournament;
-    /**
-     * maps client id to player
-     */
-    @Nonnull
-    private final Map<Integer, Client> player = Collections.synchronizedMap(Maps.newHashMap());
-    /**
-     * maps client id to spectator
+     * Maps IDs of {@link Client}s whose {@link ClientType} is {@link ClientType#PLAYER} to their respective object
+     * instances.
+     *
+     * @see #spectatorsById
      */
     @Nonnull
-    private final Map<Integer, Client> spectator = Collections.synchronizedMap(Maps.newHashMap());
+    private final Map<Integer, Client> playersById = Collections.synchronizedMap(Maps.newHashMap());
+
     /**
-     * maps player id to his field
+     * Maps IDs of {@link Client}s whose {@link ClientType} is {@link ClientType#SPECTATOR} to their respective object
+     * instances.
+     *
+     * @see #playersById
      */
     @Nonnull
-    private final Map<Integer, Field> fields = Collections.synchronizedMap(Maps.newHashMap());
+    private final Map<Integer, Client> spectatorsById = Collections.synchronizedMap(Maps.newHashMap());
+
+    /**
+     * Maps IDs of {@link Client}s whose {@link ClientType} is {@link ClientType#PLAYER} to their {@link Field}s.
+     */
+    @Nonnull
+    private final Map<Integer, Field> fieldsByPlayerId = Collections.synchronizedMap(Maps.newHashMap());
+
     /**
      * maps client id to shots
      */
     @Nonnull
     private final Map<Integer, Collection<Shot>> shots = Collections.synchronizedMap(Maps.newHashMap());
+
     /**
      * maps player id to players ships
      */
     @Nonnull
     private final Map<Integer, Map<Integer, Ship>> ships = Collections.synchronizedMap(Maps.newHashMap());
+
     /**
      * maps player id to players ship placement
      */
     @Nonnull
     private final Map<Integer, Map<Integer, PlacementInfo>> startShip = Collections.synchronizedMap(Maps.newHashMap());
+
     /**
      * maps player id to players score
      */
     @Nonnull
     private final Map<Integer, Integer> score = Collections.synchronizedMap(Maps.newHashMap());
+
     /**
      * list of all hit shots
      */
     @Nonnull
     private final List<Shot> hitShots = Collections.synchronizedList(Lists.newArrayList());
+
     /**
      * list of all missed shots
      */
     @Nonnull
     private final List<Shot> missedShots = Collections.synchronizedList(Lists.newArrayList());
+
     /**
      * list of all shots that result in a sunken ship
      */
     @Nonnull
     private final List<Shot> sunkShots = Collections.synchronizedList(Lists.newArrayList());
+
     /**
      * list of all sunken ships
      */
     @Nonnull
     private final List<Ship> sunkenShips = Collections.synchronizedList(Lists.newArrayList());
+
     /**
      * maps from ship to shots that hit the ship
      */
     @Nonnull
     private final Map<Ship, List<Shot>> shipToShots = Collections.synchronizedMap(Maps.newHashMap());
 
-    public GameHandler(@Nonnull String name, int id, @Nonnull Configuration config, boolean tournament, @Nonnull ClientManager clientManager) {
-        this.game = new Game(name, id, GameState.LOBBY, config, tournament);
-        this.tournament = tournament;
+    /**
+     * The minimum amount of {@link Client}s with {@link ClientType#PLAYER} required in order to launch a game using
+     * the {@link #launchGame()} method.
+     *
+     * @see #launchGame()
+     */
+    public static final int MIN_PLAYER_COUNT = 2;
+
+    /**
+     * The maximum amount of {@link Client}s with {@link ClientType#SPECTATOR} which can spectate a {@link Game}.
+     *
+     * @see #addClient(ClientType, Client)
+     */
+    private static final int MAX_SPECTATOR_COUNT = Integer.MAX_VALUE;
+
+    public GameHandler(@Nonnull final String name, final int id, @Nonnull final Configuration config, final boolean tournament, @Nonnull final ClientManager clientManager) {
+        this.game          = new Game(id, name, GameState.LOBBY, config, tournament);
         this.clientManager = clientManager;
+
+        stateProperty()
+            .addListener((observable, oldValue, newValue) -> game.setState(newValue));
+        currentPlayerCountProperty
+            .addListener((observable, oldValue, newValue) -> game.setCurrentPlayerCount(newValue.intValue()));
     }
+
+    /*
+     * Usually these properties would be part of the Game class, however, this is not possible because the Game class
+     * is common to all platforms and not all the platforms it is used on, Android in particular, implement JavaFX,
+     * which is why the currentPlayerCountProperty and stateProperty are now part of the GameHandler rather than the
+     * Game class.
+     *
+     * Listeners are set up on these properties which mirror any changes occurring to the currentPlayerCountProperty
+     * an stateProperty to the fields of the Game object wrapped by this GameHandler to keep the values synchronized.
+     */
+
+    // <editor-fold desc="currentPlayerCountProperty">
+    private final IntegerProperty currentPlayerCountProperty = new SimpleIntegerProperty();
+
+    public void incrementCurrentPlayerCount() {
+        if (currentPlayerCountProperty.get() < Integer.MAX_VALUE)
+            currentPlayerCountProperty.add(1);
+    }
+
+    public void decrementCurrentPlayerCount() {
+        if (currentPlayerCountProperty.get() > 0)
+            currentPlayerCountProperty.subtract(1);
+    }
+
+    public IntegerProperty currentPlayerCountProperty() {
+        return currentPlayerCountProperty;
+    }
+    // </editor-fold>
+
+    // <editor-fold desc="stateProperty">
+    private final ObjectProperty<GameState> stateProperty = new SimpleObjectProperty<>();
+
+    public GameState getState() {
+        return stateProperty.get();
+    }
+
+    public void setState(@Nonnull final GameState state) {
+        stateProperty.set(state);
+    }
+
+    public ObjectProperty<GameState> stateProperty() {
+        return stateProperty;
+    }
+    // </editor-fold>
 
     /**
      * adds the client as the spectator or player to the game
@@ -108,43 +191,49 @@ public class GameHandler implements Translator {
     public void addClient(@Nonnull ClientType type, @Nonnull Client client) throws InvalidActionException {
         switch (type) {
             case PLAYER:
-                if (player.size() >= game.getConfig().getMaxPlayerCount())
+                if (playersById.size() >= game.getConfig().getMaxPlayerCount())
                     throw new InvalidActionException("game.isFull");
-                player.put(client.getId(), client);
-                fields.put(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(),client.getId()));
-                game.addPlayer();
+                playersById.put(client.getId(), client);
+                fieldsByPlayerId.put(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(),client.getId()));
+                incrementCurrentPlayerCount();
                 break;
             case SPECTATOR:
-                if (spectator.size() >= Properties.MAXSPECTATOR)
+                if (spectatorsById.size() >= MAX_SPECTATOR_COUNT)
                     throw new InvalidActionException("game.isFull");
-                spectator.putIfAbsent(client.getId(), client);
+                spectatorsById.putIfAbsent(client.getId(), client);
         }
     }
 
     /**
-     * removes from the game including all statistics
+     * Removes the {@link Client} with the provided {@code clientId} from the {@link Game} wrapped by this
+     * {@code GameHandler}, removing all statistics associated with the client of the provided {@code clientId} in the
+     * process.
+     *
+     * @param clientId The ID associated with the {@link Client} instance which is to be removed from the game.
      */
-    public void removeClient(int client) {
-            if (this.player.containsKey(client)) {
-                this.player.remove(client);
-                this.fields.remove(client);
-                this.game.removePlayer();
-                this.ships.remove(client);
-                this.startShip.remove(client);
-            }
-            this.spectator.remove(client);
+    public void removeClient(final int clientId) {
+        if (this.playersById.containsKey(clientId)) {
+            this.playersById.remove(clientId);
+            this.fieldsByPlayerId.remove(clientId);
+            this.ships.remove(clientId);
+            this.startShip.remove(clientId);
+
+            decrementCurrentPlayerCount();
+        }
+        this.spectatorsById.remove(clientId);
     }
 
     /**
-     * @return all clients participating in the game or viewing the game. (player, spectator)
+     * @return A {@link List} containing all {@link Client}s which are participating in the {@link Game} wrapped by this
+     *         {@code GameHandler} or which are spectating it.
      */
     @Nonnull
     public List<Client> getAllClients() {
-        List<Client> clients = Lists.newArrayList();
-        if(player.size() > 0)
-            clients.addAll(getPlayers());
-        if(spectator.size() > 0)
-            clients.addAll(getSpectators());
+        final List<Client> clients = new ArrayList<>(getPlayers().size() + getSpectators().size());
+
+        clients.addAll(getPlayers());
+        clients.addAll(getSpectators());
+
         return clients;
     }
 
@@ -153,12 +242,12 @@ public class GameHandler implements Translator {
      */
     @Nonnull
     public Collection<Client> getPlayers() {
-        return player.values();
+        return playersById.values();
     }
 
     @Nonnull
     public Collection<Client> getSpectators() {
-        return spectator.values();
+        return spectatorsById.values();
     }
 
     @Nonnull
@@ -166,17 +255,13 @@ public class GameHandler implements Translator {
         return ships;
     }
 
-    /**
-     * @return the {@link Game} object
-     */
+    /** @return The {@link Game} object wrapped by this {@code GameHandler}. */
     @Nonnull
     public Game getGame() {
         return game;
     }
 
-    /**
-     * @return the {@link Configuration} from the {@link Game} object
-     */
+    /** @return the {@link Configuration} from the {@link Game} object */
     @Nonnull
     private Configuration getConfiguration() {
         return game.getConfig();
@@ -258,17 +343,17 @@ public class GameHandler implements Translator {
      * @throws GameException if to many shots have been placed or the shots for the player has already been placed
      */
     public void addShotPlacement(int clientId,@Nonnull Collection<Shot> shots) throws GameException {
-        if(shots.size() > getConfiguration().getShotCount()){
+        if (shots.size() > getConfiguration().getShotCount()) {
             throw new NotAllowedException("game.player.toManyShots");
         }
         for (Shot shot: shots){
-            if(!player.containsKey(shot.getClientId())){
+            if(!playersById.containsKey(shot.getClientId())) {
                 shots.remove(shot);
                 LOGGER.warn("Player {} for shot from {} does not exist", shot.getClientId(), clientId);
             }
         }
-        this.shots.put(clientId,shots);
-        if(shots.size() < getConfiguration().getShotCount()){
+        this.shots.put(clientId, shots);
+        if (shots.size() < getConfiguration().getShotCount()) {
             throw new InvalidActionException("game.player.toLessShots");
         }
     }
@@ -314,7 +399,7 @@ public class GameHandler implements Translator {
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().getRoundTime()) {
                     this.placeShips();
                     this.timeStamp = System.currentTimeMillis();
-                    this.clientManager.sendMessageToClients(new GameStartNotification(),getAllClients());
+                    this.clientManager.sendMessageToClients(NotificationBuilder.gameStartNotification(),getAllClients());
                     this.stage = GameStage.SHOTS;
                 }
                 break;
@@ -332,7 +417,7 @@ public class GameHandler implements Translator {
                     if(ships.size() <= 1){
                         this.stage = GameStage.FINISHED;
                     }else {
-                        clientManager.sendMessageToClients(new RoundStartNotification(), getAllClients());
+                        clientManager.sendMessageToClients(NotificationBuilder.roundStartNotification(), getAllClients());
                     }
                 }
 
@@ -345,13 +430,14 @@ public class GameHandler implements Translator {
                 }
                 break;
             case FINISHED:
-                Optional<Map.Entry<Integer,Integer>> winner = score.entrySet().stream().max(Comparator.comparingInt(Map.Entry::getValue));
-                int id = 0;
-                if(winner.isPresent()){
-                    id = winner.get().getKey();
-                }
+                OptionalInt winnerScore = score.values().stream().mapToInt(value -> value).max();
+                Collection<Integer> winner;
+                if(winnerScore.isPresent())
+                    winner = score.entrySet().stream().filter(entry -> entry.getValue() == winnerScore.getAsInt()).map(Map.Entry::getKey).collect(Collectors.toList());
+                else
+                    winner = Lists.newArrayList();
                 LOGGER.debug("Game {} has finished",game.getId());
-                this.clientManager.sendMessageToClients(new FinishNotification(this.score, id),getAllClients());
+                this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, winner),getAllClients());
                 this.game.setState(GameState.FINISHED);
                 break;
             default:
@@ -365,7 +451,7 @@ public class GameHandler implements Translator {
      */
     public boolean launchGame() {
         if (this.game.getState() == GameState.LOBBY) {
-            if (this.player.size() < 2) {
+            if (this.playersById.size() < MIN_PLAYER_COUNT) {
                 return false;
             }
             this.game.setState(GameState.IN_PROGRESS);
@@ -384,7 +470,7 @@ public class GameHandler implements Translator {
             this.startShip.clear();
             this.stage = GameStage.PLACESHIPS;
             this.timeStamp = System.currentTimeMillis();
-            this.clientManager.sendMessageToClients(new GameInitNotification(getAllClients(), this.getConfiguration()), getAllClients());
+            this.clientManager.sendMessageToClients(NotificationBuilder.gameInitNotification(getAllClients(), this.getConfiguration()), getAllClients());
         }
     }
 
@@ -441,7 +527,7 @@ public class GameHandler implements Translator {
         Map<Integer, ShipType> ships = getConfiguration().getShips();
         for (Map.Entry<Integer, Map<Integer, PlacementInfo>> clientEntry : startShip.entrySet()) {
             clients.add(clientEntry.getKey());
-            Field field = this.fields.get(clientEntry.getKey());
+            Field field = this.fieldsByPlayerId.get(clientEntry.getKey());
             for (Map.Entry<Integer, PlacementInfo> shipEntry : clientEntry.getValue().entrySet()) {
                 Ship ship = field.placeShip(ships.get(shipEntry.getKey()), shipEntry.getValue());
                 if(ship != null) {//TODO ship can't be placed
@@ -452,7 +538,7 @@ public class GameHandler implements Translator {
                 this.placeRandomShips(clientEntry.getKey(),clientEntry.getValue());
             }
         }
-        List<Client> clients1 = player.entrySet().stream().filter(integerClientEntry -> !clients.contains(integerClientEntry.getKey())).map(Map.Entry::getValue).collect(Collectors.toList());
+        List<Client> clients1 = playersById.entrySet().stream().filter(integerClientEntry -> !clients.contains(integerClientEntry.getKey())).map(Map.Entry::getValue).collect(Collectors.toList());
         this.removeInactivePlayer(clients1);
     }
 
@@ -465,10 +551,10 @@ public class GameHandler implements Translator {
         for (Map.Entry<Integer, Collection<Shot>> entry : shots.entrySet()) {
             for (Shot shot : entry.getValue()) {
                 if (shot.getClientId() == entry.getKey()) {
-                    this.clientManager.sendMessageToInt(new ErrorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.shotOwnShip")), entry.getKey());
+                    this.clientManager.sendMessageToInt(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.shotOwnShip")), entry.getKey());
                     continue;
                 }
-                ShotHit hit = fields.get(shot.getClientId()).hit(shot);
+                ShotHit hit = fieldsByPlayerId.get(shot.getClientId()).hit(shot);
                 switch (hit.getHitType()) {
                     case HIT:
                         hitToPoint.computeIfAbsent(HitType.HIT, hitType -> Maps.newHashMap()).computeIfAbsent(hit.getShot(), shot1 -> Lists.newArrayList()).add(entry.getKey());
@@ -485,7 +571,7 @@ public class GameHandler implements Translator {
                     case NONE:
                         for (Shot shot1 : this.hitShots) {
                             if (shot1.equals(shot)) {
-                                this.clientManager.sendMessageToInt(new ErrorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.alreadyHit")), entry.getKey());
+                                this.clientManager.sendMessageToInt(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.alreadyHit")), entry.getKey());
                                 break;
                             }
                         }
@@ -544,16 +630,16 @@ public class GameHandler implements Translator {
      */
     private void removeDeadPlayer(int clientId){//TODO what should be done if player is dead
         this.removeClient(clientId);
-        clientManager.sendMessageToClients(new LeaveNotification(clientId), this.getAllClients());
+        clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(clientId), this.getAllClients());
     }
 
     /**
      * removes player that didn't placed their ships
      */
     private void removeInactivePlayer(Collection<Client> clients) {
-        clientManager.sendMessageToClients(new ErrorNotification(ErrorType.INVALID_ACTION, PlaceShipsRequest.MESSAGE_ID, translate("game.player.noPlacedShips")), clients);
+        clientManager.sendMessageToClients(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, PlaceShipsRequest.MESSAGE_ID, translate("game.player.noPlacedShips")), clients);
         clients.forEach(client -> this.removeClient(client.getId()));
-        clients.forEach(client -> clientManager.sendMessageToClients(new LeaveNotification(client.getId()), clients));
+        clients.forEach(client -> clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(client.getId()), clients));
     }
 
     /**
@@ -578,8 +664,8 @@ public class GameHandler implements Translator {
      * send spectator & player update notifications
      */
     private void sendUpdateNotification(){
-        this.clientManager.sendMessageToClients(new PlayerUpdateNotification(this.hitShots, score, this.sunkShots), this.player.values());
-        this.clientManager.sendMessageToClients(new SpectatorUpdateNotification(this.hitShots, this.score, this.sunkShots, this.missedShots), this.spectator.values());
+        this.clientManager.sendMessageToClients(NotificationBuilder.playerUpdateNotification(this.hitShots, score, this.sunkShots), this.playersById.values());
+        this.clientManager.sendMessageToClients(NotificationBuilder.spectatorUpdateNotification(this.hitShots, this.score, this.sunkShots, this.missedShots), this.spectatorsById.values());
     }
 
     /**
@@ -593,7 +679,7 @@ public class GameHandler implements Translator {
 
     private void createEmptyScore(){
         this.score.clear();
-        this.player.forEach((id,client)->score.put(id,0));
+        this.playersById.forEach((id, client)->score.put(id,0));
     }
 
     public GameStage getStage() {
