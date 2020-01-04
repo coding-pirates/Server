@@ -24,6 +24,7 @@ public final class ServerModule extends AbstractModule {
 
         //bind interface ConnectionHandler to Class ClientManager in one instance
         this.bind(ConnectionHandler.class).to(ClientManager.class).in(Singleton.class);
+        this.bind(ClientManager.class).in(Singleton.class);
         //bind class GameManager in one instance
         this.bind(GameManager.class).in(Singleton.class);
         //bind class TournamentManager in one instance
