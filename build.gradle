@@ -14,8 +14,8 @@ dependencies {
 
     implementation group: 'com.google.inject', name: 'guice', version: '4.2.2'
 
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.1'
-    runtime group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.1'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.3'
+    runtime group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.3'
 
     implementation group: 'com.google.guava', name: 'guava', version: '28.1-jre'
 
