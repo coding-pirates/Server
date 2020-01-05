@@ -464,19 +464,20 @@ public final class ConfigurationController extends AbstractController<Parent> {
     @Contract(" -> new")
     private Configuration getConfigurationFromControls()
             throws InsufficientFieldSizeException, InvalidShipTypeConfigurationException {
-        final Configuration configuration = new Configuration(
-            maxPlayerCountSpinner.getValue(),
-            heightSpinner.getValue(),
-            widthSpinner.getValue(),
-            shotCountSpinner.getValue(),
-            hitPointsSpinner.getValue(),
-            sunkPointsSpinner.getValue(),
-            (long) roundTimeSpinner.getValue()         * 1_000, /* Convert s to ms. */
-            (long) visualizationTimeSpinner.getValue() * 1_000,
-            getShipTypesFromControls(),
-            penaltyMinusPointsSpinner.getValue(),
-            penaltyTypeComboBox.getSelectionModel().getSelectedItem()
-        );
+        final Configuration configuration =
+            new Configuration.Builder()
+                .maxPlayerCount(maxPlayerCountSpinner.getValue())
+                .width(widthSpinner.getValue())
+                .height(heightSpinner.getValue())
+                .shotCount(shotCountSpinner.getValue())
+                .hitPoints(hitPointsSpinner.getValue())
+                .sunkPoints(sunkPointsSpinner.getValue())
+                .roundTime((long) roundTimeSpinner.getValue()                 * 1_000L) /* Convert s to ms. */
+                .visualizationTime((long) visualizationTimeSpinner.getValue() * 1_000L)
+                .ships(getShipTypesFromControls())
+                .penaltyMinusPoints(penaltyMinusPointsSpinner.getValue())
+                .penaltyKind(penaltyTypeComboBox.getValue())
+                .build();
         validator.validate(configuration);
 
         return configuration;
