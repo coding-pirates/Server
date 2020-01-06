@@ -101,6 +101,10 @@ public class GameManager {
             LOGGER.error(ServerMarker.GAME, "Can't find game {}", gameId);
             throw new InvalidActionException("game.gameManager.noGame");
         }
+        //Todo remove call
+        if (this.getGameHandler(gameId).getAllClients().size() == 3){
+            launchGame(gameId);
+        }
     }
 
     /**
