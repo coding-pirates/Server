@@ -1,21 +1,7 @@
 package de.upb.codingpirates.battleships.server.game;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nonnull;
-
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
@@ -26,6 +12,16 @@ import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import de.upb.codingpirates.battleships.server.util.Translator;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.annotation.Nonnull;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Paul Becker
@@ -403,7 +399,7 @@ public class GameHandler implements Translator {
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().getRoundTime()) {
                     this.placeShips();
                     this.timeStamp = System.currentTimeMillis();
-                    this.clientManager.sendMessageToClients(new GameStartNotification(),getAllClients());
+                    this.clientManager.sendMessageToClients(NotificationBuilder.gameStartNotification(),getAllClients());
                     this.stage = GameStage.SHOTS;
                 }
                 break;
@@ -421,7 +417,7 @@ public class GameHandler implements Translator {
                     if(ships.size() <= 1){
                         this.stage = GameStage.FINISHED;
                     }else {
-                        clientManager.sendMessageToClients(new RoundStartNotification(), getAllClients());
+                        clientManager.sendMessageToClients(NotificationBuilder.roundStartNotification(), getAllClients());
                     }
                 }
 
@@ -434,13 +430,14 @@ public class GameHandler implements Translator {
                 }
                 break;
             case FINISHED:
-                Optional<Map.Entry<Integer,Integer>> winner = score.entrySet().stream().max(Comparator.comparingInt(Map.Entry::getValue));
-                int id = 0;
-                if(winner.isPresent()){
-                    id = winner.get().getKey();
-                }
+                OptionalInt winnerScore = score.values().stream().mapToInt(value -> value).max();
+                Collection<Integer> winner;
+                if(winnerScore.isPresent())
+                    winner = score.entrySet().stream().filter(entry -> entry.getValue() == winnerScore.getAsInt()).map(Map.Entry::getKey).collect(Collectors.toList());
+                else
+                    winner = Lists.newArrayList();
                 LOGGER.debug("Game {} has finished",game.getId());
-                this.clientManager.sendMessageToClients(new FinishNotification(this.score, id),getAllClients());
+                this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, winner),getAllClients());
                 this.game.setState(GameState.FINISHED);
                 break;
             default:
@@ -473,7 +470,7 @@ public class GameHandler implements Translator {
             this.startShip.clear();
             this.stage = GameStage.PLACESHIPS;
             this.timeStamp = System.currentTimeMillis();
-            this.clientManager.sendMessageToClients(new GameInitNotification(getAllClients(), this.getConfiguration()), getAllClients());
+            this.clientManager.sendMessageToClients(NotificationBuilder.gameInitNotification(getAllClients(), this.getConfiguration()), getAllClients());
         }
     }
 
@@ -554,7 +551,7 @@ public class GameHandler implements Translator {
         for (Map.Entry<Integer, Collection<Shot>> entry : shots.entrySet()) {
             for (Shot shot : entry.getValue()) {
                 if (shot.getClientId() == entry.getKey()) {
-                    this.clientManager.sendMessageToInt(new ErrorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.shotOwnShip")), entry.getKey());
+                    this.clientManager.sendMessageToInt(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.shotOwnShip")), entry.getKey());
                     continue;
                 }
                 ShotHit hit = fieldsByPlayerId.get(shot.getClientId()).hit(shot);
@@ -574,7 +571,7 @@ public class GameHandler implements Translator {
                     case NONE:
                         for (Shot shot1 : this.hitShots) {
                             if (shot1.equals(shot)) {
-                                this.clientManager.sendMessageToInt(new ErrorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.alreadyHit")), entry.getKey());
+                                this.clientManager.sendMessageToInt(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.alreadyHit")), entry.getKey());
                                 break;
                             }
                         }
@@ -633,16 +630,16 @@ public class GameHandler implements Translator {
      */
     private void removeDeadPlayer(int clientId){//TODO what should be done if player is dead
         this.removeClient(clientId);
-        clientManager.sendMessageToClients(new LeaveNotification(clientId), this.getAllClients());
+        clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(clientId), this.getAllClients());
     }
 
     /**
      * removes player that didn't placed their ships
      */
     private void removeInactivePlayer(Collection<Client> clients) {
-        clientManager.sendMessageToClients(new ErrorNotification(ErrorType.INVALID_ACTION, PlaceShipsRequest.MESSAGE_ID, translate("game.player.noPlacedShips")), clients);
+        clientManager.sendMessageToClients(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, PlaceShipsRequest.MESSAGE_ID, translate("game.player.noPlacedShips")), clients);
         clients.forEach(client -> this.removeClient(client.getId()));
-        clients.forEach(client -> clientManager.sendMessageToClients(new LeaveNotification(client.getId()), clients));
+        clients.forEach(client -> clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(client.getId()), clients));
     }
 
     /**
@@ -667,8 +664,8 @@ public class GameHandler implements Translator {
      * send spectator & player update notifications
      */
     private void sendUpdateNotification(){
-        this.clientManager.sendMessageToClients(new PlayerUpdateNotification(this.hitShots, score, this.sunkShots), this.playersById.values());
-        this.clientManager.sendMessageToClients(new SpectatorUpdateNotification(this.hitShots, this.score, this.sunkShots, this.missedShots), this.spectatorsById.values());
+        this.clientManager.sendMessageToClients(NotificationBuilder.playerUpdateNotification(this.hitShots, score, this.sunkShots), this.playersById.values());
+        this.clientManager.sendMessageToClients(NotificationBuilder.spectatorUpdateNotification(this.hitShots, this.score, this.sunkShots, this.missedShots), this.spectatorsById.values());
     }
 
     /**

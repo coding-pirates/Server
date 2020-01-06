@@ -1,15 +1,15 @@
 package de.upb.codingpirates.battleships.server.handler;
 
-import javax.annotation.Nonnull;
-import javax.inject.Inject;
-
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.request.PlayerGameStateRequest;
-import de.upb.codingpirates.battleships.network.message.response.PlayerGameStateResponse;
+import de.upb.codingpirates.battleships.network.message.response.ResponseBuilder;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
+
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
 
 public final class PlayerGameStateRequestHandler extends AbstractServerMessageHandler<PlayerGameStateRequest> {
 
@@ -25,7 +25,7 @@ public final class PlayerGameStateRequestHandler extends AbstractServerMessageHa
         final GameHandler handler = gameManager.getGameHandlerForClientId(connectionId.getInt());
 
         clientManager.sendMessageToId(
-            new PlayerGameStateResponse.Builder()
+            ResponseBuilder.playerGameStateResponse()
                 .gameState(handler.getGame().getState())
                 .hits(handler.getHitShots())
                 .sunk(handler.getSunkShots())

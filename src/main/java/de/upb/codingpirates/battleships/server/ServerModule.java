@@ -27,6 +27,7 @@ public final class ServerModule extends AbstractModule {
 
         //bind interface ConnectionHandler to Class ClientManager in one instance
         bind(ConnectionHandler.class).to(ClientManager.class).in(Singleton.class);
+        bind(ClientManager.class).in(Singleton.class);
         //bind class GameManager in one instance
         bind(GameManager.class).in(Singleton.class);
 

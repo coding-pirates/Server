@@ -1,14 +1,15 @@
 package de.upb.codingpirates.battleships.server.handler;
 
-import javax.annotation.Nonnull;
-
-import de.upb.codingpirates.battleships.network.message.ExceptionMessageHandler;
 import de.upb.codingpirates.battleships.network.message.Message;
+import de.upb.codingpirates.battleships.network.message.handler.ExceptionMessageHandler;
+import de.upb.codingpirates.battleships.network.message.handler.MessageHandler;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 
+import javax.annotation.Nonnull;
+
 /**
- * Common subclass of all server-side {@link de.upb.codingpirates.battleships.network.message.MessageHandler}s.
+ * Common subclass of all server-side {@link MessageHandler}s.
  *
  * @author Andre Blanke
  */
@@ -33,7 +34,7 @@ public abstract class AbstractServerMessageHandler<T extends Message> extends Ex
     }
 
     @Override
-    public final boolean canHandle(final Message message) {
+    public final boolean canHandle(@Nonnull final Message message) {
         return messageType.isInstance(message);
     }
 }
