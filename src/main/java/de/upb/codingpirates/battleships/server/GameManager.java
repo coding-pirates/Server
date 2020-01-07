@@ -224,7 +224,7 @@ public class GameManager implements ConfigurationChecker {
     public void removeGames(){
         long time = System.currentTimeMillis();
         this.removeGames.removeIf(integerLongPair -> {
-            if(integerLongPair.getValue() <= time){
+            if(integerLongPair.getValue() <= time && !gameHandlersById.get(integerLongPair.getKey()).getGame().isTournament()){
                 gameHandlersById.remove(integerLongPair.getKey());
                 return true;
             }

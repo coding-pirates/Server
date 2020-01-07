@@ -11,6 +11,7 @@ import de.upb.codingpirates.battleships.network.message.request.PlaceShipsReques
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
+import de.upb.codingpirates.battleships.server.exceptions.GameFullExeption;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -193,7 +194,7 @@ public class GameHandler implements Handler, Runnable {
         switch (type) {
             case PLAYER:
                 if (playersById.size() >= game.getConfig().getMaxPlayerCount())
-                    throw new InvalidActionException("game.isFull");
+                    throw new GameFullExeption();
                 playersById.put(client.getId(), client);
                 fieldsByPlayerId.put(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(),client.getId()));
                 incrementCurrentPlayerCount();

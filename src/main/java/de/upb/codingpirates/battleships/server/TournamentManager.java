@@ -47,7 +47,7 @@ public class TournamentManager implements ConfigurationChecker {
         checkField(configuration);
         int id = this.idManager.generate().getInt();
         LOGGER.info(ServerMarker.TOURNAMENT, "Create Tournament: {} with id: {}", name, id);
-        TournamentHandler tournamentHandler = new TournamentHandler(name, clientManager, gameManager, configuration);
+        TournamentHandler tournamentHandler = new TournamentHandler(name, clientManager, gameManager, configuration, id);
         this.tournamentHandlerByInt.put(id, tournamentHandler);
         return tournamentHandler;
     }

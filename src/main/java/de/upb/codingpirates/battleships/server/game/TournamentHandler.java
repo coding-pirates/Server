@@ -9,6 +9,7 @@ import de.upb.codingpirates.battleships.logic.Configuration;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
+import de.upb.codingpirates.battleships.server.exceptions.GameFullExeption;
 import de.upb.codingpirates.battleships.server.exceptions.InvalidGameSizeException;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import org.apache.logging.log4j.LogManager;
@@ -20,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class TournamentHandler implements Handler{
+public class TournamentHandler implements Handler, Runnable{
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Nonnull
@@ -41,14 +42,17 @@ public class TournamentHandler implements Handler{
     private final Map<Integer, Integer> score = Collections.synchronizedMap(Maps.newHashMap());
     @Nonnull
     private final String name;
+    private final int tournamentId;
+    private boolean started;
 
     private int gameSize = 0;
 
-    public TournamentHandler(@Nonnull String name, @Nonnull ClientManager clientManager, @Nonnull GameManager gameManager,@Nonnull Configuration configuration) {
+    public TournamentHandler(@Nonnull String name, @Nonnull ClientManager clientManager, @Nonnull GameManager gameManager,@Nonnull Configuration configuration, int id) {
         this.clientManager = clientManager;
         this.configuration = configuration;
         this.gameManager = gameManager;
         this.name = name;
+        this.tournamentId = id;
     }
 
     @Override
@@ -62,17 +66,39 @@ public class TournamentHandler implements Handler{
     }
 
     public void start() throws InvalidGameSizeException, InvalidActionException {
+        this.started = true;
         List<Client> players = Lists.newArrayList(player.values());
         Collections.shuffle(players);
         this.createGames((int)(((float)players.size() / (float)this.configuration.getMaxPlayerCount())+0.5f));
-        while (!players.isEmpty()){
-            for (GameHandler manager: games.values()){
-                if(players.isEmpty()){
-                    break;
+        LOGGER.debug(ServerMarker.TOURNAMENT, "Create {} games for tournament {}. {} / {} = {} + {} = {}", this.games.size(), this.getTournamentId(),(float)players.size(),(float)this.configuration.getMaxPlayerCount(),(float)players.size() / (float)this.configuration.getMaxPlayerCount(),0.5f,((float)players.size() / (float)this.configuration.getMaxPlayerCount())+0.5f);
+        try {
+            while (!players.isEmpty()) {
+                for (GameHandler manager : games.values()) {
+                    if (players.isEmpty()) {
+                        break;
+                    }
+                    LOGGER.debug(ServerMarker.TOURNAMENT, "try to add player {} to game {}", players.get(0).getId(), manager.getGame().getId());
+                    manager.addClient(ClientType.PLAYER, players.get(0));
+                    players.remove(0);
                 }
-                manager.addClient(ClientType.PLAYER,players.remove(0));
             }
+
+        }catch (GameFullExeption e){
+            LOGGER.info(ServerMarker.TOURNAMENT, "Could not add player {} to game, because all games are full", players.get(0));
         }
+        //test for games with only one player
+        this.games.entrySet().removeIf(entry-> {
+           if(entry.getValue().getPlayers().size() < 2){
+               Collection<Client> player = Lists.newArrayList(entry.getValue().getPlayers());
+               player.forEach((player1)-> {
+                   this.player.remove(player1.getId());
+                   entry.getValue().removeClient(player1.getId());
+               });
+               return true;
+           }
+           return false;
+        });
+        this.games.values().forEach(GameHandler::launchGame);
     }
 
     private void createGames(int amount) throws InvalidGameSizeException {
@@ -117,7 +143,17 @@ public class TournamentHandler implements Handler{
         return games;
     }
 
+    public int getTournamentId() {
+        return tournamentId;
+    }
+
     public void gameFinished(int id){
-        games.get(id).getScore().forEach((client, score)-> this.score.compute(client,(client1, score1)->score+score1));
+        Map<Integer, Integer> score = this.games.get(id).getScore();
+        score.forEach((client, score1)-> this.score.compute(client,(client1, score2)->score1+score2));
+    }
+
+    @Override
+    public void run() {
+        if(!this.started)return;
     }
 }
