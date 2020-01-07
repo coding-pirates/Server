@@ -1,13 +1,14 @@
 package de.upb.codingpirates.battleships.server.handler;
 
-import javax.annotation.Nonnull;
-import javax.inject.Inject;
-
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
+import de.upb.codingpirates.battleships.network.message.response.ResponseBuilder;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
+
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
 
 public final class ShotsRequestHandler extends AbstractServerMessageHandler<ShotsRequest> {
 
@@ -23,5 +24,6 @@ public final class ShotsRequestHandler extends AbstractServerMessageHandler<Shot
         gameManager
             .getGameHandlerForClientId(connectionId.getInt())
             .addShotPlacement(connectionId.getInt(), message.getShots());
+        clientManager.sendMessageToId(ResponseBuilder.shotsResponse(), connectionId);
     }
 }
