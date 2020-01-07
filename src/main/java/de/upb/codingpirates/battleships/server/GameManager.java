@@ -102,7 +102,7 @@ public class GameManager {
             throw new InvalidActionException("game.gameManager.noGame");
         }
         //Todo remove call
-        if (this.getGameHandler(gameId).getAllClients().size() == 3){
+        if (this.getGameHandler(gameId).getAllClients().size() == 2){
             launchGame(gameId);
         }
     }
