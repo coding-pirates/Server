@@ -2,8 +2,10 @@ package de.upb.codingpirates.battleships.server;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import de.upb.codingpirates.battleships.logic.AbstractClient;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.ClientType;
+import de.upb.codingpirates.battleships.logic.Spectator;
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.connectionmanager.ServerConnectionManager;
 import de.upb.codingpirates.battleships.network.exceptions.BattleshipException;
@@ -41,7 +43,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      * maps client id to client
      */
     @Nonnull
-    private final Map<Integer, Client> clients = Collections.synchronizedMap(Maps.newHashMap());
+    private final Map<Integer, AbstractClient> clients = Collections.synchronizedMap(Maps.newHashMap());
 
     /**
      * maps client id to player
@@ -54,7 +56,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      * maps client id to spectator
      */
     @Nonnull
-    private final Map<Integer, Client> spectator = Collections.synchronizedMap(Maps.newHashMap());
+    private final Map<Integer, Spectator> spectator = Collections.synchronizedMap(Maps.newHashMap());
 
     @Inject
     public ClientManager(@Nonnull ServerConnectionManager connectionManager) {
@@ -70,23 +72,37 @@ public class ClientManager implements ConnectionHandler, Translator {
      * @throws InvalidActionException if the id exists
      */
     @Nonnull
-    public Client create(int id,@Nonnull String name,@Nonnull ClientType clientType) throws InvalidActionException {
+    public AbstractClient create(int id,@Nonnull String name,@Nonnull ClientType clientType) throws InvalidActionException {
         LOGGER.debug(ServerMarker.CLIENT, "create client with id: {}, type {}", id, clientType);
         if (this.clients.containsKey(id)) {
             throw new InvalidActionException("game.clientManager.createClient.idExists");
         }
 
-        Client client = new Client(id, name);
-        this.clients.put(id, client);
+        AbstractClient client;
         switch (clientType) {
             case PLAYER:
-                this.player.put(id, client);
+                this.player.put(id, (Client)(client = new Client(id, name)));
                 break;
             case SPECTATOR:
-                this.spectator.put(id, client);
+                this.spectator.put(id, (Spectator)(client = new Spectator(id,name)));
                 break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + clientType);
         }
+        this.clients.put(id, client);
         return client;
+    }
+
+    @Nullable
+    public ClientType getTypeFromId(int id){
+        if(this.clients.containsKey(id))
+            return this.clients.get(id).getClientType();
+        return null;
+    }
+
+    @Nullable
+    public ClientType getTypeFromId(Id id){
+        return this.getTypeFromId(id.getInt());
     }
 
     /**
@@ -154,9 +170,9 @@ public class ClientManager implements ConnectionHandler, Translator {
      * @param message
      * @param clients
      */
-    public void sendMessageToClients(Message message, Collection<Client> clients) {
+    public void sendMessageToClients(Message message, Collection<? extends AbstractClient> clients) {
         try {
-            for (Client client : clients) {
+            for (AbstractClient client : clients) {
                 this.connectionManager.send(new Id(client.getId()), message);
             }
         } catch (IOException e) {
@@ -170,7 +186,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      * @param message
      * @param clients
      */
-    public void sendMessageToClient(Message message, Client... clients) {
+    public <T extends AbstractClient> void sendMessageToClient(Message message, T... clients) {
         this.sendMessageToClients(message, Lists.newArrayList(clients));
     }
 
@@ -201,10 +217,8 @@ public class ClientManager implements ConnectionHandler, Translator {
      */
     @Nonnull
     public ClientType getClientTypeFromID(int id) throws InvalidActionException {
-        if (this.player.containsKey(id))
-            return ClientType.PLAYER;
-        else if (this.spectator.containsKey(id))
-            return ClientType.SPECTATOR;
+        if(clients.containsKey(id))
+            return clients.get(id).getClientType();
         throw new InvalidActionException("game.clientManager.clientNotExist");
     }
 
@@ -212,7 +226,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      * @return Client for id or {@code null} if client id is not represent
      */
     @Nullable
-    public Client getClient(int id) {
+    public AbstractClient getClient(int id) {
         LOGGER.debug(clients.size());
         return this.clients.get(id);
     }

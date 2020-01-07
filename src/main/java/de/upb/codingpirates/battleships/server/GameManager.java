@@ -78,13 +78,12 @@ public class GameManager {
      *
      * @param gameId
      * @param client
-     * @param clientType
      * @throws InvalidActionException if game does not exist
      */
-    public void addClientToGame(int gameId, @Nonnull Client client, @Nonnull ClientType clientType) throws GameException {
-        LOGGER.debug(ServerMarker.GAME, "Adding client {}, with type {}, to game {}", client.getId(), clientType, gameId);
+    public void addClientToGame(int gameId, @Nonnull AbstractClient client) throws GameException {
+        LOGGER.debug(ServerMarker.GAME, "Adding client {}, with type {}, to game {}", client.getId(), client.getClientType(), gameId);
         if(this.clientToGame.containsKey(client.getId())){
-            if(clientType.equals(ClientType.PLAYER)) {
+            if(client.getClientType().equals(ClientType.PLAYER)) {
                 GameHandler handler = this.gameHandlersById.get(this.clientToGame.get(client.getId()));
                 if(handler.getGame().getState().equals(GameState.FINISHED)){
                     this.clientToGame.remove(client.getId());
@@ -95,7 +94,7 @@ public class GameManager {
             }
         }
         if (this.gameHandlersById.containsKey(gameId)) {
-            this.gameHandlersById.get(gameId).addClient(clientType, client);
+            this.gameHandlersById.get(gameId).addClient(client);
             this.clientToGame.put(client.getId(), gameId);
         } else {
             LOGGER.error(ServerMarker.GAME, "Can't find game {}", gameId);
