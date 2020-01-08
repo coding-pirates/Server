@@ -41,45 +41,48 @@
           <VBox.margin>
             <Insets topRightBottomLeft="5"/>
           </VBox.margin>
-          <Label
-              styleClass="table-header"
-              text="%overview.game.table.header">
-            <VBox.margin>
-              <Insets bottom="5"/>
-            </VBox.margin>
-          </Label>
-          <TableView fx:id="gameTableView">
-            <columns>
-              <TableColumn text="%overview.game.table.columns.id.text">
-                <cellValueFactory>
-                  <PropertyValueFactory property="id"/>
-                </cellValueFactory>
-              </TableColumn>
-              <TableColumn text="%overview.game.table.columns.name.text">
-                <cellValueFactory>
-                  <PropertyValueFactory property="name"/>
-                </cellValueFactory>
-              </TableColumn>
-              <TableColumn text="%overview.game.table.columns.state.text">
-                <cellValueFactory>
-                  <PropertyValueFactory property="state"/>
-                </cellValueFactory>
-              </TableColumn>
-              <TableColumn text="%overview.game.table.columns.currentPlayerCount">
-                <cellValueFactory>
-                  <PropertyValueFactory property="currentPlayerCount"/>
-                </cellValueFactory>
-              </TableColumn>
-              <TableColumn text="%overview.game.table.columns.maxPlayerCount">
-                <cellValueFactory>
-                  <PropertyValueFactory property="maxPlayerCount"/>
-                </cellValueFactory>
-              </TableColumn>
-            </columns>
-            <placeholder>
-              <Label text="%overview.game.table.placeholder"/>
-            </placeholder>
-          </TableView>
+          <TabPane>
+            <Tab
+                closable="false"
+                text="%tab.overview.games.text">
+              <TableView fx:id="gameTableView">
+                <columns>
+                  <TableColumn text="%overview.game.table.columns.id.text">
+                    <cellValueFactory>
+                      <PropertyValueFactory property="id"/>
+                    </cellValueFactory>
+                  </TableColumn>
+                  <TableColumn text="%overview.game.table.columns.name.text">
+                    <cellValueFactory>
+                      <PropertyValueFactory property="name"/>
+                    </cellValueFactory>
+                  </TableColumn>
+                  <TableColumn text="%overview.game.table.columns.state.text">
+                    <cellValueFactory>
+                      <PropertyValueFactory property="state"/>
+                    </cellValueFactory>
+                  </TableColumn>
+                  <TableColumn text="%overview.game.table.columns.currentPlayerCount">
+                    <cellValueFactory>
+                      <PropertyValueFactory property="currentPlayerCount"/>
+                    </cellValueFactory>
+                  </TableColumn>
+                  <TableColumn text="%overview.game.table.columns.maxPlayerCount">
+                    <cellValueFactory>
+                      <PropertyValueFactory property="maxPlayerCount"/>
+                    </cellValueFactory>
+                  </TableColumn>
+                </columns>
+                <placeholder>
+                  <Label text="%overview.game.table.placeholder"/>
+                </placeholder>
+              </TableView>
+            </Tab>
+            <Tab
+                closable="false"
+                text="%tab.overview.tournaments.text">
+            </Tab>
+          </TabPane>
         </VBox>
         <VBox>
           <VBox.margin>
