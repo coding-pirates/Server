@@ -1,30 +1,5 @@
 package de.upb.codingpirates.battleships.server.gui.controllers;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
-import javax.annotation.Nonnull;
-import javax.inject.Inject;
-
-import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
-import javafx.collections.MapChangeListener;
-import javafx.fxml.FXML;
-import javafx.scene.Parent;
-import javafx.scene.control.*;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.DataFormat;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.TransferMode;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import org.jetbrains.annotations.Contract;
-
-import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Game;
 import de.upb.codingpirates.battleships.logic.GameState;
@@ -33,6 +8,26 @@ import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
 import de.upb.codingpirates.battleships.server.gui.control.Alerts;
+import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.collections.MapChangeListener;
+import javafx.fxml.FXML;
+import javafx.scene.Parent;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.*;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DataFormat;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Contract;
+
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
+import java.net.URL;
+import java.util.ResourceBundle;
 
 /**
  * The controller associated with the {@code main.fxml} file.
@@ -185,7 +180,7 @@ public final class MainController extends AbstractController<Parent> {
                     return;
 
                 try {
-                    gameManager.getGameHandler(row.getItem().getId()).addClient(ClientType.PLAYER, (Client) content);
+                    gameManager.getGameHandler(row.getItem().getId()).addClient((Client) content);
                 } catch (final InvalidActionException exception) {
                     LOGGER.error(exception);
                 }

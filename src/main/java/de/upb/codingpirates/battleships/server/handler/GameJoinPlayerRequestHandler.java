@@ -1,6 +1,6 @@
 package de.upb.codingpirates.battleships.server.handler;
 
-import de.upb.codingpirates.battleships.logic.Client;
+import de.upb.codingpirates.battleships.logic.AbstractClient;
 import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.logic.GameState;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
@@ -47,15 +47,18 @@ public final class GameJoinPlayerRequestHandler extends AbstractServerMessageHan
             throw new NotAllowedException("game.handler.gameJoinPlayerRequest.gameIsFinished");
         }
 
-        final Client client = clientManager.getClient(connectionId.getInt());
+        final AbstractClient client = clientManager.getClient(connectionId.getInt());
         if (client == null) {
             LOGGER.error("Cannot get Client for id {}", connectionId);
+            return;
+        } else if(client.getClientType() != ClientType.PLAYER){
+            LOGGER.error("Spectator {} tried to join as player", connectionId);
             return;
         }
 
         final int gameId = message.getGameId();
 
-        gameManager.addClientToGame(gameId, client, ClientType.PLAYER);
+        gameManager.addClientToGame(gameId, client);
         clientManager.sendMessageToClient(ResponseBuilder.gameJoinPlayerResponse(gameId), client);
     }
 }

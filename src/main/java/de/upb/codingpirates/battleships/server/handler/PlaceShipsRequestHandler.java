@@ -1,17 +1,17 @@
 package de.upb.codingpirates.battleships.server.handler;
 
-import javax.annotation.Nonnull;
-import javax.inject.Inject;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
+import de.upb.codingpirates.battleships.network.message.response.ResponseBuilder;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
 
 public final class PlaceShipsRequestHandler extends AbstractServerMessageHandler<PlaceShipsRequest> {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -32,5 +32,6 @@ public final class PlaceShipsRequestHandler extends AbstractServerMessageHandler
         gameManager
             .getGameHandlerForClientId(connectionId.getInt())
             .addShipPlacement(clientId, message.getPositions());
+        clientManager.sendMessageToId(ResponseBuilder.placeShipsResponse(), connectionId);
     }
 }
