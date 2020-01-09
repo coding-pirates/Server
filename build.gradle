@@ -1,6 +1,8 @@
 apply plugin: "java" //enables java settings for gradle
 apply plugin: "application" //adds a run task for this project
 
+apply from: "${rootProject.rootDir}/gradle/javadoc.gradle"
+
 dependencies {
     //adds maven dependencies for gradle to download
     //implementation means the files will be compiled into the jar
