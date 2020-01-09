@@ -53,7 +53,7 @@ public class GameHandler implements Translator {
      * @see #playersById
      */
     @Nonnull
-    private final Map<Integer, Client> spectatorsById = Collections.synchronizedMap(Maps.newHashMap());
+    private final Map<Integer, Spectator> spectatorsById = Collections.synchronizedMap(Maps.newHashMap());
 
     /**
      * Maps IDs of {@link Client}s whose {@link ClientType} is {@link ClientType#PLAYER} to their {@link Field}s.
@@ -126,7 +126,7 @@ public class GameHandler implements Translator {
     /**
      * The maximum amount of {@link Client}s with {@link ClientType#SPECTATOR} which can spectate a {@link Game}.
      *
-     * @see #addClient(ClientType, Client)
+     * @see #addClient(AbstractClient)
      */
     private static final int MAX_SPECTATOR_COUNT = Integer.MAX_VALUE;
 
@@ -188,19 +188,19 @@ public class GameHandler implements Translator {
      * adds the client as the spectator or player to the game
      * @throws InvalidActionException if game is full
      */
-    public void addClient(@Nonnull ClientType type, @Nonnull Client client) throws InvalidActionException {
-        switch (type) {
+    public void addClient(@Nonnull AbstractClient client) throws InvalidActionException {
+        switch (client.getClientType()) {
             case PLAYER:
                 if (playersById.size() >= game.getConfig().getMaxPlayerCount())
                     throw new InvalidActionException("game.isFull");
-                playersById.put(client.getId(), client);
+                playersById.put(client.getId(), (Client)client);
                 fieldsByPlayerId.put(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(),client.getId()));
                 incrementCurrentPlayerCount();
                 break;
             case SPECTATOR:
                 if (spectatorsById.size() >= MAX_SPECTATOR_COUNT)
                     throw new InvalidActionException("game.isFull");
-                spectatorsById.putIfAbsent(client.getId(), client);
+                spectatorsById.putIfAbsent(client.getId(), (Spectator)client);
         }
     }
 
@@ -228,11 +228,11 @@ public class GameHandler implements Translator {
      *         {@code GameHandler} or which are spectating it.
      */
     @Nonnull
-    public List<Client> getAllClients() {
-        final List<Client> clients = new ArrayList<>(getPlayers().size() + getSpectators().size());
+    public List<AbstractClient> getAllClients() {
+        final List<AbstractClient> clients = new ArrayList<>(getPlayers().size() + getSpectators().size());
 
-        clients.addAll(getPlayers());
-        clients.addAll(getSpectators());
+        clients.addAll(this.getPlayers());
+        clients.addAll(this.getSpectators());
 
         return clients;
     }
@@ -246,7 +246,7 @@ public class GameHandler implements Translator {
     }
 
     @Nonnull
-    public Collection<Client> getSpectators() {
+    public Collection<Spectator> getSpectators() {
         return spectatorsById.values();
     }
 
@@ -470,7 +470,7 @@ public class GameHandler implements Translator {
             this.startShip.clear();
             this.stage = GameStage.PLACESHIPS;
             this.timeStamp = System.currentTimeMillis();
-            this.clientManager.sendMessageToClients(NotificationBuilder.gameInitNotification(getAllClients(), this.getConfiguration()), getAllClients());
+            this.clientManager.sendMessageToClients(NotificationBuilder.gameInitNotification(getPlayers(), this.getConfiguration()), getAllClients());
         }
     }
 
