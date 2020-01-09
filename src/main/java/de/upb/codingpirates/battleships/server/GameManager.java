@@ -97,7 +97,7 @@ public class GameManager {
             throw new InvalidActionException("game.gameManager.noGame");
         }
         //Todo remove call
-        if (this.getGameHandler(gameId).getPlayers().size() == 2){
+        if (this.getGameHandler(gameId).getPlayers().size() == 3){
             launchGame(gameId);
         }
     }
