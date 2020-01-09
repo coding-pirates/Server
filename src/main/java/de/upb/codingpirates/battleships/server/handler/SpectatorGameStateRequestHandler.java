@@ -23,8 +23,7 @@ public final class SpectatorGameStateRequestHandler extends AbstractServerMessag
     }
 
     @Override
-    public void handleMessage(@Nonnull final SpectatorGameStateRequest message,
-                              @Nonnull final Id connectionId) throws GameException {
+    public void handleMessage(@Nonnull final SpectatorGameStateRequest message, @Nonnull final Id connectionId) throws GameException {
         if (!clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.SPECTATOR))
             throw new NotAllowedException("game.handler.spectatorGameStateRequest.noSpectator");
 

@@ -27,8 +27,7 @@ public final class GameJoinPlayerRequestHandler extends AbstractServerMessageHan
     }
 
     @Override
-    public void handleMessage(@Nonnull final GameJoinPlayerRequest message,
-                              @Nonnull final Id connectionId) throws GameException {
+    public void handleMessage(@Nonnull final GameJoinPlayerRequest message, @Nonnull final Id connectionId) throws GameException {
         LOGGER.debug(ServerMarker.CLIENT, "Handling GameJoinPlayerRequest from clientId {}, for gameId {}.", connectionId, message.getGameId());
 
         if (!clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.PLAYER))
