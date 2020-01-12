@@ -189,6 +189,7 @@ public final class MainController extends AbstractController<Parent> {
         return new ContextMenu(launchItem, pauseResumeItem, abortItem);
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private void initializeTableViews() {
         final EventHandler<? super DragEvent> clientDragOverHandler = event -> {
             final Dragboard dragboard = event.getDragboard();
