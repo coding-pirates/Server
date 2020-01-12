@@ -81,6 +81,14 @@
             <Tab
                 closable="false"
                 text="%tab.overview.tournaments.text">
+              <TableView fx:id="tournamentTableView">
+                <columns>
+                  <TableColumn/>
+                </columns>
+                <placeholder>
+                  <Label text="%overview.tournament.table.placeholder"/>
+                </placeholder>
+              </TableView>
             </Tab>
           </TabPane>
         </VBox>

@@ -10,14 +10,12 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.collections.MapChangeListener;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.DataFormat;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.TransferMode;
+import javafx.scene.input.*;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,18 +40,24 @@ import de.upb.codingpirates.battleships.server.gui.control.Alerts;
 public final class MainController extends AbstractController<Parent> {
 
     @FXML
-    private Parent configuration;
-    @FXML
     private ConfigurationController configurationController;
 
     @FXML
-    private TableView<Game>   gameTableView;
+    private TableView<Game> gameTableView;
+    @FXML
+    private TableView<?> tournamentTableView;
+
     @FXML
     private TableView<Client> playerTableView;
 
     private final ClientManager clientManager;
     private final GameManager   gameManager;
 
+    /**
+     * The MIME type used for serialized Java objects, namely instances of {@link Client}.
+     *
+     * @see #initializeTableViews()
+     */
     private static final DataFormat SERIALIZED_MIME_TYPE =
         new DataFormat("application/x-java-serialized-object");
 
@@ -80,6 +84,11 @@ public final class MainController extends AbstractController<Parent> {
         initializeTableViews();
     }
 
+    /**
+     * Updates the user interface whenever the {@link ClientManager#getPlayerMappings()} map changes.
+     *
+     * @param change The change which occurred to the {@link javafx.collections.ObservableMap}.
+     */
     private void onPlayerMappingsChange(
             @Nonnull final MapChangeListener.Change<? extends Integer, ? extends Client> change) {
         if (change.wasAdded())
@@ -88,6 +97,11 @@ public final class MainController extends AbstractController<Parent> {
             playerTableView.getItems().remove(change.getValueRemoved());
     }
 
+    /**
+     * Updates the user interface whenever the {@link GameManager#getGameMappings()} map changes.
+     *
+     * @param change The change which occurred to the {@link javafx.collections.ObservableMap}.
+     */
     private void onGameMappingsChange(
             @Nonnull final MapChangeListener.Change<? extends Integer, ? extends GameHandler> change) {
         if (change.wasAdded())
@@ -97,6 +111,18 @@ public final class MainController extends AbstractController<Parent> {
 
     }
 
+    /**
+     * Factory method for instantiating a new {@link ContextMenu} for the provided {@link TableRow}.
+     *
+     * The created {@code ContextMenu} supports starting, pausing, unpausing, an aborting {@link Game}s via their
+     * associated {@link GameHandler}.
+     *
+     * @param row The {@code TableRow} for which a new {@code ContextMenu} is to be created.
+     *
+     * @return A new {@code ContextMenu} for the provided {@code row}.
+     *
+     * @see #initializeTableViews()
+     */
     @Nonnull
     @Contract("_ -> new")
     private ContextMenu newGameTableRowContextMenu(@Nonnull final TableRow<Game> row) {
@@ -164,19 +190,22 @@ public final class MainController extends AbstractController<Parent> {
     }
 
     private void initializeTableViews() {
+        final EventHandler<? super DragEvent> clientDragOverHandler = event -> {
+            final Dragboard dragboard = event.getDragboard();
+            final TableRow<?> row = (TableRow<?>) event.getGestureTarget();
+
+            if (!row.isEmpty() && dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
+                event.acceptTransferModes(TransferMode.LINK);
+                event.consume();
+            }
+        };
+
         gameTableView.setRowFactory(tableView -> {
             final TableRow<Game> row = new TableRow<>();
 
             row.setContextMenu(newGameTableRowContextMenu(row));
 
-            row.setOnDragOver(event -> {
-                final Dragboard dragboard = event.getDragboard();
-
-                if (!row.isEmpty() && dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
-                    event.acceptTransferModes(TransferMode.LINK);
-                    event.consume();
-                }
-            });
+            row.setOnDragOver(clientDragOverHandler);
             row.setOnDragDropped(event -> {
                 final Dragboard dragboard = event.getDragboard();
                 final Object    content   = dragboard.getContent(SERIALIZED_MIME_TYPE);
@@ -190,6 +219,12 @@ public final class MainController extends AbstractController<Parent> {
                     LOGGER.error(exception);
                 }
             });
+            return row;
+        });
+        tournamentTableView.setRowFactory(tableView -> {
+            final TableRow row = new TableRow<>();
+
+            row.setOnDragOver(clientDragOverHandler);
             return row;
         });
         playerTableView.setRowFactory(tableView -> {
