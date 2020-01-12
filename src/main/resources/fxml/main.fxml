@@ -126,7 +126,7 @@
     <Tab
         closable="false"
         text="%tab.configuration.text">
-      <fx:include fx:id="configuration" resources="lang.configuration" source="configuration.fxml"/>
+      <fx:include resources="lang.configuration" source="configuration.fxml"/>
     </Tab>
   </TabPane>
 </VBox>

@@ -14,6 +14,7 @@ import java.util.stream.IntStream;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
+import de.upb.codingpirates.battleships.server.gui.util.AlertBuilder;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -41,7 +42,6 @@ import org.jetbrains.annotations.Contract;
 
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.server.GameManager;
-import de.upb.codingpirates.battleships.server.gui.control.Alerts;
 import de.upb.codingpirates.battleships.server.gui.controllers.ConfigurationValidator.InsufficientFieldSizeException;
 
 import static java.util.stream.Collectors.*;
@@ -563,13 +563,12 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
             LOGGER.error(exception);
 
-            Alerts
-                .exceptionAlert(
-                    resourceBundle.getString("configuration.export.exceptionAlert.title"),
-                    resourceBundle.getString("configuration.export.exceptionAlert.headerText"),
-                    contentText,
-                    resourceBundle.getString("configuration.export.exceptionAlert.labelText"),
-                    exception)
+            AlertBuilder
+                .ofThrowable(exception, resourceBundle.getString("configuration.export.exceptionAlert.labelText"))
+                .title(resourceBundle.getString("configuration.export.exceptionAlert.title"))
+                .headerText(resourceBundle.getString("configuration.export.exceptionAlert.headerText"))
+                .contentText(contentText)
+                .build()
                 .showAndWait();
         }
     }
@@ -597,13 +596,12 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
             LOGGER.error(exception);
 
-            Alerts
-                .exceptionAlert(
-                    resourceBundle.getString("configuration.import.exceptionAlert.title"),
-                    resourceBundle.getString("configuration.import.exceptionAlert.headerText"),
-                    contentText,
-                    resourceBundle.getString("configuration.import.exceptionAlert.labelText"),
-                    exception)
+            AlertBuilder
+                .ofThrowable(exception, resourceBundle.getString("configuration.import.exceptionAlert.labelText"))
+                .title(resourceBundle.getString("configuration.import.exceptionAlert.title"))
+                .headerText(resourceBundle.getString("configuration.import.exceptionAlert.headerText"))
+                .contentText(contentText)
+                .build()
                 .showAndWait();
         }
     }

@@ -29,15 +29,21 @@ import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionExc
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
-import de.upb.codingpirates.battleships.server.gui.control.Alerts;
+import de.upb.codingpirates.battleships.server.gui.util.AlertBuilder;
 
 /**
  * The controller associated with the {@code main.fxml} file.
+ *
+ * Its main task is updating the {@link #gameTableView}, {@link #tournamentTableView}, and {@link #playerTableView}
+ * when updates from the backing {@link GameManager}, {@link TournamentManager}, and {@link ClientManager} arrive.
  *
  * @author Andre Blanke
  */
 public final class MainController extends AbstractController<Parent> {
 
+    /**
+     * The controller associated with the {@code configuration.fxml} file.
+     */
     @FXML
     private ConfigurationController configurationController;
 
@@ -174,14 +180,13 @@ public final class MainController extends AbstractController<Parent> {
                 .bind(handler.stateProperty().isEqualTo(GameState.FINISHED));
             abortItem
                 .setOnAction(event ->
-                    Alerts
-                        .alert(
-                            resourceBundle.getString("overview.game.table.contextMenu.abort.alert.title"),
-                            resourceBundle.getString("overview.game.table.contextMenu.abort.alert.headerText"),
-                            resourceBundle.getString("overview.game.table.contextMenu.abort.alert.contentText"),
-                            AlertType.CONFIRMATION,
-                            ButtonType.YES,
-                            ButtonType.NO)
+                    AlertBuilder
+                        .of(AlertType.CONFIRMATION)
+                        .title(resourceBundle.getString("overview.game.table.contextMenu.abort.alert.title"))
+                        .headerText(resourceBundle.getString("overview.game.table.contextMenu.abort.alert.headerText"))
+                        .contentText(resourceBundle.getString("overview.game.table.contextMenu.abort.alert.contentText"))
+                        .buttonTypes(ButtonType.YES, ButtonType.NO)
+                        .build()
                         .showAndWait()
                         .ifPresent(alertResult -> handler.abortGame(alertResult == ButtonType.YES)));
         });
