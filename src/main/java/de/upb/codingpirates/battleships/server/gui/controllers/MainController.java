@@ -22,7 +22,6 @@ import org.apache.logging.log4j.Logger;
 
 import org.jetbrains.annotations.Contract;
 
-import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Game;
 import de.upb.codingpirates.battleships.logic.GameState;
@@ -215,7 +214,7 @@ public final class MainController extends AbstractController<Parent> {
                     return;
 
                 try {
-                    gameManager.getGameHandler(row.getItem().getId()).addClient(ClientType.PLAYER, (Client) content);
+                    gameManager.getGameHandler(row.getItem().getId()).addClient((Client) content);
                 } catch (final InvalidActionException exception) {
                     LOGGER.error(exception);
                 }
