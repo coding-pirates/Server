@@ -1,7 +1,9 @@
 package de.upb.codingpirates.battleships.server.handler;
 
+import de.upb.codingpirates.battleships.logic.AbstractClient;
 import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
+import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
@@ -27,7 +29,10 @@ public final class PlaceShipsRequestHandler extends AbstractServerMessageHandler
     public void handleMessage(final @Nonnull PlaceShipsRequest message, final @Nonnull Id connectionId) throws GameException {
         LOGGER.debug(ServerMarker.HANDLER, "Handling PlaceShipsRequest from clientId {}.", connectionId.getInt());
 
-        if (!clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.PLAYER))
+        AbstractClient client = clientManager.getClient(connectionId.getInt());
+        if(client == null)
+            throw new InvalidActionException("player does not exists");
+        if (!client.handleClientAs().equals(ClientType.PLAYER))
             throw new NotAllowedException("game.handler.gameJoinPlayerRequest.noPlayer");
 
         final int clientId = connectionId.getInt();
