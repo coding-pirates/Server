@@ -213,6 +213,7 @@ public class GameHandler implements Translator {
             this.startShip.remove(clientId);
 
             decrementCurrentPlayerCount();
+            clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(clientId), getAllClients());
         }
         this.spectatorsById.remove(clientId);
     }
@@ -623,6 +624,22 @@ public class GameHandler implements Translator {
         });
         sunkShips.forEach((ship -> this.sunkShots.addAll(this.shipToShots.get(ship))));
         this.shots.clear();
+        if(shots.size() < livingPlayer.size()){
+            for (Client player : livingPlayer){
+                if(!shots.containsKey(player.getId())){
+                    switch (getConfiguration().getPenaltyKind()){
+                        case KICK:
+                            this.removeClient(player.getId());
+                            break;
+                        case POINTLOSS:
+                            this.score.compute(player.getId(), (id, oldValue)-> oldValue != null? oldValue - getConfiguration().getPenaltyMinusPoints() * 4 : - getConfiguration().getPenaltyMinusPoints() * 4);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -639,7 +656,6 @@ public class GameHandler implements Translator {
     private void removeInactivePlayer(Collection<Client> clients) {
         clientManager.sendMessageToClients(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, PlaceShipsRequest.MESSAGE_ID, translate("game.player.noPlacedShips")), clients);
         clients.forEach(client -> this.removeClient(client.getId()));
-        clients.forEach(client -> clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(client.getId()), clients));
     }
 
     /**
