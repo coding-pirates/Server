@@ -60,5 +60,10 @@ public final class GameJoinPlayerRequestHandler extends AbstractServerMessageHan
 
         gameManager.addClientToGame(gameId, client);
         clientManager.sendMessageToClient(ResponseBuilder.gameJoinPlayerResponse(gameId), client);
+        //TODO delete
+        if(gameManager.getGameHandler(message.getGameId()).getPlayers().size()>=2){
+            gameManager.getGameHandler(message.getGameId()).launchGame();
+        }
+
     }
 }
