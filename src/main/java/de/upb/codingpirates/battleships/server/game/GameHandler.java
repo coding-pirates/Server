@@ -552,9 +552,17 @@ public class GameHandler implements Translator {
     private void performShots() {
         this.newHits.clear();
         List<Ship> sunkShips = Lists.newArrayList();
-        Map<HitType, Map<Shot, List<Integer>>> hitToPoint = Maps.newHashMap();
+        Map<Shot,List<Integer>> shotListMap = Maps.newHashMap();
+        Map<HitType, List<Shot>> hitToPoint = Maps.newHashMap();
         for (Map.Entry<Integer, Collection<Shot>> entry : shots.entrySet()) {
             for (Shot shot : entry.getValue()) {
+                shotListMap.compute(shot, (shot1, list) ->{
+                    if(list != null){
+                        list.add(entry.getKey());
+                        return list;
+                    }
+                    return Lists.newArrayList(entry.getKey());
+                });
                 if (shot.getClientId() == entry.getKey()) {
                     this.clientManager.sendMessageToInt(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.shotOwnShip")), entry.getKey());
                     continue;
@@ -562,13 +570,13 @@ public class GameHandler implements Translator {
                 ShotHit hit = fieldsByPlayerId.get(shot.getClientId()).hit(shot);
                 switch (hit.getHitType()) {
                     case HIT:
-                        hitToPoint.computeIfAbsent(HitType.HIT, hitType -> Maps.newHashMap()).computeIfAbsent(hit.getShot(), shot1 -> Lists.newArrayList()).add(entry.getKey());
+                        hitToPoint.computeIfAbsent(HitType.HIT, hitType -> Lists.newArrayList()).add(hit.getShot());
                         this.hitShots.add(shot);
                         this.newHits.add(shot);
                         this.shipToShots.computeIfAbsent(hit.getShip(), (ship -> Lists.newArrayList())).add(hit.getShot());
                         break;
                     case SUNK:
-                        hitToPoint.computeIfAbsent(HitType.SUNK, hitType -> Maps.newHashMap()).computeIfAbsent(hit.getShot(), point2D -> Lists.newArrayList()).add(entry.getKey());
+                        hitToPoint.computeIfAbsent(HitType.SUNK, hitType -> Lists.newArrayList()).add(hit.getShot());
                         this.hitShots.add(shot);
                         this.newHits.add(shot);
                         this.shipToShots.computeIfAbsent(hit.getShip(), (ship -> Lists.newArrayList())).add(hit.getShot());
@@ -591,9 +599,9 @@ public class GameHandler implements Translator {
         }
         //add points for each hit to the player who shot a Shot at a position
         if(hitToPoint.containsKey(HitType.HIT)){
-            for(Map.Entry<Shot, List<Integer>> entry : hitToPoint.get(HitType.HIT).entrySet()) {
-                int points = getConfiguration().getHitPoints() / entry.getValue().size();
-                entry.getValue().forEach( client ->
+            for(Shot shot : hitToPoint.get(HitType.HIT)) {
+                int points = getConfiguration().getHitPoints() / shotListMap.get(shot).size();
+                shotListMap.get(shot).forEach( client ->
                 score.compute(client, (id, point) -> {
                     if (point == null) {
                         return points;
@@ -604,9 +612,9 @@ public class GameHandler implements Translator {
             }
         }
         if(hitToPoint.containsKey(HitType.SUNK)){
-            for(Map.Entry<Shot, List<Integer>> entry : hitToPoint.get(HitType.SUNK).entrySet()) {
-                int points = getConfiguration().getSunkPoints() / entry.getValue().size();
-                entry.getValue().forEach( client ->
+            for(Shot shot : hitToPoint.get(HitType.SUNK)) {
+                int points = getConfiguration().getSunkPoints() / shotListMap.get(shot).size();
+                shotListMap.get(shot).forEach( client ->
                         score.compute(client, (id, point) -> {
                             if (point == null) {
                                 return points;
