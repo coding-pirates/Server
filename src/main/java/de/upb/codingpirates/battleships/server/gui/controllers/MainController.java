@@ -86,6 +86,8 @@ public final class MainController extends AbstractController<Parent> {
             .getGameMappings()
             .addListener(this::onGameMappingsChange);
 
+        clientManager.getPlayerMappings().put(0, new Client(0, "test"));
+
         initializeTableViews();
     }
 
@@ -215,6 +217,8 @@ public final class MainController extends AbstractController<Parent> {
                 final Dragboard dragboard = event.getDragboard();
                 final Object    content   = dragboard.getContent(SERIALIZED_MIME_TYPE);
 
+                LOGGER.trace(CONTROLLER_MARKER, "Drag dropped for content '{}'.", content);
+
                 if (row.isEmpty() || !(content instanceof Client) || (row.getItem().getState() != GameState.LOBBY))
                     return;
 
@@ -240,6 +244,8 @@ public final class MainController extends AbstractController<Parent> {
                     return;
                 final ClipboardContent content   = new ClipboardContent();
                 final Dragboard        dragboard = row.startDragAndDrop(TransferMode.LINK);
+
+                LOGGER.trace(CONTROLLER_MARKER, "Detected drag for content '{}'.", row.getItem());
 
                 content.put(SERIALIZED_MIME_TYPE, row.getItem());
 
