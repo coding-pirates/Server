@@ -197,7 +197,7 @@ public final class MainController extends AbstractController<Parent> {
     private void initializeTableViews() {
         final EventHandler<? super DragEvent> clientDragOverHandler = event -> {
             final Dragboard dragboard = event.getDragboard();
-            final TableRow<?> row = (TableRow<?>) event.getGestureTarget();
+            final TableRow<?> row = (TableRow<?>) event.getGestureSource();
 
             if (!row.isEmpty() && dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
                 event.acceptTransferModes(TransferMode.LINK);
