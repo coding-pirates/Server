@@ -17,20 +17,16 @@ import javax.inject.Inject;
 public final class SpectatorGameStateRequestHandler extends AbstractServerMessageHandler<SpectatorGameStateRequest> {
 
     @Inject
-    public SpectatorGameStateRequestHandler(@Nonnull final ClientManager clientManager,
-                                            @Nonnull final GameManager gameManager) {
+    public SpectatorGameStateRequestHandler(@Nonnull final ClientManager clientManager, @Nonnull final GameManager gameManager) {
         super(clientManager, gameManager, SpectatorGameStateRequest.class);
     }
 
     @Override
-    public void handleMessage(@Nonnull final SpectatorGameStateRequest message,
-                              @Nonnull final Id connectionId) throws GameException {
+    public void handleMessage(@Nonnull final SpectatorGameStateRequest message, @Nonnull final Id connectionId) throws GameException {
         if (!clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.SPECTATOR))
             throw new NotAllowedException("game.handler.spectatorGameStateRequest.noSpectator");
 
         final GameHandler handler = gameManager.getGameHandlerForClientId(connectionId.getInt());
-        if (handler.getGame().getState() != GameState.IN_PROGRESS)
-            throw new NotAllowedException("game.handler.spectatorGameStateRequest.wrongTime");
 
         clientManager.sendMessageToId(
             ResponseBuilder.spectatorGameStateResponse()
