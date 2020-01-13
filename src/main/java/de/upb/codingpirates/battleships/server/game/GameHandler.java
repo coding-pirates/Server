@@ -1,5 +1,6 @@
 package de.upb.codingpirates.battleships.server.game;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.logic.*;
@@ -357,11 +358,13 @@ public class GameHandler implements Translator {
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 
+    private static final List<Shot> EMPTY = ImmutableList.of();
     private long timeStamp = 0L;
     private long pauseTimeCache = 0L;
     private GameStage stage = GameStage.START;
     private List<Client> livingPlayer = Lists.newArrayList();
     private List<Client> deadPlayer = Lists.newArrayList();
+    private List<Shot> newHits = Lists.newArrayList();
 
     /**
      * main method, called every tick
@@ -388,12 +391,13 @@ public class GameHandler implements Translator {
             case START:
                 if (timeStamp < System.currentTimeMillis() - 1000L) {
                     this.startGame();
-                    this.sendUpdateNotification();
+                    this.sendUpdateNotification(EMPTY);
                     this.createEmptyScore();
                     this.livingPlayer.clear();
                     this.deadPlayer.clear();
                     this.livingPlayer.addAll(playersById.values());
                 }
+                break;
             case PLACESHIPS:
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().getRoundTime()) {
                     this.placeShips();
@@ -406,7 +410,7 @@ public class GameHandler implements Translator {
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().getVisualizationTime()) {
                     this.stage = GameStage.SHOTS;
                     this.timeStamp = System.currentTimeMillis();
-                    this.sendUpdateNotification();
+                    this.sendUpdateNotification(newHits);
 
                     this.deadPlayer.forEach(client -> {
                         LOGGER.info(ServerMarker.GAME, "{} has lost",client);
@@ -514,8 +518,8 @@ public class GameHandler implements Translator {
             if(!points){
                 this.createEmptyScore();
             }
-            this.sendUpdateNotification();
-            this.getAllClients().forEach(client ->this.clientManager.disconnect(client.getId()));
+            this.sendUpdateNotification(EMPTY);
+            this.getAllClients().forEach(client ->this.removeClient(client.getId()));
         }
     }
 
@@ -546,6 +550,7 @@ public class GameHandler implements Translator {
      * perform all shots in {@link #shots}
      */
     private void performShots() {
+        this.newHits.clear();
         List<Ship> sunkShips = Lists.newArrayList();
         Map<HitType, Map<Shot, List<Integer>>> hitToPoint = Maps.newHashMap();
         for (Map.Entry<Integer, Collection<Shot>> entry : shots.entrySet()) {
@@ -559,11 +564,13 @@ public class GameHandler implements Translator {
                     case HIT:
                         hitToPoint.computeIfAbsent(HitType.HIT, hitType -> Maps.newHashMap()).computeIfAbsent(hit.getShot(), shot1 -> Lists.newArrayList()).add(entry.getKey());
                         this.hitShots.add(shot);
+                        this.newHits.add(shot);
                         this.shipToShots.computeIfAbsent(hit.getShip(), (ship -> Lists.newArrayList())).add(hit.getShot());
                         break;
                     case SUNK:
                         hitToPoint.computeIfAbsent(HitType.SUNK, hitType -> Maps.newHashMap()).computeIfAbsent(hit.getShot(), point2D -> Lists.newArrayList()).add(entry.getKey());
                         this.hitShots.add(shot);
+                        this.newHits.add(shot);
                         this.shipToShots.computeIfAbsent(hit.getShip(), (ship -> Lists.newArrayList())).add(hit.getShot());
                         sunkShips.add(hit.getShip());
                         LOGGER.info(ServerMarker.INGAME,"Ship has been sunk of {}",shot.getClientId());
@@ -679,12 +686,11 @@ public class GameHandler implements Translator {
     /**
      * send spectator & player update notifications
      */
-    private void sendUpdateNotification() {
-        this.clientManager.sendMessageToClients(NotificationBuilder.playerUpdateNotification(this.hitShots, score, this.sunkShots), this.livingPlayer);
-        SpectatorUpdateNotification spectatorUpdateNotification = NotificationBuilder.spectatorUpdateNotification(this.hitShots, this.score, this.sunkShots, this.missedShots);
+    private void sendUpdateNotification(List<Shot> hitShots) {
+        this.clientManager.sendMessageToClients(NotificationBuilder.playerUpdateNotification(hitShots, score, this.sunkShots), this.livingPlayer);
+        SpectatorUpdateNotification spectatorUpdateNotification = NotificationBuilder.spectatorUpdateNotification(hitShots, this.score, this.sunkShots, this.missedShots);
         this.clientManager.sendMessageToClients(spectatorUpdateNotification, this.spectatorsById.values());
         this.clientManager.sendMessageToClients(spectatorUpdateNotification, this.deadPlayer);
-
     }
 
     /**
