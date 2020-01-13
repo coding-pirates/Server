@@ -355,6 +355,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
             resourceBundle.getString("configuration.fileExtension.glob")
         );
 
+        //setupSpinners();
         setupShipTypeConfigurationControls();
         setupPenaltyMinusPointsControls();
     }
