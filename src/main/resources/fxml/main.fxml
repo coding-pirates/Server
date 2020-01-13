@@ -13,6 +13,8 @@
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.layout.VBox?>
 
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.layout.HBox?>
 <VBox
     xmlns:fx="http://javafx.com/fxml"
     fx:controller="de.upb.codingpirates.battleships.server.gui.controllers.MainController"
@@ -120,6 +122,9 @@
               <Label text="%overview.player.table.placeholder"/>
             </placeholder>
           </TableView>
+          <HBox alignment="CENTER">
+            <Text text="%overview.player.text.dragAndDropHint"/>
+          </HBox>
         </VBox>
       </VBox>
     </Tab>
