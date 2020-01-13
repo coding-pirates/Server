@@ -572,6 +572,7 @@ public class GameHandler implements Translator {
                         this.hitShots.add(shot);
                         this.newHits.add(shot);
                         this.shipToShots.computeIfAbsent(hit.getShip(), (ship -> Lists.newArrayList())).add(hit.getShot());
+                        this.sunkShots.add(shot);
                         sunkShips.add(hit.getShip());
                         LOGGER.info(ServerMarker.INGAME,"Ship has been sunk of {}",shot.getClientId());
                         break;
@@ -629,7 +630,6 @@ public class GameHandler implements Translator {
                 this.livingPlayer.remove(player);
             }
         });
-        sunkShips.forEach((ship -> this.sunkShots.addAll(this.shipToShots.get(ship))));
         this.shots.clear();
         if(shots.size() < livingPlayer.size()){
             for (Client player : livingPlayer){
