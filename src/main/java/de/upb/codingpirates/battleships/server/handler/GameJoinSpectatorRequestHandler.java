@@ -20,14 +20,12 @@ public final class GameJoinSpectatorRequestHandler extends AbstractServerMessage
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Inject
-    public GameJoinSpectatorRequestHandler(@Nonnull final ClientManager clientManager,
-                                           @Nonnull final GameManager   gameManager) {
+    public GameJoinSpectatorRequestHandler(@Nonnull final ClientManager clientManager, @Nonnull final GameManager   gameManager) {
         super(clientManager, gameManager, GameJoinSpectatorRequest.class);
     }
 
     @Override
-    public void handleMessage(@Nonnull final GameJoinSpectatorRequest message,
-                              @Nonnull final Id connectionId) throws GameException {
+    public void handleMessage(@Nonnull final GameJoinSpectatorRequest message, @Nonnull final Id connectionId) throws GameException {
         LOGGER.debug(ServerMarker.CLIENT, "Handling GameJoinSpectatorRequest from clientId {}, for gameId {}.", connectionId, message.getGameId());
 
         if (!clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.SPECTATOR)) {

@@ -104,12 +104,6 @@ public class GameHandler implements Translator {
     private final List<Shot> sunkShots = Collections.synchronizedList(Lists.newArrayList());
 
     /**
-     * list of all sunken ships
-     */
-    @Nonnull
-    private final List<Ship> sunkenShips = Collections.synchronizedList(Lists.newArrayList());
-
-    /**
      * maps from ship to shots that hit the ship
      */
     @Nonnull
@@ -365,7 +359,8 @@ public class GameHandler implements Translator {
     private long timeStamp = 0L;
     private long pauseTimeCache = 0L;
     private GameStage stage = GameStage.START;
-    private List<Integer> deadPlayer = Lists.newArrayList();
+    private List<Client> livingPlayer = Lists.newArrayList();
+    private List<Client> deadPlayer = Lists.newArrayList();
 
     /**
      * main method, called every tick
@@ -394,6 +389,9 @@ public class GameHandler implements Translator {
                     this.startGame();
                     this.sendUpdateNotification();
                     this.createEmptyScore();
+                    this.livingPlayer.clear();
+                    this.deadPlayer.clear();
+                    this.livingPlayer.addAll(playersById.values());
                 }
             case PLACESHIPS:
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().getRoundTime()) {
@@ -409,10 +407,10 @@ public class GameHandler implements Translator {
                     this.timeStamp = System.currentTimeMillis();
                     this.sendUpdateNotification();
 
-                    this.deadPlayer.forEach(clientId -> {
-                        LOGGER.info(ServerMarker.GAME, "{} has lost",clientId);
-                        this.ships.remove(clientId);
-                        this.removeDeadPlayer(clientId);
+                    this.deadPlayer.forEach(client -> {
+                        LOGGER.info(ServerMarker.GAME, "{} has lost",client);
+                        this.ships.remove(client.getId());
+                        this.removeDeadPlayer(client);
                     });
                     if(ships.size() <= 1){
                         this.stage = GameStage.FINISHED;
@@ -470,6 +468,7 @@ public class GameHandler implements Translator {
             this.startShip.clear();
             this.stage = GameStage.PLACESHIPS;
             this.timeStamp = System.currentTimeMillis();
+            this.playersById.values().forEach(client -> client.setDead(false));
             this.clientManager.sendMessageToClients(NotificationBuilder.gameInitNotification(getPlayers(), this.getConfiguration()), getAllClients());
         }
     }
@@ -617,7 +616,9 @@ public class GameHandler implements Translator {
         remove.forEach((clientId, ships) -> ships.forEach( ship -> this.ships.get(clientId).remove(ship)));
         this.ships.forEach((clientId, ships)->{
             if(ships.isEmpty()){
-                this.deadPlayer.add(clientId);
+                Client player = this.playersById.get(clientId);
+                this.deadPlayer.add(player);
+                this.livingPlayer.remove(player);
             }
         });
         sunkShips.forEach((ship -> this.sunkShots.addAll(this.shipToShots.get(ship))));
@@ -626,11 +627,10 @@ public class GameHandler implements Translator {
 
     /**
      * removed dead player
-     * @param clientId
+     * @param client
      */
-    private void removeDeadPlayer(int clientId){//TODO what should be done if player is dead
-        this.removeClient(clientId);
-        clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(clientId), this.getAllClients());
+    private void removeDeadPlayer(Client client){
+        client.setDead(true);
     }
 
     /**
@@ -663,9 +663,12 @@ public class GameHandler implements Translator {
     /**
      * send spectator & player update notifications
      */
-    private void sendUpdateNotification(){
-        this.clientManager.sendMessageToClients(NotificationBuilder.playerUpdateNotification(this.hitShots, score, this.sunkShots), this.playersById.values());
-        this.clientManager.sendMessageToClients(NotificationBuilder.spectatorUpdateNotification(this.hitShots, this.score, this.sunkShots, this.missedShots), this.spectatorsById.values());
+    private void sendUpdateNotification() {
+        this.clientManager.sendMessageToClients(NotificationBuilder.playerUpdateNotification(this.hitShots, score, this.sunkShots), this.livingPlayer);
+        SpectatorUpdateNotification spectatorUpdateNotification = NotificationBuilder.spectatorUpdateNotification(this.hitShots, this.score, this.sunkShots, this.missedShots);
+        this.clientManager.sendMessageToClients(spectatorUpdateNotification, this.spectatorsById.values());
+        this.clientManager.sendMessageToClients(spectatorUpdateNotification, this.deadPlayer);
+
     }
 
     /**

@@ -93,18 +93,6 @@ public class ClientManager implements ConnectionHandler, Translator {
         return client;
     }
 
-    @Nullable
-    public ClientType getTypeFromId(int id){
-        if(this.clients.containsKey(id))
-            return this.clients.get(id).getClientType();
-        return null;
-    }
-
-    @Nullable
-    public ClientType getTypeFromId(Id id){
-        return this.getTypeFromId(id.getInt());
-    }
-
     /**
      * disconnect client with specific id
      *
