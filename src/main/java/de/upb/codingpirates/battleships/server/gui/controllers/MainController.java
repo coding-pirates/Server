@@ -25,7 +25,7 @@ import org.jetbrains.annotations.Contract;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Game;
 import de.upb.codingpirates.battleships.logic.GameState;
-import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
+import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
@@ -213,8 +213,8 @@ public final class MainController extends AbstractController<Parent> {
                     return;
 
                 try {
-                    row.getItem().addClient((Client) content);
-                } catch (final InvalidActionException exception) {
+                    gameManager.addClientToGame(row.getItem().getId(), (Client) content);
+                } catch (final GameException exception) {
                     LOGGER.error(exception);
                 }
             });
