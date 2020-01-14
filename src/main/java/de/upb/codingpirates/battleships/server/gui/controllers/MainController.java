@@ -2,6 +2,8 @@ package de.upb.codingpirates.battleships.server.gui.controllers;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
@@ -57,6 +59,8 @@ public final class MainController extends AbstractController<Parent> {
 
     private final ClientManager clientManager;
     private final GameManager   gameManager;
+
+    private final ExecutorService aiExecutorService = Executors.newCachedThreadPool();
 
     /**
      * The MIME type used for serialized Java objects, namely instances of {@link Client}.
@@ -134,6 +138,7 @@ public final class MainController extends AbstractController<Parent> {
         final MenuItem launchItem      = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.launch.text"));
         final MenuItem pauseResumeItem = new MenuItem();
         final MenuItem abortItem       = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.abort.text"));
+        final MenuItem addAiItem       = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.addAi.text"));
 
         row.itemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue == null)
@@ -182,8 +187,21 @@ public final class MainController extends AbstractController<Parent> {
                         .build()
                         .showAndWait()
                         .ifPresent(alertResult -> handler.abortGame(alertResult == ButtonType.YES)));
+            addAiItem
+                .disableProperty()
+                .bind(
+                    handler.stateProperty().isNotEqualTo(GameState.LOBBY)
+                        .or(handler.currentPlayerCountProperty().isEqualTo(handler.getMaxPlayerCount())));
+            addAiItem
+                .setOnAction(event -> aiExecutorService.submit(() -> {
+                }));
         });
-        return new ContextMenu(launchItem, pauseResumeItem, abortItem);
+        return new ContextMenu(
+            launchItem,
+            pauseResumeItem,
+            abortItem,
+            new SeparatorMenuItem(),
+            addAiItem);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
