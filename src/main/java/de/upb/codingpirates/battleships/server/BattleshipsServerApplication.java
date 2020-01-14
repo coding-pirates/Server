@@ -31,8 +31,8 @@ public final class BattleshipsServerApplication extends Application {
 
     /**
      * The title of this JavaFX application {@link Stage}.
-     * 
-     * @see #start(Stage) 
+     *
+     * @see #start(Stage)
      */
     private static final String TITLE = "Battleships Server";
 
