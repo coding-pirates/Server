@@ -20,6 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -131,13 +132,13 @@ public class GameHandler implements Translator {
     private static final int MAX_SPECTATOR_COUNT = Integer.MAX_VALUE;
 
     public GameHandler(@Nonnull final String name, final int id, @Nonnull final Configuration config, final boolean tournament, @Nonnull final ClientManager clientManager) {
-        this.game          = new Game(id, name, GameState.LOBBY, config, tournament);
+        this.game          = new Game(id, name, getState(), config, tournament);
         this.clientManager = clientManager;
 
-        stateProperty()
-            .addListener((observable, oldValue, newValue) -> game.setState(newValue));
-        currentPlayerCountProperty
-            .addListener((observable, oldValue, newValue) -> game.setCurrentPlayerCount(newValue.intValue()));
+        currentPlayerCountProperty.addListener((observable, oldValue, newValue) ->
+            game.setCurrentPlayerCount(newValue.intValue()));
+        stateProperty.addListener((observable, oldValue, newValue) ->
+            game.setState(newValue));
     }
 
     /*
@@ -153,14 +154,12 @@ public class GameHandler implements Translator {
     // <editor-fold desc="currentPlayerCountProperty">
     private final IntegerProperty currentPlayerCountProperty = new SimpleIntegerProperty();
 
-    public void incrementCurrentPlayerCount() {
-        if (currentPlayerCountProperty.get() < Integer.MAX_VALUE)
-            currentPlayerCountProperty.add(1);
+    public int getCurrentPlayerCount() {
+        return currentPlayerCountProperty.get();
     }
 
-    public void decrementCurrentPlayerCount() {
-        if (currentPlayerCountProperty.get() > 0)
-            currentPlayerCountProperty.subtract(1);
+    public void setCurrentPlayerCount(final int currentPlayerCount) {
+        currentPlayerCountProperty.set(currentPlayerCount);
     }
 
     public IntegerProperty currentPlayerCountProperty() {
@@ -169,7 +168,7 @@ public class GameHandler implements Translator {
     // </editor-fold>
 
     // <editor-fold desc="stateProperty">
-    private final ObjectProperty<GameState> stateProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<GameState> stateProperty = new SimpleObjectProperty<>(GameState.LOBBY);
 
     public GameState getState() {
         return stateProperty.get();
@@ -184,6 +183,23 @@ public class GameHandler implements Translator {
     }
     // </editor-fold>
 
+    /*
+     * TODO: Remove these three "synthetic" properties and replace them with a better implementation of
+     *  PropertyValueFactory which allows usage of the ".".
+     */
+
+    public int getId() {
+        return getGame().getId();
+    }
+
+    public String getName() {
+        return getGame().getName();
+    }
+
+    public int getMaxPlayerCount() {
+        return getGame().getConfig().getMaxPlayerCount();
+    }
+
     /**
      * adds the client as the spectator or player to the game
      * @throws InvalidActionException if game is full
@@ -194,13 +210,14 @@ public class GameHandler implements Translator {
                 if (playersById.size() >= game.getConfig().getMaxPlayerCount())
                     throw new InvalidActionException("game.isFull");
                 playersById.put(client.getId(), (Client)client);
-                fieldsByPlayerId.put(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(),client.getId()));
-                incrementCurrentPlayerCount();
+                fieldsByPlayerId.put(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(), client.getId()));
+                currentPlayerCountProperty.set(currentPlayerCountProperty.get() + 1);
                 break;
             case SPECTATOR:
                 if (spectatorsById.size() >= MAX_SPECTATOR_COUNT)
                     throw new InvalidActionException("game.isFull");
-                spectatorsById.putIfAbsent(client.getId(), (Spectator)client);
+                spectatorsById.putIfAbsent(client.getId(), (Spectator) client);
+                break;
         }
     }
 
@@ -218,7 +235,7 @@ public class GameHandler implements Translator {
             this.ships.remove(clientId);
             this.startShip.remove(clientId);
 
-            decrementCurrentPlayerCount();
+            currentPlayerCountProperty.set(getCurrentPlayerCount() - 1);
         }
         this.spectatorsById.remove(clientId);
     }
@@ -387,7 +404,8 @@ public class GameHandler implements Translator {
      * sends {@link FinishNotification} and sets gameState to {@link GameState#FINISHED}
      */
     public void run() {
-        if(!game.getState().equals(GameState.IN_PROGRESS))return;
+        if (getState() != GameState.IN_PROGRESS)
+            return;
         switch (this.stage) {
             case START:
                 if (timeStamp < System.currentTimeMillis() - 1000L) {
@@ -438,7 +456,7 @@ public class GameHandler implements Translator {
                     winner = Lists.newArrayList();
                 LOGGER.debug("Game {} has finished",game.getId());
                 this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, winner),getAllClients());
-                this.game.setState(GameState.FINISHED);
+                setState(GameState.FINISHED);
                 break;
             default:
                 break;
@@ -450,7 +468,7 @@ public class GameHandler implements Translator {
      * @return {@code false} if player count is under 2
      */
     public boolean launchGame() {
-        if (this.game.getState() == GameState.LOBBY) {
+        if (getState() == GameState.LOBBY) {
             if (this.playersById.size() < MIN_PLAYER_COUNT) {
                 return false;
             }
@@ -478,7 +496,7 @@ public class GameHandler implements Translator {
      * saves remaining time of the round and pauses the game
      */
     public void pauseGame() {
-        if (this.game.getState() == GameState.IN_PROGRESS) {
+        if (getState() == GameState.IN_PROGRESS) {
             this.game.setState(GameState.PAUSED);
             switch (stage){
                 case VISUALIZATION:
@@ -498,8 +516,8 @@ public class GameHandler implements Translator {
      * uses saved remain time to return to game
      */
     public void continueGame() {
-        if (this.game.getState() == GameState.PAUSED) {
-            this.game.setState(GameState.IN_PROGRESS);
+        if (getState() == GameState.PAUSED) {
+            setState(GameState.IN_PROGRESS);
             this.timeStamp = System.currentTimeMillis() + pauseTimeCache;
         }
     }
@@ -508,10 +526,10 @@ public class GameHandler implements Translator {
      * stops game
      * @param points if {@code false} all points will be set to 0
      */
-    public void abortGame(boolean points){
-        if(this.game.getState() != GameState.FINISHED){
-            this.game.setState(GameState.FINISHED);
-            if(!points){
+    public void abortGame(boolean points) {
+        if (getState() != GameState.FINISHED) {
+            setState(GameState.FINISHED);
+            if (!points) {
                 this.createEmptyScore();
             }
             this.sendUpdateNotification();
@@ -647,9 +665,12 @@ public class GameHandler implements Translator {
      * @throws InvalidActionException if there is no round running
      */
     public long getRemainingTime() throws InvalidActionException{
-        if(!this.game.getState().equals(GameState.IN_PROGRESS) && !this.game.getState().equals(GameState.PAUSED))throw new InvalidActionException("game.noTimerActive");
-        if(this.game.getState().equals(GameState.PAUSED))return this.pauseTimeCache;
-        switch (stage){
+        if (getState() != GameState.IN_PROGRESS && getState() != GameState.PAUSED)
+            throw new InvalidActionException("game.noTimerActive");
+        if (getState() == GameState.PAUSED)
+            return this.pauseTimeCache;
+
+        switch (stage) {
             case PLACESHIPS:
             case SHOTS:
                 return System.currentTimeMillis() - this.timeStamp - getConfiguration().getRoundTime();

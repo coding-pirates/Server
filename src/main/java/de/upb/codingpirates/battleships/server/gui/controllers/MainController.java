@@ -48,7 +48,7 @@ public final class MainController extends AbstractController<Parent> {
     private ConfigurationController configurationController;
 
     @FXML
-    private TableView<Game> gameTableView;
+    private TableView<GameHandler> gameTableView;
     @FXML
     private TableView<?> tournamentTableView;
 
@@ -86,8 +86,6 @@ public final class MainController extends AbstractController<Parent> {
             .getGameMappings()
             .addListener(this::onGameMappingsChange);
 
-        clientManager.getPlayerMappings().put(0, new Client(0, "test"));
-
         initializeTableViews();
     }
 
@@ -112,9 +110,9 @@ public final class MainController extends AbstractController<Parent> {
     private void onGameMappingsChange(
             @Nonnull final MapChangeListener.Change<? extends Integer, ? extends GameHandler> change) {
         if (change.wasAdded())
-            gameTableView.getItems().add(change.getValueAdded().getGame());
+            gameTableView.getItems().add(change.getValueAdded());
         else if (change.wasRemoved())
-            gameTableView.getItems().remove(change.getValueRemoved().getGame());
+            gameTableView.getItems().remove(change.getValueRemoved());
 
     }
 
@@ -132,7 +130,7 @@ public final class MainController extends AbstractController<Parent> {
      */
     @Nonnull
     @Contract("_ -> new")
-    private ContextMenu newGameTableRowContextMenu(@Nonnull final TableRow<Game> row) {
+    private ContextMenu newGameHandlerTableRowContextMenu(@Nonnull final TableRow<GameHandler> row) {
         final MenuItem launchItem      = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.launch.text"));
         final MenuItem pauseResumeItem = new MenuItem();
         final MenuItem abortItem       = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.abort.text"));
@@ -141,14 +139,7 @@ public final class MainController extends AbstractController<Parent> {
             if (newValue == null)
                 return;
 
-            final GameHandler handler;
-            final Game game = row.getItem();
-
-            try {
-                handler = gameManager.getGameHandler(game.getId());
-            } catch (final InvalidActionException exception) {
-                throw new RuntimeException(exception);
-            }
+            final GameHandler handler = row.getItem();
 
             final BooleanBinding inProgress = handler.stateProperty().isEqualTo(GameState.IN_PROGRESS);
             final BooleanBinding paused     = handler.stateProperty().isEqualTo(GameState.PAUSED);
@@ -171,7 +162,7 @@ public final class MainController extends AbstractController<Parent> {
                         .otherwise(resourceBundle.getString("overview.game.table.contextMenu.pause.text")));
             pauseResumeItem
                 .setOnAction(event -> {
-                    if (game.getState() == GameState.PAUSED)
+                    if (handler.getState() == GameState.PAUSED)
                         handler.continueGame();
                     else
                         handler.pauseGame();
@@ -208,14 +199,13 @@ public final class MainController extends AbstractController<Parent> {
         };
 
         gameTableView.setRowFactory(tableView -> {
-            final TableRow<Game> row = new TableRow<>();
+            final TableRow<GameHandler> row = new TableRow<>();
 
-            row.setContextMenu(newGameTableRowContextMenu(row));
+            row.setContextMenu(newGameHandlerTableRowContextMenu(row));
 
             row.setOnDragOver(clientDragOverHandler);
             row.setOnDragDropped(event -> {
-                final Dragboard dragboard = event.getDragboard();
-                final Object    content   = dragboard.getContent(SERIALIZED_MIME_TYPE);
+                final Object content = event.getDragboard().getContent(SERIALIZED_MIME_TYPE);
 
                 LOGGER.trace(CONTROLLER_MARKER, "Drag dropped for content '{}'.", content);
 
@@ -223,7 +213,7 @@ public final class MainController extends AbstractController<Parent> {
                     return;
 
                 try {
-                    gameManager.getGameHandler(row.getItem().getId()).addClient((Client) content);
+                    row.getItem().addClient((Client) content);
                 } catch (final InvalidActionException exception) {
                     LOGGER.error(exception);
                 }
