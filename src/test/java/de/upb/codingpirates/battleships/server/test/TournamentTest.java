@@ -2,6 +2,7 @@ package de.upb.codingpirates.battleships.server.test;
 
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.ClientType;
+import de.upb.codingpirates.battleships.logic.GameStage;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.server.exceptions.InvalidGameSizeException;
@@ -22,12 +23,16 @@ public class TournamentTest extends ServerTest{
         assert gameManager != null;
         assert clientManager != null;
         assert tournamentManager != null;
-        TournamentHandler handler = tournamentManager.createTournament(TEST_CONFIG,"test");
+        TournamentHandler handler = tournamentManager.createTournament(TEST_CONFIG,"test", 4);
         for(int i = 0; i< TestProperties.tournamentPlayer;i++) {
             tournamentManager.addClientToTournament(handler.getTournamentId(), new Client(i,"t"+i), ClientType.PLAYER);
         }
         handler.start();
         LOGGER.debug(handler.getGames().size());
         assert handler.getGames().size() == (int)(((float)TestProperties.tournamentPlayer / (float)TEST_CONFIG.getMaxPlayerCount())+0.5f);
+        handler.getGames().values().forEach(game -> game.setStage(GameStage.FINISHED));
+        timer = System.currentTimeMillis();
+        while (timer > System.currentTimeMillis() - 1000){
+        }
     }
 }

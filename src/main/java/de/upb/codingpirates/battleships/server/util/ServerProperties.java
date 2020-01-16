@@ -24,4 +24,6 @@ public class ServerProperties {
      * @see de.upb.codingpirates.battleships.server.game.GameHandler#addClient(de.upb.codingpirates.battleships.logic.ClientType, de.upb.codingpirates.battleships.logic.Client)
      */
     public static final int MAX_SPECTATOR_COUNT = Integer.MAX_VALUE;
+
+    public static final long TOURNAMENT_GAMEFINISH_TIME = 10000;
 }

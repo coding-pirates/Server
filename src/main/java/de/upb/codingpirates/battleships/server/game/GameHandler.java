@@ -1,5 +1,6 @@
 package de.upb.codingpirates.battleships.server.game;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.logic.*;
@@ -672,6 +673,11 @@ public class GameHandler implements Handler, Runnable {
     private void sendUpdateNotification(){
         this.clientManager.sendMessageToClients(NotificationBuilder.playerUpdateNotification(this.hitShots, score, this.sunkShots), this.playersById.values());
         this.clientManager.sendMessageToClients(NotificationBuilder.spectatorUpdateNotification(this.hitShots, this.score, this.sunkShots, this.missedShots), this.spectatorsById.values());
+    }
+
+    @VisibleForTesting
+    public void setStage(GameStage stage){
+        this.stage = stage;
     }
 
     /**

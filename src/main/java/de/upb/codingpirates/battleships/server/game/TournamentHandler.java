@@ -6,20 +6,21 @@ import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.logic.Configuration;
+import de.upb.codingpirates.battleships.logic.GameState;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
+import de.upb.codingpirates.battleships.network.message.notification.NotificationBuilder;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.exceptions.GameFullExeption;
 import de.upb.codingpirates.battleships.server.exceptions.InvalidGameSizeException;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
+import de.upb.codingpirates.battleships.server.util.ServerProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class TournamentHandler implements Handler, Runnable{
     private static final Logger LOGGER = LogManager.getLogger();
@@ -43,16 +44,22 @@ public class TournamentHandler implements Handler, Runnable{
     @Nonnull
     private final String name;
     private final int tournamentId;
+    private final int rounds;
+    private boolean finished = false;
+
     private boolean started;
-
+    private int roundCounter = 0;
+    private List<GameHandler> newGames = Collections.synchronizedList(Lists.newArrayList());
     private int gameSize = 0;
+    private long start = -1;
 
-    public TournamentHandler(@Nonnull String name, @Nonnull ClientManager clientManager, @Nonnull GameManager gameManager,@Nonnull Configuration configuration, int id) {
+    public TournamentHandler(@Nonnull String name, @Nonnull ClientManager clientManager, @Nonnull GameManager gameManager,@Nonnull Configuration configuration, int id, int rounds) {
         this.clientManager = clientManager;
         this.configuration = configuration;
         this.gameManager = gameManager;
         this.name = name;
         this.tournamentId = id;
+        this.rounds = rounds;
     }
 
     @Override
@@ -66,14 +73,16 @@ public class TournamentHandler implements Handler, Runnable{
     }
 
     public void start() throws InvalidGameSizeException, InvalidActionException {
+        this.start = -1;
+        this.roundCounter++;
         this.started = true;
         List<Client> players = Lists.newArrayList(player.values());
         Collections.shuffle(players);
         this.createGames((int)(((float)players.size() / (float)this.configuration.getMaxPlayerCount())+0.5f));
-        LOGGER.debug(ServerMarker.TOURNAMENT, "Create {} games for tournament {}. {} / {} = {} + {} = {}", this.games.size(), this.getTournamentId(),(float)players.size(),(float)this.configuration.getMaxPlayerCount(),(float)players.size() / (float)this.configuration.getMaxPlayerCount(),0.5f,((float)players.size() / (float)this.configuration.getMaxPlayerCount())+0.5f);
+        LOGGER.debug(ServerMarker.TOURNAMENT, "Create {} games for tournament {}. {} / {} = {} + {} = {} results in {}", this.games.size(), this.getTournamentId(),(float)players.size(),(float)this.configuration.getMaxPlayerCount(),(float)players.size() / (float)this.configuration.getMaxPlayerCount(),0.5f,((float)players.size() / (float)this.configuration.getMaxPlayerCount())+0.5f, (int)((float)players.size() / (float)this.configuration.getMaxPlayerCount())+0.5f);
         try {
             while (!players.isEmpty()) {
-                for (GameHandler manager : games.values()) {
+                for (GameHandler manager : this.newGames) {
                     if (players.isEmpty()) {
                         break;
                     }
@@ -87,24 +96,25 @@ public class TournamentHandler implements Handler, Runnable{
             LOGGER.info(ServerMarker.TOURNAMENT, "Could not add player {} to game, because all games are full", players.get(0));
         }
         //test for games with only one player
-        this.games.entrySet().removeIf(entry-> {
-           if(entry.getValue().getPlayers().size() < 2){
-               Collection<Client> player = Lists.newArrayList(entry.getValue().getPlayers());
+        this.newGames.removeIf(gameHandler-> {
+           if(gameHandler.getPlayers().size() < 2){
+               Collection<Client> player = Lists.newArrayList(gameHandler.getPlayers());
                player.forEach((player1)-> {
                    this.player.remove(player1.getId());
-                   entry.getValue().removeClient(player1.getId());
+                   gameHandler.removeClient(player1.getId());
                });
                return true;
            }
+           this.games.put(gameHandler.getGame().getId(),gameHandler);
            return false;
         });
-        this.games.values().forEach(GameHandler::launchGame);
+        this.newGames.forEach(GameHandler::launchGame);
     }
 
     private void createGames(int amount) throws InvalidGameSizeException {
         for (int i = 0;i< amount;i++) {
             GameHandler handler = gameManager.createGame(configuration, name + "_" + gameSize++, this);
-            games.put(handler.getGame().getId(), handler);
+            newGames.add(handler);
         }
     }
 
@@ -154,6 +164,35 @@ public class TournamentHandler implements Handler, Runnable{
 
     @Override
     public void run() {
-        if(!this.started)return;
+        if(!this.started | finished)return;
+        if(System.currentTimeMillis() % 100 == 0){
+            if(this.start != -1 && start < System.currentTimeMillis()){
+                try {
+                    this.start();
+                } catch (InvalidGameSizeException | InvalidActionException e) {
+                    LOGGER.error(ServerMarker.TOURNAMENT, "Could not start new games for tournament {} for round {}", this.tournamentId, this.roundCounter);
+                }
+            }
+            if(this.newGames.stream().allMatch(newGame -> newGame.getGame().getState().equals(GameState.FINISHED))) {
+                this.newGames.clear();
+                if(this.rounds -1 <= roundCounter){
+                    this.finishTournament();
+                }else {
+                    this.start = System.currentTimeMillis() + ServerProperties.TOURNAMENT_GAMEFINISH_TIME;
+                }
+            }
+        }
+    }
+
+    private void finishTournament(){
+        this.finished = true;
+        OptionalInt winnerScore = score.values().stream().mapToInt(value -> value).max();
+        Collection<Integer> winner;
+        if(winnerScore.isPresent())
+            winner = score.entrySet().stream().filter(entry -> entry.getValue() == winnerScore.getAsInt()).map(Map.Entry::getKey).collect(Collectors.toList());
+        else
+            winner = Lists.newArrayList();
+        LOGGER.debug("Tournament {} has finished", tournamentId);
+        this.clientManager.sendMessageToClients(NotificationBuilder.tournamentFinishNotification(winner),getAllClients());
     }
 }

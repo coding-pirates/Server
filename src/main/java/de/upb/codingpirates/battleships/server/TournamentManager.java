@@ -20,6 +20,8 @@ import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class TournamentManager implements ConfigurationChecker {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -41,13 +43,19 @@ public class TournamentManager implements ConfigurationChecker {
         this.gameManager = gameManager;
         this.clientManager = clientManager;
         this.idManager = idManager;
+        new Timer("Server Main").schedule(new TimerTask() {
+            @Override
+            public void run() {
+                TournamentManager.this.run();
+            }
+        }, 1L, 1L);
     }
 
-    public TournamentHandler createTournament(@Nonnull Configuration configuration, @Nonnull String name) throws InvalidGameSizeException {
+    public TournamentHandler createTournament(@Nonnull Configuration configuration, @Nonnull String name, int rounds) throws InvalidGameSizeException {
         checkField(configuration);
         int id = this.idManager.generate().getInt();
         LOGGER.info(ServerMarker.TOURNAMENT, "Create Tournament: {} with id: {}", name, id);
-        TournamentHandler tournamentHandler = new TournamentHandler(name, clientManager, gameManager, configuration, id);
+        TournamentHandler tournamentHandler = new TournamentHandler(name, clientManager, gameManager, configuration, id, rounds);
         this.tournamentHandlerByInt.put(id, tournamentHandler);
         return tournamentHandler;
     }
@@ -83,5 +91,12 @@ public class TournamentManager implements ConfigurationChecker {
 
     public boolean isParticipating(int clientId){
         return clientToTournament.containsKey(clientId);
+    }
+
+    /**
+     * run method for every game
+     */
+    private void run() {
+        this.tournamentHandlerByInt.values().forEach(TournamentHandler::run);
     }
 }
