@@ -1,6 +1,5 @@
 package de.upb.codingpirates.battleships.server.handler;
 
-import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.request.TournamentParticipantsRequest;
 import de.upb.codingpirates.battleships.network.message.response.ResponseBuilder;
@@ -23,7 +22,7 @@ public final class TournamentParticipantsRequestHandler extends AbstractServerMe
     }
 
     @Override
-    protected void handleMessage(TournamentParticipantsRequest message, Id connectionId) throws GameException {
+    protected void handleMessage(TournamentParticipantsRequest message, Id connectionId) {
         this.clientManager.sendMessageToId(ResponseBuilder.tournamentParticipantsResponse(this.tournamentManager.isParticipating(connectionId.getInt())), connectionId);
     }
 }

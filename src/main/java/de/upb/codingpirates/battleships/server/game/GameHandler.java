@@ -1,6 +1,5 @@
 package de.upb.codingpirates.battleships.server.game;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.logic.*;
@@ -191,9 +190,9 @@ public class GameHandler implements Runnable, Translator {
 
     /**
      * adds the client as the spectator or player to the game
-     * @throws InvalidActionException if game is full
+     * @throws GameFullExeption if game is full
      */
-    public void addClient(@Nonnull ClientType type, @Nonnull Client client) throws InvalidActionException {
+    public void addClient(@Nonnull ClientType type, @Nonnull Client client) throws GameFullExeption {
         switch (type) {
             case PLAYER:
                 if (playersById.size() >= game.getConfig().getMaxPlayerCount())
@@ -204,7 +203,7 @@ public class GameHandler implements Runnable, Translator {
                 break;
             case SPECTATOR:
                 if (spectatorsById.size() >= MAX_SPECTATOR_COUNT)
-                    throw new InvalidActionException("game.isFull");
+                    throw new GameFullExeption();
                 spectatorsById.putIfAbsent(client.getId(), client);
         }
     }
@@ -675,11 +674,6 @@ public class GameHandler implements Runnable, Translator {
     private void sendUpdateNotification(){
         this.clientManager.sendMessageToClients(NotificationBuilder.playerUpdateNotification(this.hitShots, score, this.sunkShots), this.playersById.values());
         this.clientManager.sendMessageToClients(NotificationBuilder.spectatorUpdateNotification(this.hitShots, this.score, this.sunkShots, this.missedShots), this.spectatorsById.values());
-    }
-
-    @VisibleForTesting
-    public void setStage(GameStage stage){
-        this.stage = stage;
     }
 
     /**
