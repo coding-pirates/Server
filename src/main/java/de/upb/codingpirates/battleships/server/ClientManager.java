@@ -215,7 +215,6 @@ public class ClientManager implements ConnectionHandler, Translator {
      */
     @Nullable
     public AbstractClient getClient(int id) {
-        LOGGER.debug(clients.size());
         return this.clients.get(id);
     }
 
