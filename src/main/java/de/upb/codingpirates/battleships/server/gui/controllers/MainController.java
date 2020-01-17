@@ -1,13 +1,19 @@
 package de.upb.codingpirates.battleships.server.gui.controllers;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ResourceBundle;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
+import de.upb.codingpirates.battleships.network.Properties;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -24,6 +30,7 @@ import org.apache.logging.log4j.Logger;
 
 import org.jetbrains.annotations.Contract;
 
+import de.upb.codingpirates.battleships.ai.AI;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Game;
 import de.upb.codingpirates.battleships.logic.GameState;
@@ -194,6 +201,13 @@ public final class MainController extends AbstractController<Parent> {
                         .or(handler.currentPlayerCountProperty().isEqualTo(handler.getMaxPlayerCount())));
             addAiItem
                 .setOnAction(event -> aiExecutorService.submit(() -> {
+                    final AI ai = new AI(UUID.randomUUID().toString(), 1);
+
+                    try {
+                        ai.connect(InetAddress.getLocalHost().getHostName(), Properties.PORT);
+                    } catch (final IOException exception) {
+                        LOGGER.error(exception);
+                    }
                 }));
         });
         return new ContextMenu(
