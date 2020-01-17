@@ -9,6 +9,7 @@ dependencies {
     //testImplementation means the files will only compiled for testing purpose and not served in the final programm
 
     //adds local network & logic files as dependencies
+    implementation project(":ai")
     implementation project(":network")
     implementation project(":logic")
 
