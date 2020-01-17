@@ -655,7 +655,6 @@ public class GameHandler implements Translator {
                 this.livingPlayer.remove(player);
             }
         });
-        this.shots.clear();
         if(shots.size() < livingPlayer.size()){
             for (Client player : livingPlayer){
                 if(!shots.containsKey(player.getId())){
@@ -672,6 +671,7 @@ public class GameHandler implements Translator {
                 }
             }
         }
+        this.shots.clear();
     }
 
     /**
