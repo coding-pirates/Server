@@ -36,7 +36,6 @@ public final class GameJoinPlayerRequestHandler extends AbstractServerMessageHan
         final GameState gameState =
             gameManager
                 .getGameHandler(message.getGameId())
-                .getGame()
                 .getState();
 
         switch (gameState) {

@@ -36,7 +36,7 @@ public final class PlayerGameStateRequestHandler extends AbstractServerMessageHa
 
         clientManager.sendMessageToId(
             ResponseBuilder.playerGameStateResponse()
-                .gameState(handler.getGame().getState())
+                .gameState(handler.getState())
                 .hits(handler.getHitShots())
                 .sunk(handler.getSunkShots())
                 .ships(handler.getStartShip().get(connectionId.getInt()))

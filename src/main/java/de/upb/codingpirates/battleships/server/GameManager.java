@@ -80,7 +80,7 @@ public class GameManager {
         if(this.clientToGame.containsKey(client.getId())){
             if(client.getClientType().equals(ClientType.PLAYER)) {
                 GameHandler handler = this.gameHandlersById.get(this.clientToGame.get(client.getId()));
-                if(handler.getGame().getState().equals(GameState.FINISHED)){
+                if(handler.getState().equals(GameState.FINISHED)){
                     this.clientToGame.remove(client.getId());
                 }
                 throw new NotAllowedException("game.gameManager.alreadyIngame");

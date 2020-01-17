@@ -21,7 +21,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -475,7 +474,7 @@ public class GameHandler implements Translator {
             if (this.playersById.size() < MIN_PLAYER_COUNT) {
                 return false;
             }
-            this.game.setState(GameState.IN_PROGRESS);
+            this.setState(GameState.IN_PROGRESS);
             this.stage = GameStage.START;
             this.timeStamp = System.currentTimeMillis();
         }
@@ -501,7 +500,7 @@ public class GameHandler implements Translator {
      */
     public void pauseGame() {
         if (getState() == GameState.IN_PROGRESS) {
-            this.game.setState(GameState.PAUSED);
+            this.setState(GameState.PAUSED);
             switch (stage){
                 case VISUALIZATION:
                     this.pauseTimeCache = getConfiguration().getVisualizationTime() - (System.currentTimeMillis() - timeStamp);
