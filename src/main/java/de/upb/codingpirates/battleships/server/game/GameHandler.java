@@ -13,7 +13,9 @@ import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.exceptions.GameFullExeption;
+import de.upb.codingpirates.battleships.server.util.GameListener;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
+import de.upb.codingpirates.battleships.server.util.Translator;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -32,7 +34,7 @@ import static de.upb.codingpirates.battleships.server.util.ServerProperties.MIN_
 /**
  * @author Paul Becker
  */
-public class GameHandler implements Handler, Runnable {
+public class GameHandler implements Runnable, Translator {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -43,7 +45,7 @@ public class GameHandler implements Handler, Runnable {
     private final GameManager gameManager;
 
     @Nullable
-    private final TournamentHandler tournamentHandler;
+    private final GameListener gameListener;
 
     /** The core {@link Game} object wrapped by this {@code GameHandler}. */
     @Nonnull
@@ -127,11 +129,11 @@ public class GameHandler implements Handler, Runnable {
     @Nonnull
     private final Map<Ship, List<Shot>> shipToShots = Collections.synchronizedMap(Maps.newHashMap());
 
-    public GameHandler(@Nonnull final String name, final int id, @Nonnull final Configuration config, final boolean tournament, @Nonnull final ClientManager clientManager, @Nonnull GameManager gameManager, @Nullable TournamentHandler tournamentHandler) {
+    public GameHandler(@Nonnull final String name, final int id, @Nonnull final Configuration config, final boolean tournament, @Nonnull final ClientManager clientManager, @Nonnull GameManager gameManager, @Nullable GameListener gameListener) {
         this.game          = new Game(id, name, GameState.LOBBY, config, tournament);
         this.clientManager = clientManager;
         this.gameManager = gameManager;
-        this.tournamentHandler = tournamentHandler;
+        this.gameListener = gameListener;
 
         stateProperty()
             .addListener((observable, oldValue, newValue) -> game.setState(newValue));
@@ -443,8 +445,8 @@ public class GameHandler implements Handler, Runnable {
                 LOGGER.debug("Game {} has finished",game.getId());
                 this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, winner),getAllClients());
                 this.game.setState(GameState.FINISHED);
-                if(this.tournamentHandler != null)
-                    this.tournamentHandler.gameFinished(this.game.getId());
+                if(this.gameListener != null)
+                    this.gameListener.onGameFinished();
                 this.gameManager.gameFinished(this.game.getId());
                 break;
             default:

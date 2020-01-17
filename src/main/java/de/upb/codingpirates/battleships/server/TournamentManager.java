@@ -1,11 +1,8 @@
 package de.upb.codingpirates.battleships.server;
 
 import com.google.common.collect.Maps;
-import de.upb.codingpirates.battleships.logic.Client;
-import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.logic.Configuration;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
-import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.IdManager;
 import de.upb.codingpirates.battleships.server.exceptions.InvalidGameSizeException;
 import de.upb.codingpirates.battleships.server.game.TournamentHandler;
@@ -18,10 +15,7 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class TournamentManager implements ConfigurationChecker {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -51,28 +45,15 @@ public class TournamentManager implements ConfigurationChecker {
         }, 1L, 1L);
     }
 
-    public TournamentHandler createTournament(@Nonnull Configuration configuration, @Nonnull String name, int rounds) throws InvalidGameSizeException {
-        checkField(configuration);
+    public TournamentHandler createTournament(@Nonnull List<Configuration> configuration, @Nonnull String name, int rounds) throws InvalidGameSizeException {
+        for(Configuration config: configuration){
+            checkField(config);
+        }
         int id = this.idManager.generate().getInt();
         LOGGER.info(ServerMarker.TOURNAMENT, "Create Tournament: {} with id: {}", name, id);
         TournamentHandler tournamentHandler = new TournamentHandler(name, clientManager, gameManager, configuration, id, rounds);
         this.tournamentHandlerByInt.put(id, tournamentHandler);
         return tournamentHandler;
-    }
-
-    public void addClientToTournament(int tournamentId, @Nonnull Client client, @Nonnull ClientType clientType) throws NotAllowedException, InvalidActionException {
-        if(clientType.equals(ClientType.SPECTATOR)) throw new NotAllowedException("You cannot join as spectator");
-        LOGGER.debug(ServerMarker.TOURNAMENT, "Adding client {}, with type {}, to tournament {}", client.getId(), clientType, tournamentId);
-        if(this.clientToTournament.containsKey(client.getId())){
-            if(clientType.equals(ClientType.PLAYER)){
-                throw new NotAllowedException("you cannot join a game while participating");
-            }
-        }
-        this.clientToTournament.put(client.getId(),tournamentId);
-        if(!this.tournamentHandlerByInt.containsKey(tournamentId)){
-            throw new InvalidActionException("this tournament does not exist");
-        }
-        this.tournamentHandlerByInt.get(tournamentId).addClient(clientType,client);
     }
 
     @Nonnull

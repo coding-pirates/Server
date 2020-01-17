@@ -26,4 +26,6 @@ public class ServerProperties {
     public static final int MAX_SPECTATOR_COUNT = Integer.MAX_VALUE;
 
     public static final long TOURNAMENT_GAMEFINISH_TIME = 10000;
+
+    public static final long AUTO_GAME_START = 20000;
 }
