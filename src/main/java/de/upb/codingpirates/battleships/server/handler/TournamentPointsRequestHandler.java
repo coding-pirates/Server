@@ -3,9 +3,11 @@ package de.upb.codingpirates.battleships.server.handler;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.request.TournamentPointsRequest;
+import de.upb.codingpirates.battleships.network.message.response.ResponseBuilder;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.TournamentManager;
+import de.upb.codingpirates.battleships.server.game.TournamentHandler;
 
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
@@ -22,6 +24,7 @@ public final class TournamentPointsRequestHandler extends AbstractServerMessageH
 
     @Override
     protected void handleMessage(TournamentPointsRequest message, Id connectionId) throws GameException {
-
+        TournamentHandler handler = this.tournamentManager.getTournamentByClient(connectionId.getInt());
+        this.clientManager.sendMessageToId(ResponseBuilder.tournamentPointsResponse(handler.getScore()));
     }
 }

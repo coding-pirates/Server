@@ -119,4 +119,8 @@ public class TournamentHandler implements Runnable, GameListener {
         LOGGER.debug("Tournament {} has finished", tournamentId);
         this.clientManager.sendMessageToClients(NotificationBuilder.tournamentFinishNotification(winner), gameHandler.getAllClients());
     }
+
+    public Map<Integer, Integer> getScore(){
+        return score;
+    }
 }
