@@ -336,6 +336,7 @@ public class GameHandler implements Translator {
      * @throws GameException if to many ships have been placed or the ships for the player has already been placed
      */
     public void addShipPlacement(int clientId,@Nonnull Map<Integer, PlacementInfo> ships) throws GameException {
+        if(this.getStage().equals(GameStage.PLACESHIPS)) {
             if (ships.size() > getConfiguration().getShips().size()) {
                 LOGGER.debug("Client {} would have set to many ships", clientId);
                 throw new NotAllowedException("game.player.toManyShips");
@@ -346,6 +347,9 @@ public class GameHandler implements Translator {
                 throw new InvalidActionException("game.player.toLessShips");
             }
             LOGGER.debug("Ships placed successful for player {}", clientId);
+        }else {
+            throw new InvalidActionException("Its not the time to place ships");
+        }
     }
 
     /**
