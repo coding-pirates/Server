@@ -2,9 +2,7 @@ package de.upb.codingpirates.battleships.server.gui.controllers;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.ResourceBundle;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -13,7 +11,6 @@ import java.util.concurrent.Executors;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
-import de.upb.codingpirates.battleships.network.Properties;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -34,6 +31,7 @@ import de.upb.codingpirates.battleships.ai.AI;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Game;
 import de.upb.codingpirates.battleships.logic.GameState;
+import de.upb.codingpirates.battleships.network.Properties;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
@@ -50,6 +48,8 @@ import de.upb.codingpirates.battleships.server.gui.util.AlertBuilder;
  */
 public final class MainController extends AbstractController<Parent> {
 
+    @FXML
+    private Parent configuration;
     /**
      * The controller associated with the {@code configuration.fxml} file.
      */

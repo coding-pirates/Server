@@ -11,7 +11,7 @@ import de.upb.codingpirates.battleships.logic.ShipType;
 import static java.util.Collections.max;
 import static java.util.Comparator.comparingInt;
 
-/* TODO: improve implementation */
+/* TODO: improve implementation. */
 /**
  * A {@link ConfigurationValidator} which checks for the validity of a {@link Configuration} instance by comparing the
  * configuration's field area to the sum of the areas of the bounding boxes of available {@link ShipType}s.
