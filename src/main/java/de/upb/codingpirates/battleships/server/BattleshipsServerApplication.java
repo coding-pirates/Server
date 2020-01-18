@@ -27,7 +27,7 @@ import de.upb.codingpirates.battleships.server.gui.util.ResourceBundleWrapper;
 public final class BattleshipsServerApplication extends Application {
 
     @Nonnull
-    private final Injector injector;
+    private final Injector injector = Guice.createInjector(new ServerModule());
 
     /**
      * The title of this JavaFX application {@link Stage}.
@@ -41,7 +41,6 @@ public final class BattleshipsServerApplication extends Application {
     }
 
     public BattleshipsServerApplication() {
-        injector = Guice.createInjector(new ServerModule());
         injector.getInstance(MessageDispatcher.class);
     }
 

@@ -14,7 +14,6 @@ import java.util.stream.IntStream;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
-import de.upb.codingpirates.battleships.server.gui.util.AlertBuilder;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -43,6 +42,7 @@ import org.jetbrains.annotations.Contract;
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.gui.controllers.ConfigurationValidator.InsufficientFieldSizeException;
+import de.upb.codingpirates.battleships.server.gui.util.AlertBuilder;
 
 import static java.util.stream.Collectors.*;
 
@@ -107,7 +107,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
     @FXML
     private TextField gameNameTextField;
 
-    private final Gson        gson;
+    private final Gson gson;
 
     private final GameManager gameManager;
 
