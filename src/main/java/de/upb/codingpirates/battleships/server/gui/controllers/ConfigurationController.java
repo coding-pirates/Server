@@ -1,15 +1,18 @@
 package de.upb.codingpirates.battleships.server.gui.controllers;
 
-import com.google.gson.Gson;
-import com.google.inject.Inject;
-import de.upb.codingpirates.battleships.logic.Configuration;
-import de.upb.codingpirates.battleships.logic.PenaltyType;
-import de.upb.codingpirates.battleships.logic.Point2D;
-import de.upb.codingpirates.battleships.logic.ShipType;
-import de.upb.codingpirates.battleships.network.ConnectionHandler;
-import de.upb.codingpirates.battleships.server.ClientManager;
-import de.upb.codingpirates.battleships.server.GameManager;
-import de.upb.codingpirates.battleships.server.gui.control.Alerts;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.IntStream;
+
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
+
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -22,27 +25,28 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
+
+import com.google.common.annotations.VisibleForTesting;
+
+import com.google.gson.Gson;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.IntStream;
+import de.upb.codingpirates.battleships.logic.Configuration;
+import de.upb.codingpirates.battleships.logic.PenaltyType;
+import de.upb.codingpirates.battleships.logic.Point2D;
+import de.upb.codingpirates.battleships.logic.ShipType;
+import de.upb.codingpirates.battleships.server.GameManager;
+import de.upb.codingpirates.battleships.server.gui.control.Alerts;
 
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.*;
 
 /**
- * The controller associated with the {@code configuration.fxml} file which allows the creation of
- * {@link Configuration} objects and starting of configured games.
+ * The controller associated with the {@code configuration.fxml} file which allows the creation of {@link Configuration}
+ * objects and starting of configured games.
  *
  * @author Andre Blanke
  */
@@ -101,21 +105,18 @@ public final class ConfigurationController extends AbstractController<Parent> {
     @FXML
     private TextField gameNameTextField;
 
-    private final Gson gson;
-
-    private GameManager gameManager;
-
-    private ClientManager clientManager;
+    private final Gson        gson;
+    private final GameManager gameManager;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Inject
-    private ConfigurationController(@NotNull final Gson gson, GameManager gameManager, ConnectionHandler clientManager) {
-        this.gson = gson;
+    private ConfigurationController(@Nonnull final Gson gson, @Nonnull final GameManager gameManager) {
+        this.gson        = gson;
         this.gameManager = gameManager;
-        this.clientManager = (ClientManager)clientManager;
     }
 
+    // <editor-fold desc="toShipTypeLabel">
     private static final int LATIN_ALPHABET_LENGTH = 26;
 
     /**
@@ -138,8 +139,9 @@ public final class ConfigurationController extends AbstractController<Parent> {
      *
      * @return A unique label for the n-th {@link ShipType}.
      */
-    @NotNull
-    private static String toShipTypeLabel(int n) {
+    @Nonnull
+    @VisibleForTesting
+    static String toShipTypeLabel(int n) {
         final StringBuilder shipTypeLabelBuilder = new StringBuilder();
 
         for (; n >= 0; n = (n / LATIN_ALPHABET_LENGTH) - 1) {
@@ -149,6 +151,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
         }
         return shipTypeLabelBuilder.toString();
     }
+    // </editor-fold>
 
     // <editor-fold desc="Initialization">
     private ShipTypeConfiguration getSelectedShipTypeConfiguration() {
@@ -160,7 +163,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
     private static final Color COLOR_MARKED   = Color.DARKGRAY;
     private static final Color COLOR_UNMARKED = Color.TEAL;
 
-    private void populateShipConfigurationGrid(@NotNull final ShipTypeConfiguration config) {
+    private void populateShipConfigurationGrid(@Nonnull final ShipTypeConfiguration config) {
         shipConfigurationGrid.getChildren().clear();
 
         for (int x = 0; x < config.width; ++x) {
@@ -348,7 +351,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
     }
     // </editor-fold>
 
-    private void displayInvalidConfigurationAlert(@NotNull final ShipTypeConfiguration invalidConfiguration) {
+    private void displayInvalidConfigurationAlert(@Nonnull final ShipTypeConfiguration invalidConfiguration) {
         Alert alert = new Alert(AlertType.ERROR);
 
         alert.setTitle(
@@ -389,7 +392,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
     private ExtensionFilter configurationExtensionFilter;
 
-    @NotNull
+    @Nonnull
     @Contract(pure = true)
     private FileChooser newConfigurationFileChooser(final String title) {
         final FileChooser fileChooser = new FileChooser();
@@ -409,7 +412,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
             .collect(toMap(Function.identity(), i -> configurations.get(i).toShipType()));
     }
 
-    private void setControlsFromShipTypes(@NotNull final Map<Integer, ShipType> shipTypes) {
+    private void setControlsFromShipTypes(@Nonnull final Map<Integer, ShipType> shipTypes) {
         shipTypeEditingComboBox
             .getItems()
             .setAll(ShipTypeConfiguration.fromShipTypes(shipTypes.values()));
@@ -427,7 +430,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
      *
      * @see #setControlsFromConfiguration(Configuration)
      */
-    @NotNull
+    @Nonnull
     @Contract(" -> new")
     private Configuration getConfigurationFromControls() throws InvalidShipTypeConfigurationException {
         return new Configuration(
@@ -457,7 +460,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
      *
      * @see #getConfigurationFromControls()
      */
-    private void setControlsFromConfiguration(@NotNull final Configuration configuration) {
+    private void setControlsFromConfiguration(@Nonnull final Configuration configuration) {
         maxPlayerCountSpinner
                 .getValueFactory()
                 .setValue(configuration.getMaxPlayerCount());
@@ -573,7 +576,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
         alert.setContentText(resourceBundle.getString("game.name.invalidNameAlert.contentText"));
         alert.setTitle(resourceBundle.getString("game.name.invalidNameAlert.title"));
-        alert.setHeaderText(resourceBundle.getString("game.name.invalidNameAlert.header"));
+        alert.setHeaderText(String.format(resourceBundle.getString("game.name.invalidNameAlert.header"), invalidName));
 
         alert.showAndWait();
     }
@@ -591,11 +594,11 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
         try {
             configuration = getConfigurationFromControls();
+
+            gameManager.createGame(configuration,gameNameTextField.getText(),false);
         } catch (final InvalidShipTypeConfigurationException exception) {
             displayInvalidConfigurationAlert(exception.invalidConfiguration);
-            return;
         }
-        this.gameManager.createGame(configuration,gameNameTextField.getText(),false);
     }
 
     /**
@@ -609,15 +612,25 @@ public final class ConfigurationController extends AbstractController<Parent> {
      *
      * @author Andre Blanke
      */
-    private static final class ShipTypeConfiguration {
+    @VisibleForTesting
+    static final class ShipTypeConfiguration {
 
         private int width;
         private int height;
 
         private final Set<Point2D> marks;
 
+        /**
+         * The (preferably) unique label of this {@code ShipTypeConfiguration} displayed by the {@link #toString()}.
+         * 
+         * @see #toShipTypeLabel(int) 
+         */
         private final String label;
 
+        /**
+         * The default {@link #width} and {@link #height} a newly instantiated {@code ShipTypeConfiguration} should
+         * have.
+         */
         private static final int DEFAULT_WIDTH_AND_HEIGHT = 5;
 
         /**
@@ -626,17 +639,18 @@ public final class ConfigurationController extends AbstractController<Parent> {
         private static final int MINIMUM_SHIP_TYPE_SIZE   = 2;
 
         @Contract(pure = true)
-        private ShipTypeConfiguration(@NotNull final String label) {
+        private ShipTypeConfiguration(@Nonnull final String label) {
             this(label, new HashSet<>());
         }
 
         @Contract(pure = true)
-        private ShipTypeConfiguration(@NotNull final String label, @NotNull final Collection<Point2D> marks) {
+        private ShipTypeConfiguration(@Nonnull final String label, @Nonnull final Collection<Point2D> marks) {
             this(label, new HashSet<>(marks));
         }
 
         @Contract(pure = true)
-        private ShipTypeConfiguration(@NotNull final String label, @NotNull final Set<Point2D> marks) {
+        @VisibleForTesting
+        ShipTypeConfiguration(@Nonnull final String label, @Nonnull final Set<Point2D> marks) {
             this.label = label;
             this.marks = marks;
 
@@ -655,8 +669,8 @@ public final class ConfigurationController extends AbstractController<Parent> {
             height = Math.max(height, DEFAULT_WIDTH_AND_HEIGHT);
         }
 
-        @NotNull
-        private static Collection<ShipTypeConfiguration> fromShipTypes(@NotNull final Collection<ShipType> shipTypes) {
+        @Nonnull
+        private static Collection<ShipTypeConfiguration> fromShipTypes(@Nonnull final Collection<ShipType> shipTypes) {
             final List<ShipTypeConfiguration> shipTypeConfigurations = new ArrayList<>(shipTypes.size());
 
             int i = 0;
@@ -667,10 +681,23 @@ public final class ConfigurationController extends AbstractController<Parent> {
             return shipTypeConfigurations;
         }
 
+        @VisibleForTesting
+        static Set<Point2D> normalize(@Nonnull final Set<Point2D> marks) {
+            if (marks.isEmpty())
+                return marks;
+            final Point2D minX = Collections.min(marks, Comparator.comparingInt(Point2D::getX));
+            final Point2D minY = Collections.min(marks, Comparator.comparingInt(Point2D::getY));
+
+            return marks
+                .stream()
+                .map(mark -> new Point2D(mark.getX() - minX.getX(), mark.getY() - minY.getY()))
+                .collect(toSet());
+        }
+
         /**
          * @inheritDoc
          *
-         * @return The label of this {@code ShipType} when displayed inside of {@link #shipTypeEditingComboBox}.
+         * @return The label of this {@code ShipType}, used for display inside of {@link #shipTypeEditingComboBox}.
          */
         @Override
         @Contract(pure = true)
@@ -678,30 +705,73 @@ public final class ConfigurationController extends AbstractController<Parent> {
             return label;
         }
 
+        /**
+         * Removes all {@link Point2D} objects from the {@link #marks} collection which lie outside the bounds set by
+         * the {@link #width} and {@link #height} attributes.
+         */
         private void removeInvalidMarks() {
             marks.removeIf(point -> (point.getX() >= width) || (point.getY() >= height));
         }
 
-        private static final Point2D[] NEIGHBOR_OFFSETS = {
-            new Point2D(-1, 0), /* Left   */
-            new Point2D( 0, 1), /* Top    */
-            new Point2D( 1, 0), /* Right  */
-            new Point2D( 0, -1) /* Bottom */
-        };
-
         // <editor-fold desc="toShipType()">
+        /**
+         * Checks whether the depth-first search should be continued for the point {@code (x, y)}.
+         *
+         * The search should be continued if the provided point {@code (x, y)} is within the bounds of the matrix,
+         * a {@link Point2D} object representing this point exists inside the {@link #marks} collection, and if it has
+         * not yet been visited.
+         *
+         * @param marks A matrix representation of the {@link #marks} collection.
+         *
+         * @param visited A matrix representing the {@link Point2D} objects of the {@link #marks} collection which
+         *                have already been visited by a previous iteration of the algorithm.
+         *
+         * @param x The x coordinate of the point which is to be checked for a continuation of the depth-first search.
+         *
+         * @param y The y coordinate of the point which is to be checked for a continuation of the depth-first search.
+         *
+         * @return {@code true} if the depth-first search should be continued for the point {@code (x, y)},
+         *         otherwise {@code false}.
+         *
+         * @see #dfs(boolean[][], boolean[][], int, int) 
+         */
         @Contract(pure = true)
         private boolean shouldTraverse(
-                @NotNull final boolean[][] marks,
-                @NotNull final boolean[][] visited,
+                @Nonnull final boolean[][] marks,
+                @Nonnull final boolean[][] visited,
                 final int x,
                 final int y) {
             return ((x >= 0) && (x < width)) && ((y >= 0) && (y < height)) && marks[x][y] && !visited[x][y];
         }
 
+        /**
+         * An array of {@link Point2D} objects containing the offsets used to reach a neighboring {@code Point2D} from
+         * another {@code Point2D} object.
+         */
+        private static final Point2D[] NEIGHBOR_OFFSETS = {
+                new Point2D(-1, 0), /* Left   */
+                new Point2D( 0, 1), /* Top    */
+                new Point2D( 1, 0), /* Right  */
+                new Point2D( 0, -1) /* Bottom */
+        };
+
+        /**
+         * Recursively executes a depth-first search starting at the point {@code (x, y)}.
+         *
+         * @param marks A matrix representation of the {@link #marks} collection.
+         *
+         * @param visited A matrix representing the {@link Point2D} objects of the {@link #marks} collection which
+         *                have already been visited by a previous iteration of the algorithm.
+         *
+         * @param x The x starting coordinate of the point from which to start the depth-first search.
+         *
+         * @param y The y starting coordinate of the point from which to start the depth-first search.
+         *
+         * @see #checkMarksConnected()
+         */
         private void dfs(
-                @NotNull final boolean[][] marks,
-                @NotNull final boolean[][] visited,
+                @Nonnull final boolean[][] marks,
+                @Nonnull final boolean[][] visited,
                 final int x,
                 final int y) {
             visited[x][y] = true;
@@ -715,7 +785,20 @@ public final class ConfigurationController extends AbstractController<Parent> {
             }
         }
 
-        private boolean checkMarksConnected() {
+        /**
+         * Checks whether or not the individual {@link Point2D} objects inside the {@link #marks} collection are all
+         * directly adjacent to each other.
+         *
+         * Two {@link Point2D}s are considered directly adjacent if and only if one can be reached from the other by
+         * going up, down, left, or right and vice versa.
+         *
+         * @return {@code true} if all {@link Point2D} objects inside the {@link #marks} collection are adjacent,
+         *         otherwise {@code false}.
+         *
+         * @see #toShipType()
+         */
+        @VisibleForTesting
+        boolean checkMarksConnected() {
             final boolean[][] markMatrix = new boolean[width][height];
             final boolean[][] visited    = new boolean[width][height];
 
@@ -736,13 +819,32 @@ public final class ConfigurationController extends AbstractController<Parent> {
             return true;
         }
 
+        /**
+         * Checks whether this {@code ShipTypeConfiguration} consists of the minimum amount of {@link Point2D} objects
+         * according to the product vision.
+         *
+         * @return {@code true} if this {@code ShipTypeConfiguration} has the minimum size, otherwise {@code false}.
+         *
+         * @see #toShipType()
+         */
         @Contract(pure = true)
         @SuppressWarnings("BooleanMethodIsAlwaysInverted")
         private boolean hasMinimumSize() {
             return marks.size() >= MINIMUM_SHIP_TYPE_SIZE;
         }
 
-        @NotNull
+        /**
+         * Converts this {@code ShipTypeConfiguration} into a {@link ShipType}
+         *
+         * @return A new {@link ShipType} representing this {@link ShipTypeConfiguration}.
+         *
+         * @throws InvalidShipTypeConfigurationException If this {@code ShipTypeConfiguration} is not of the minimum
+         *                                               size or the individual {@link Point2D} are not directly
+         *                                               adjacent to each other.
+         *
+         * @see InvalidShipTypeConfigurationException
+         */
+        @Nonnull
         @Contract(value = " -> new", pure = true)
         private ShipType toShipType() throws InvalidShipTypeConfigurationException {
             if (!hasMinimumSize() || !checkMarksConnected())
@@ -752,11 +854,23 @@ public final class ConfigurationController extends AbstractController<Parent> {
         // </editor-fold>
     }
 
+    /**
+     * An exception thrown to indicate that a {@link ShipTypeConfiguration} is not valid (e.g. because some it is too
+     * small or because the individual parts that make up the ship are not connected) and thus cannot be converted
+     * into a {@link ShipType}.
+     *
+     * @see ShipTypeConfiguration#toShipType()
+     */
     private static final class InvalidShipTypeConfigurationException extends RuntimeException {
 
         private final ShipTypeConfiguration invalidConfiguration;
 
-        private InvalidShipTypeConfigurationException(@NotNull final ShipTypeConfiguration invalidConfiguration) {
+        /**
+         * Instantiates a new {@code InvalidShipTypeConfigurationException}.
+         *
+         * @param invalidConfiguration The invalid {@link ShipTypeConfiguration} which caused this exception.
+         */
+        private InvalidShipTypeConfigurationException(@Nonnull final ShipTypeConfiguration invalidConfiguration) {
             this.invalidConfiguration = invalidConfiguration;
         }
     }

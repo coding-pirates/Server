@@ -2,7 +2,6 @@ package de.upb.codingpirates.battleships.server;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.inject.Inject;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
@@ -11,24 +10,26 @@ import de.upb.codingpirates.battleships.network.exceptions.BattleshipException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.Message;
-import de.upb.codingpirates.battleships.network.message.notification.ErrorNotification;
-import de.upb.codingpirates.battleships.server.network.ServerApplication;
+import de.upb.codingpirates.battleships.network.message.notification.NotificationBuilder;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import de.upb.codingpirates.battleships.server.util.Translator;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
 /**
- * handles all client related tasks
- * <p>
- * get an instance with {@link ServerApplication#getClientManager()}
+ * Handles all {@link Client}-related functionality.
+ *
+ * @author Paul Becker
  */
 public class ClientManager implements ConnectionHandler, Translator {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -46,7 +47,8 @@ public class ClientManager implements ConnectionHandler, Translator {
      * maps client id to player
      */
     @Nonnull
-    private final Map<Integer, Client> player = Collections.synchronizedMap(Maps.newHashMap());
+    private final ObservableMap<Integer, Client> player =
+        FXCollections.synchronizedObservableMap(FXCollections.observableHashMap());
 
     /**
      * maps client id to spectator
@@ -75,13 +77,13 @@ public class ClientManager implements ConnectionHandler, Translator {
         }
 
         Client client = new Client(id, name);
-        this.clients.putIfAbsent(id, client);
+        this.clients.put(id, client);
         switch (clientType) {
             case PLAYER:
-                this.player.putIfAbsent(id, client);
+                this.player.put(id, client);
                 break;
             case SPECTATOR:
-                this.spectator.putIfAbsent(id, client);
+                this.spectator.put(id, client);
                 break;
         }
         return client;
@@ -211,16 +213,20 @@ public class ClientManager implements ConnectionHandler, Translator {
      */
     @Nullable
     public Client getClient(int id) {
+        LOGGER.debug(clients.size());
         return this.clients.get(id);
     }
 
     @Override
-    public void handleBattleshipException(BattleshipException e) {
-        if (e.getConnectionId() != null) {
-            this.sendMessageToId(new ErrorNotification(e.getErrorType(), e.getMessageId(), this.translate(e.getMessage())), e.getConnectionId());
+    public void handleBattleshipException(@Nonnull final BattleshipException exception) {
+        if (exception.getConnectionId() != null) {
+            this.sendMessageToId(NotificationBuilder.errorNotification(exception.getErrorType(), exception.getMessageId(), this.translate(exception.getMessage())), exception.getConnectionId());
         } else {
             LOGGER.warn(ServerMarker.CLIENT, "could not send ErrorNotification. Could not identify source client");
         }
     }
 
+    public ObservableMap<Integer, Client> getPlayerMappings() {
+        return player;
+    }
 }

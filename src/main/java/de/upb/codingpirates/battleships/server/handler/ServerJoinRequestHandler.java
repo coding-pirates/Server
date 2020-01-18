@@ -1,40 +1,32 @@
 package de.upb.codingpirates.battleships.server.handler;
 
-import com.google.inject.Inject;
-import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.id.Id;
-import de.upb.codingpirates.battleships.network.message.ExceptionMessageHandler;
-import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.request.ServerJoinRequest;
-import de.upb.codingpirates.battleships.network.message.response.ServerJoinResponse;
+import de.upb.codingpirates.battleships.network.message.response.ResponseBuilder;
 import de.upb.codingpirates.battleships.server.ClientManager;
+import de.upb.codingpirates.battleships.server.GameManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
+import javax.inject.Inject;
 
-public class ServerJoinRequestHandler extends ExceptionMessageHandler<ServerJoinRequest> {
-
+public final class ServerJoinRequestHandler extends AbstractServerMessageHandler<ServerJoinRequest> {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    @Nonnull
-    private ClientManager clientManager;
-
     @Inject
-    public ServerJoinRequestHandler(@Nonnull ConnectionHandler handler) {
-        this.clientManager = (ClientManager) handler;
+    public ServerJoinRequestHandler(@Nonnull final ClientManager clientManager,
+                                    @Nonnull final GameManager gameManager) {
+        super(clientManager, gameManager, ServerJoinRequest.class);
     }
 
     @Override
-    public void handleMessage(@Nonnull ServerJoinRequest message, Id connectionId) throws GameException {
-        LOGGER.debug("Handle ServerJoinRequest from {}, with name {}, as {}", connectionId, message.getName(), message.getClientType());
-        this.clientManager.create(connectionId.getInt(), message.getName(), message.getClientType());
-        this.clientManager.sendMessageToId(new ServerJoinResponse(connectionId.getInt()), connectionId);
-    }
+    public void handleMessage(@Nonnull final ServerJoinRequest message,
+                              @Nonnull final Id connectionId) throws GameException {
+        LOGGER.debug("Handling ServerJoinRequest from clientId {}, with name '{}', as type {}.", connectionId, message.getName(), message.getClientType());
 
-    @Override
-    public boolean canHandle(Message message) {
-        return message instanceof ServerJoinRequest;
+        clientManager.create(connectionId.getInt(), message.getName(), message.getClientType());
+        clientManager.sendMessageToId(ResponseBuilder.serverJoinResponse(connectionId.getInt()), connectionId);
     }
 }

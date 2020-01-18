@@ -6,9 +6,11 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.SeparatorMenuItem?>
-<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox
@@ -40,13 +42,40 @@
             <Insets topRightBottomLeft="5"/>
           </VBox.margin>
           <Label
-            styleClass="table-header"
-            text="%overview.game.table.header">
+              styleClass="table-header"
+              text="%overview.game.table.header">
             <VBox.margin>
               <Insets bottom="5"/>
             </VBox.margin>
           </Label>
-          <TableView>
+          <TableView fx:id="gameTableView">
+            <columns>
+              <TableColumn text="%overview.game.table.columns.id.text">
+                <cellValueFactory>
+                  <PropertyValueFactory property="id"/>
+                </cellValueFactory>
+              </TableColumn>
+              <TableColumn text="%overview.game.table.columns.name.text">
+                <cellValueFactory>
+                  <PropertyValueFactory property="name"/>
+                </cellValueFactory>
+              </TableColumn>
+              <TableColumn text="%overview.game.table.columns.state.text">
+                <cellValueFactory>
+                  <PropertyValueFactory property="state"/>
+                </cellValueFactory>
+              </TableColumn>
+              <TableColumn text="%overview.game.table.columns.currentPlayerCount">
+                <cellValueFactory>
+                  <PropertyValueFactory property="currentPlayerCount"/>
+                </cellValueFactory>
+              </TableColumn>
+              <TableColumn text="%overview.game.table.columns.maxPlayerCount">
+                <cellValueFactory>
+                  <PropertyValueFactory property="maxPlayerCount"/>
+                </cellValueFactory>
+              </TableColumn>
+            </columns>
             <placeholder>
               <Label text="%overview.game.table.placeholder"/>
             </placeholder>
@@ -57,13 +86,25 @@
             <Insets topRightBottomLeft="5"/>
           </VBox.margin>
           <Label
-            styleClass="table-header"
-            text="%overview.player.table.header">
+              styleClass="table-header"
+              text="%overview.player.table.header">
             <VBox.margin>
               <Insets bottom="5"/>
             </VBox.margin>
           </Label>
-          <TableView>
+          <TableView fx:id="playerTableView">
+            <columns>
+              <TableColumn text="%overview.player.table.columns.id.text">
+                <cellValueFactory>
+                  <PropertyValueFactory property="id"/>
+                </cellValueFactory>
+              </TableColumn>
+              <TableColumn text="%overview.player.table.columns.name.text">
+                <cellValueFactory>
+                  <PropertyValueFactory property="name"/>
+                </cellValueFactory>
+              </TableColumn>
+            </columns>
             <placeholder>
               <Label text="%overview.player.table.placeholder"/>
             </placeholder>

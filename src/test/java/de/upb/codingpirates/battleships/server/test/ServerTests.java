@@ -1,20 +1,24 @@
 package de.upb.codingpirates.battleships.server.test;
 
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import de.upb.codingpirates.battleships.client.Handler;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import de.upb.codingpirates.battleships.client.ListenerHandler;
+import de.upb.codingpirates.battleships.client.listener.*;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
 import de.upb.codingpirates.battleships.client.network.ClientConnector;
 import de.upb.codingpirates.battleships.client.network.ClientModule;
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.Properties;
+import de.upb.codingpirates.battleships.network.dispatcher.MessageDispatcher;
 import de.upb.codingpirates.battleships.network.exceptions.BattleshipException;
 import de.upb.codingpirates.battleships.network.message.notification.*;
-import de.upb.codingpirates.battleships.network.message.report.ConnectionClosedReport;
-import de.upb.codingpirates.battleships.network.message.request.*;
-import de.upb.codingpirates.battleships.network.message.response.*;
-import de.upb.codingpirates.battleships.server.network.ServerApplication;
+import de.upb.codingpirates.battleships.network.message.request.RequestBuilder;
+import de.upb.codingpirates.battleships.network.message.response.LobbyResponse;
+import de.upb.codingpirates.battleships.network.message.response.ServerJoinResponse;
+import de.upb.codingpirates.battleships.server.GameManager;
+import de.upb.codingpirates.battleships.server.ServerModule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
@@ -43,13 +47,10 @@ public class ServerTests {
     public void test() throws IOException {
         if(!TestProperties.isServerOnline) {
             new Thread(() -> {
-                ServerApplication server = null;
-                try {
-                    server = new ServerApplication();
-                } catch (InstantiationException | IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-                server.getGameManager().createGame(TEST_CONFIG, "test", false);
+                Injector injector = Guice.createInjector(new ServerModule());
+                injector.getInstance(MessageDispatcher.class);
+                GameManager manager = injector.getInstance(GameManager.class);
+                manager.createGame(TEST_CONFIG, "test", false);
                 long timer = System.currentTimeMillis();
                 while (timer > System.currentTimeMillis() - 20000) {
 
@@ -76,21 +77,21 @@ public class ServerTests {
 
 
         for(int i = 0;i< TestProperties.playerCount;i++) {
-            connectorstmp.get(i).sendMessageToServer(new ServerJoinRequest(names[i], ClientType.PLAYER));
+            connectorstmp.get(i).sendMessageToServer(RequestBuilder.serverJoinRequest(names[i], ClientType.PLAYER));
             timer = System.currentTimeMillis();
             while (timer > System.currentTimeMillis() - 10){
             }
         }
 
         for(int i = 0;i< TestProperties.playerCount;i++) {
-            connectorstmp.get(i).sendMessageToServer(new LobbyRequest());
+            connectorstmp.get(i).sendMessageToServer(RequestBuilder.lobbyRequest());
             timer = System.currentTimeMillis();
             while (timer > System.currentTimeMillis() - 100){
             }
         }
 
         for(int i = 0;i< TestProperties.playerCount;i++) {
-            connectorstmp.get(i).sendMessageToServer(new GameJoinPlayerRequest(lobbySize-1));
+            connectorstmp.get(i).sendMessageToServer(RequestBuilder.gameJoinPlayerRequest(lobbySize-1));
             timer = System.currentTimeMillis();
             while (timer > System.currentTimeMillis() - 100){
             }
@@ -107,37 +108,38 @@ public class ServerTests {
     public static class TestClientModule extends ClientModule<ClientConnector> {
 
         public TestClientModule() {
-            super(ClientConnector.class,MessageHandler.class);
+            super(ClientConnector.class);
+            ListenerHandler.registerListener(new MessageHandler());
         }
     }
 
-    public static class MessageHandler implements Handler {
+    public static class MessageHandler implements GameInitNotificationListener, GameStartNotificationListener, FinishNotificationListener, LobbyResponseListener, ServerJoinResponseListener,RoundStartNotificationListener,ErrorNotificationListener,BattleshipsExceptionListener {
         @Override
-        public void handleGameInitNotification(GameInitNotification message, int clientId) {
+        public void onGameInitNotification(GameInitNotification message, int clientId) {
             LOGGER.info("GameInitNotification");
             synchronized (finished) {
                 finished.set(false);
             }
             configuration = message.getConfiguration();
             try {
-                connectors.get(clientId).sendMessageToServer(new PlaceShipsRequest(getPlacement(message.getConfiguration())));
+                connectors.get(clientId).sendMessageToServer(RequestBuilder.placeShipsRequest(getPlacement(message.getConfiguration())));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
         @Override
-        public void handleGameStartNotification(GameStartNotification message, int clientId) {
+        public void onGameStartNotification(GameStartNotification message, int clientId) {
             LOGGER.info("GameStartNotification");
             try {
-                connectors.get(clientId).sendMessageToServer(new ShotsRequest(getShots(configuration)));
+                connectors.get(clientId).sendMessageToServer(RequestBuilder.shotsRequest(getShots(configuration)));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
         @Override
-        public void handleFinishNotification(FinishNotification message, int clientId) {
+        public void onFinishNotification(FinishNotification message, int clientId) {
             LOGGER.info("FinishNotification");
             synchronized (finished) {
                 finished.set(true);
@@ -145,7 +147,7 @@ public class ServerTests {
         }
 
         @Override
-        public void handleLobbyResponse(LobbyResponse message, int clientId) {
+        public void onLobbyResponse(LobbyResponse message, int clientId) {
             LOGGER.info("LobbyResponse");
             lobbySize = message.getGames().size();
         }
@@ -154,125 +156,32 @@ public class ServerTests {
 
 
         @Override
-        public void handleServerJoinResponse(ServerJoinResponse message, int clientId) {
+        public void onServerJoinResponse(ServerJoinResponse message, int clientId) {
             LOGGER.info("ServerJoinResponse");
             ids.add(message.getClientId());
             connectors.put(message.getClientId(), connectorstmp.get(count++));
         }
 
         @Override
-        public void handleBattleshipException(BattleshipException exception, int clientId) {
+        public void onBattleshipException(BattleshipException exception, int clientId) {
             LOGGER.info("BattleshipException", exception);
         }
 
         @Override
-        public void handleErrorNotification(ErrorNotification message, int clientId) {
+        public void onErrorNotification(ErrorNotification message, int clientId) {
             LOGGER.info("ErrorNotification");
             LOGGER.info("MessageId: {}, ErrorType: {}, Reason: {}", message.getReferenceMessageId(), message.getErrorType(), message.getReason());
         }
 
         @Override
-        public void handleRoundStartNotification(RoundStartNotification message, int clientId) {
+        public void onRoundStartNotification(RoundStartNotification message, int clientId) {
             LOGGER.info("RoundStartNotification");
             try {
-                connectors.get(clientId).sendMessageToServer(new ShotsRequest(getShots(configuration)));
+                connectors.get(clientId).sendMessageToServer(RequestBuilder.shotsRequest(getShots(configuration)));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-
-
-
-
-        @Override
-        public void handleContinueNotification(ContinueNotification message, int clientId) {
-            LOGGER.info("ContinueNotification");
-
-        }
-
-        @Override
-        public void handleConnectionClosedReport(ConnectionClosedReport message, int clientId) {
-            LOGGER.info("ConnectionClosedReport");
-
-        }
-
-
-
-        @Override
-        public void handleGameJoinPlayer(GameJoinPlayerResponse message, int clientId) {
-            LOGGER.info("GameJoinPlayer");
-
-        }
-
-        @Override
-        public void handleGameJoinSpectator(GameJoinSpectatorResponse message, int clientId) {
-            LOGGER.info("GameJoinSpectator");
-
-        }
-
-        @Override
-        public void handleLeaveNotification(LeaveNotification message, int clientId) {
-            LOGGER.info("LeaveNotification");
-
-        }
-
-
-
-        @Override
-        public void handlePauseNotification(PauseNotification message, int clientId) {
-            LOGGER.info("PauseNotification");
-
-        }
-
-        @Override
-        public void handlePlaceShipsResponse(PlaceShipsResponse message, int clientId) {
-            LOGGER.info("PlaceShipsResponse");
-
-        }
-
-        @Override
-        public void handlePlayerUpdateNotification(PlayerUpdateNotification message, int clientId) {
-            LOGGER.info("PlayerUpdateNotification");
-
-        }
-
-        @Override
-        public void handleSpectatorUpdateNotification(SpectatorUpdateNotification message, int clientId) {
-            LOGGER.info("SpectatorUpdateNotification");
-
-        }
-
-        @Override
-        public void handlePointsResponse(PointsResponse message, int clientId) {
-            LOGGER.info("SpectatorPointsResponse");
-
-        }
-
-        @Override
-        public void handleRemainingTimeResponse(RemainingTimeResponse message, int clientId) {
-            LOGGER.info("RemainingTimeResponse");
-
-        }
-
-        @Override
-        public void handleShotsResponse(ShotsResponse message, int clientId) {
-            LOGGER.info("ShotsResponse");
-
-        }
-
-        @Override
-        public void handleSpectatorGameStateResponse(SpectatorGameStateResponse message, int clientId) {
-            LOGGER.info("SpectatorGameStateResponse");
-
-        }
-
-        @Override
-        public void handlePlayerGameStateResponse(PlayerGameStateResponse message, int clientId) {
-            LOGGER.info("PlayerGameStateResponse");
-
-        }
-
-
     }
 
     private static Map<Integer, PlacementInfo> getPlacement(Configuration configuration){
@@ -291,11 +200,11 @@ public class ServerTests {
 
     private static List<Shot> getShots(Configuration configuration){
         List<Shot> shots = Lists.newArrayList();
-        if(TestProperties.simple){
+        if (TestProperties.simple){
             shots.add(new Shot(ids.get(0), new Point2D(3, 4)));
             shots.add(new Shot(ids.get(0), new Point2D(3, 3)));
             shots.add(new Shot(ids.get(0), new Point2D(4, 3)));
-        }else {
+        } else {
             switch (TestProperties.testCase){
                 case 0:
                     if (RANDOM.nextBoolean()) {

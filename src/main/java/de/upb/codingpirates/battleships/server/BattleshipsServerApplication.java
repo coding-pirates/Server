@@ -1,17 +1,17 @@
 package de.upb.codingpirates.battleships.server;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import de.upb.codingpirates.battleships.network.dispatcher.MessageDispatcher;
 import de.upb.codingpirates.battleships.server.gui.util.ResourceBundleWrapper;
-import de.upb.codingpirates.battleships.server.network.ServerApplication;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
@@ -21,27 +21,23 @@ import java.util.ResourceBundle;
  */
 public final class BattleshipsServerApplication extends Application {
 
-    private final ServerApplication server;
+    @Nonnull
+    private final Injector injector;
 
     /**
-     * The title of the JavaFX application {@link Stage}.
+     * The title of this JavaFX application {@link Stage}.
      * 
      * @see #start(Stage) 
      */
     private static final String TITLE = "Battleships Server";
 
-    private static final Logger LOGGER = LogManager.getLogger();
-
-    public static void main(final String[] args) {
+    public static void main(final String... args) {
         launch(args);
     }
 
     public BattleshipsServerApplication() {
-        try {
-            server = new ServerApplication();
-        } catch (IllegalAccessException | InstantiationException e) {
-            throw new IllegalStateException("Server could not be created");
-        }
+        injector = Guice.createInjector(new ServerModule());
+        injector.getInstance(MessageDispatcher.class);
     }
 
     /**
@@ -61,7 +57,8 @@ public final class BattleshipsServerApplication extends Application {
      * @throws MissingResourceException If a {@code ResourceBundle} with the same name as the view
      *                                  could not be found.
      */
-    private <T extends Parent> T loadView(@NotNull final String name)
+    @SuppressWarnings("SameParameterValue")
+    private <T extends Parent> T loadView(@Nonnull final String name)
             throws IOException, MissingResourceException {
         final String fxmlPath       = String.format("/fxml/%s.fxml", name);
         final String bundleBaseName = String.format("lang.%s", name);
@@ -70,13 +67,13 @@ public final class BattleshipsServerApplication extends Application {
             BattleshipsServerApplication.class.getResource(fxmlPath),
             new ResourceBundleWrapper(ResourceBundle.getBundle(bundleBaseName))
         );
-        loader.setControllerFactory(server.getInjector()::getInstance);
+        loader.setControllerFactory(injector::getInstance);
 
         return loader.load();
     }
 
     @Override
-    public void start(@NotNull final Stage stage) throws Exception {
+    public void start(@Nonnull final Stage stage) throws Exception {
         stage.setOnCloseRequest(event -> {
             Platform.exit();
             System.exit(0);
