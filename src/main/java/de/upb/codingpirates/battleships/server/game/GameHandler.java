@@ -54,7 +54,7 @@ public class GameHandler implements Translator {
      * @see #playersById
      */
     @Nonnull
-    private final Map<Integer, Spectator> spectatorsById = Collections.synchronizedMap(Maps.newHashMap());
+    private final Map<Integer, AbstractClient> spectatorsById = Collections.synchronizedMap(Maps.newHashMap());
 
     /**
      * Maps IDs of {@link Client}s whose {@link ClientType} is {@link ClientType#PLAYER} to their {@link Field}s.
@@ -199,7 +199,7 @@ public class GameHandler implements Translator {
      * @throws InvalidActionException if game is full
      */
     public void addClient(@Nonnull AbstractClient client) throws InvalidActionException {
-        switch (client.getClientType()) {
+        switch (client.handleClientAs()) {
             case PLAYER:
                 if (playersById.size() >= game.getConfig().getMaxPlayerCount())
                     throw new InvalidActionException("game.isFull");
@@ -258,7 +258,7 @@ public class GameHandler implements Translator {
     }
 
     @Nonnull
-    public Collection<Spectator> getSpectators() {
+    public Collection<AbstractClient> getSpectators() {
         return spectatorsById.values();
     }
 
@@ -584,7 +584,7 @@ public class GameHandler implements Translator {
                     this.clientManager.sendMessageToInt(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.shotOwnShip")), entry.getKey());
                     continue;
                 }
-                ShotHit hit = fieldsByPlayerId.get(shot.getClientId()).hit(shot);
+                ShotHit hit = this.fieldsByPlayerId.get(shot.getClientId()).hit(shot);
                 switch (hit.getHitType()) {
                     case HIT:
                         hitToPoint.computeIfAbsent(HitType.HIT, hitType -> Lists.newArrayList()).add(hit.getShot());

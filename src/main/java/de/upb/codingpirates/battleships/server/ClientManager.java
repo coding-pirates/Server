@@ -21,7 +21,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Collection;
@@ -213,9 +212,18 @@ public class ClientManager implements ConnectionHandler, Translator {
     /**
      * @return Client for id or {@code null} if client id is not represent
      */
-    @Nullable
-    public AbstractClient getClient(int id) {
-        return this.clients.get(id);
+    @Nonnull
+    public AbstractClient getClient(int id) throws InvalidActionException {
+        if(clients.containsKey(id))
+            return this.clients.get(id);
+        throw new InvalidActionException("game.clientManager.clientNotExist");
+    }
+
+    /**
+     * @return Client for id or {@code null} if client id is not represent
+     */
+    public boolean existsClient(int id) {
+        return clients.containsKey(id);
     }
 
     @Override
