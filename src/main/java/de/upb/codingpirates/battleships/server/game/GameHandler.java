@@ -536,7 +536,6 @@ public class GameHandler implements Translator {
                 this.createEmptyScore();
             }
             this.sendUpdateNotification(EMPTY);
-            this.getAllClients().forEach(client ->this.removeClient(client.getId()));
         }
     }
 
