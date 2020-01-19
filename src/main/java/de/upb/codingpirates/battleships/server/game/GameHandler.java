@@ -454,19 +454,21 @@ public class GameHandler implements Translator {
                 }
                 break;
             case FINISHED:
-                OptionalInt winnerScore = score.values().stream().mapToInt(value -> value).max();
-                Collection<Integer> winner;
-                if(winnerScore.isPresent())
-                    winner = score.entrySet().stream().filter(entry -> entry.getValue() == winnerScore.getAsInt()).map(Map.Entry::getKey).collect(Collectors.toList());
-                else
-                    winner = Lists.newArrayList();
                 LOGGER.debug("Game {} has finished",game.getId());
-                this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, winner),getAllClients());
+                this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, getWinner()),getAllClients());
                 setState(GameState.FINISHED);
                 break;
             default:
                 break;
         }
+    }
+
+    public Collection<Integer> getWinner(){
+        OptionalInt winnerScore = score.values().stream().mapToInt(value -> value).max();
+        Collection<Integer> winner = Lists.newArrayList();
+        if(winnerScore.isPresent())
+            winner.addAll(score.entrySet().stream().filter(entry -> entry.getValue() == winnerScore.getAsInt()).map(Map.Entry::getKey).collect(Collectors.toList()));
+        return winner;
     }
 
     /**
