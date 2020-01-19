@@ -78,7 +78,7 @@ public class GameManager {
     public void addClientToGame(int gameId, @Nonnull AbstractClient client) throws GameException {
         LOGGER.debug(ServerMarker.GAME, "Adding client {}, with type {}, to game {}", client.getId(), client.getClientType(), gameId);
         if(this.clientToGame.containsKey(client.getId())){
-            if(client.getClientType().equals(ClientType.PLAYER)) {
+            if(client.getClientType().equals(ClientType.PLAYER) && client.handleClientAs().equals(ClientType.PLAYER)) {
                 GameHandler handler = this.gameHandlersById.get(this.clientToGame.get(client.getId()));
                 if(handler.getState().equals(GameState.FINISHED)){
                     this.clientToGame.remove(client.getId());
