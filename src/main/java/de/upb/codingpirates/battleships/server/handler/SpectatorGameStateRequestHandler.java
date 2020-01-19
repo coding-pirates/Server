@@ -31,7 +31,7 @@ public final class SpectatorGameStateRequestHandler extends AbstractServerMessag
     @Override
     public void handleMessage(@Nonnull final SpectatorGameStateRequest message, @Nonnull final Id connectionId) throws GameException {
         AbstractClient client = clientManager.getClient(connectionId.getInt());
-        if(client == null)
+        if (client == null)
             throw new InvalidActionException("player does not exists");
         if (!client.handleClientAs().equals(ClientType.SPECTATOR))
             throw new NotAllowedException("game.handler.spectatorGameStateRequest.noSpectator");
@@ -39,12 +39,12 @@ public final class SpectatorGameStateRequestHandler extends AbstractServerMessag
         final GameHandler handler = gameManager.getGameHandlerForClientId(connectionId.getInt());
 
         clientManager.sendMessageToId(
-            ResponseBuilder.spectatorGameStateResponse()
-                .players(handler.getPlayers())
-                .shots(handler.getShots())
-                .ships(handler.getStage().equals(GameStage.PLACESHIPS) || handler.getStage().equals(GameStage.START) ? EMPTY : handler.getStartShip())
-                .gameState(handler.getGame().getState())
-                .build(),
-            connectionId);
+                ResponseBuilder.spectatorGameStateResponse()
+                        .players(handler.getPlayers())
+                        .shots(handler.getShots())
+                        .ships(handler.getStage().equals(GameStage.PLACESHIPS) || handler.getStage().equals(GameStage.START) ? EMPTY : handler.getStartShip())
+                        .gameState(handler.getGame().getState())
+                        .build(),
+                connectionId);
     }
 }

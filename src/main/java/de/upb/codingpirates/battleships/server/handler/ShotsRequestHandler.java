@@ -26,14 +26,14 @@ public final class ShotsRequestHandler extends AbstractServerMessageHandler<Shot
     public void handleMessage(@Nonnull final ShotsRequest message, @Nonnull final Id connectionId) throws GameException {
 
         AbstractClient client = clientManager.getClient(connectionId.getInt());
-        if(client == null)
+        if (client == null)
             throw new InvalidActionException("player does not exists");
         if (!client.handleClientAs().equals(ClientType.PLAYER))
             throw new NotAllowedException("game.handler.gameJoinPlayerRequest.noPlayer");
 
         gameManager
-            .getGameHandlerForClientId(connectionId.getInt())
-            .addShotPlacement(connectionId.getInt(), message.getShots());
+                .getGameHandlerForClientId(connectionId.getInt())
+                .addShotPlacement(connectionId.getInt(), message.getShots());
         clientManager.sendMessageToId(ResponseBuilder.shotsResponse(), connectionId);
     }
 }

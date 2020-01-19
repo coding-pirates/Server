@@ -17,10 +17,10 @@
 <?import javafx.scene.text.Text?>
 
 <ScrollPane
-    xmlns:fx="http://javafx.com/fxml"
-    fx:controller="de.upb.codingpirates.battleships.server.gui.controllers.MainController"
-    fx:id="root"
-    stylesheets="@/css/main.css">
+  xmlns:fx="http://javafx.com/fxml"
+  fx:controller="de.upb.codingpirates.battleships.server.gui.controllers.MainController"
+  fx:id="root"
+  stylesheets="@/css/main.css">
   <VBox>
     <MenuBar>
       <Menu text="%menuBar.menu.file.text">

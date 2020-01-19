@@ -1,19 +1,15 @@
 package de.upb.codingpirates.battleships.server.gui.controllers;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.URL;
-import java.net.UnknownHostException;
-import java.util.ResourceBundle;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import javax.annotation.Nonnull;
-import javax.inject.Inject;
-
+import de.upb.codingpirates.battleships.ai.AI;
+import de.upb.codingpirates.battleships.logic.Client;
+import de.upb.codingpirates.battleships.logic.Game;
+import de.upb.codingpirates.battleships.logic.GameState;
 import de.upb.codingpirates.battleships.network.Properties;
+import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
+import de.upb.codingpirates.battleships.server.ClientManager;
+import de.upb.codingpirates.battleships.server.GameManager;
+import de.upb.codingpirates.battleships.server.game.GameHandler;
+import de.upb.codingpirates.battleships.server.gui.util.AlertBuilder;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -21,28 +17,26 @@ import javafx.collections.MapChangeListener;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
-import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.*;
 import javafx.scene.input.*;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.jetbrains.annotations.Contract;
 
-import de.upb.codingpirates.battleships.ai.AI;
-import de.upb.codingpirates.battleships.logic.Client;
-import de.upb.codingpirates.battleships.logic.Game;
-import de.upb.codingpirates.battleships.logic.GameState;
-import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
-import de.upb.codingpirates.battleships.server.ClientManager;
-import de.upb.codingpirates.battleships.server.GameManager;
-import de.upb.codingpirates.battleships.server.game.GameHandler;
-import de.upb.codingpirates.battleships.server.gui.util.AlertBuilder;
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.URL;
+import java.util.ResourceBundle;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * The controller associated with the {@code main.fxml} file.
- *
+ * <p>
  * Its main task is updating the {@link #gameTableView}, {@link #tournamentTableView}, and {@link #playerTableView}
  * when updates from the backing {@link GameManager}, {@link TournamentManager}, and {@link ClientManager} arrive.
  *
@@ -65,7 +59,7 @@ public final class MainController extends AbstractController<Parent> {
     private TableView<Client> playerTableView;
 
     private final ClientManager clientManager;
-    private final GameManager   gameManager;
+    private final GameManager gameManager;
 
     private final ExecutorService aiExecutorService = Executors.newCachedThreadPool();
 
@@ -75,14 +69,14 @@ public final class MainController extends AbstractController<Parent> {
      * @see #initializeTableViews()
      */
     private static final DataFormat SERIALIZED_MIME_TYPE =
-        new DataFormat("application/x-java-serialized-object");
+            new DataFormat("application/x-java-serialized-object");
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Inject
     public MainController(@Nonnull final ClientManager clientManager, @Nonnull final GameManager gameManager) {
         this.clientManager = clientManager;
-        this.gameManager   = gameManager;
+        this.gameManager = gameManager;
     }
 
     // <editor-fold desc="Initialization">
@@ -91,11 +85,11 @@ public final class MainController extends AbstractController<Parent> {
         super.initialize(url, resourceBundle);
 
         clientManager
-            .getPlayerMappings()
-            .addListener(this::onPlayerMappingsChange);
+                .getPlayerMappings()
+                .addListener(this::onPlayerMappingsChange);
         gameManager
-            .getGameMappings()
-            .addListener(this::onGameMappingsChange);
+                .getGameMappings()
+                .addListener(this::onGameMappingsChange);
 
         initializeTableViews();
     }
@@ -129,23 +123,21 @@ public final class MainController extends AbstractController<Parent> {
 
     /**
      * Factory method for instantiating a new {@link ContextMenu} for the provided {@link TableRow}.
-     *
+     * <p>
      * The created {@code ContextMenu} supports starting, pausing, unpausing, an aborting {@link Game}s via their
      * associated {@link GameHandler}.
      *
      * @param row The {@code TableRow} for which a new {@code ContextMenu} is to be created.
-     *
      * @return A new {@code ContextMenu} for the provided {@code row}.
-     *
      * @see #initializeTableViews()
      */
     @Nonnull
     @Contract("_ -> new")
     private ContextMenu newGameHandlerTableRowContextMenu(@Nonnull final TableRow<GameHandler> row) {
-        final MenuItem launchItem      = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.launch.text"));
+        final MenuItem launchItem = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.launch.text"));
         final MenuItem pauseResumeItem = new MenuItem();
-        final MenuItem abortItem       = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.abort.text"));
-        final MenuItem addAiItem       = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.addAi.text"));
+        final MenuItem abortItem = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.abort.text"));
+        final MenuItem addAiItem = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.addAi.text"));
 
         row.itemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue == null)
@@ -154,68 +146,68 @@ public final class MainController extends AbstractController<Parent> {
             final GameHandler handler = row.getItem();
 
             final BooleanBinding inProgress = handler.stateProperty().isEqualTo(GameState.IN_PROGRESS);
-            final BooleanBinding paused     = handler.stateProperty().isEqualTo(GameState.PAUSED);
+            final BooleanBinding paused = handler.stateProperty().isEqualTo(GameState.PAUSED);
 
             launchItem
-                .disableProperty()
-                .bind(handler.currentPlayerCountProperty().lessThan(GameHandler.MIN_PLAYER_COUNT));
+                    .disableProperty()
+                    .bind(handler.currentPlayerCountProperty().lessThan(GameHandler.MIN_PLAYER_COUNT));
             launchItem
-                .setOnAction(event -> handler.launchGame());
+                    .setOnAction(event -> handler.launchGame());
 
             pauseResumeItem
-                .disableProperty()
-                .bind(Bindings.not(inProgress.or(paused)));
+                    .disableProperty()
+                    .bind(Bindings.not(inProgress.or(paused)));
             pauseResumeItem
-                .textProperty()
-                .bind(
-                    Bindings
-                        .when(paused)
-                        .then(resourceBundle.getString("overview.game.table.contextMenu.resume.text"))
-                        .otherwise(resourceBundle.getString("overview.game.table.contextMenu.pause.text")));
+                    .textProperty()
+                    .bind(
+                            Bindings
+                                    .when(paused)
+                                    .then(resourceBundle.getString("overview.game.table.contextMenu.resume.text"))
+                                    .otherwise(resourceBundle.getString("overview.game.table.contextMenu.pause.text")));
             pauseResumeItem
-                .setOnAction(event -> {
-                    if (handler.getState() == GameState.PAUSED)
-                        handler.continueGame();
-                    else
-                        handler.pauseGame();
-                });
+                    .setOnAction(event -> {
+                        if (handler.getState() == GameState.PAUSED)
+                            handler.continueGame();
+                        else
+                            handler.pauseGame();
+                    });
 
             abortItem
-                .disableProperty()
-                .bind(handler.stateProperty().isEqualTo(GameState.FINISHED));
+                    .disableProperty()
+                    .bind(handler.stateProperty().isEqualTo(GameState.FINISHED));
             abortItem
-                .setOnAction(event ->
-                    AlertBuilder
-                        .of(AlertType.CONFIRMATION)
-                        .title(resourceBundle.getString("overview.game.table.contextMenu.abort.alert.title"))
-                        .headerText(resourceBundle.getString("overview.game.table.contextMenu.abort.alert.headerText"))
-                        .contentText(resourceBundle.getString("overview.game.table.contextMenu.abort.alert.contentText"))
-                        .buttonTypes(ButtonType.YES, ButtonType.NO)
-                        .build()
-                        .showAndWait()
-                        .ifPresent(alertResult -> handler.abortGame(alertResult == ButtonType.YES)));
+                    .setOnAction(event ->
+                            AlertBuilder
+                                    .of(AlertType.CONFIRMATION)
+                                    .title(resourceBundle.getString("overview.game.table.contextMenu.abort.alert.title"))
+                                    .headerText(resourceBundle.getString("overview.game.table.contextMenu.abort.alert.headerText"))
+                                    .contentText(resourceBundle.getString("overview.game.table.contextMenu.abort.alert.contentText"))
+                                    .buttonTypes(ButtonType.YES, ButtonType.NO)
+                                    .build()
+                                    .showAndWait()
+                                    .ifPresent(alertResult -> handler.abortGame(alertResult == ButtonType.YES)));
             addAiItem
-                .disableProperty()
-                .bind(
-                    handler.stateProperty().isNotEqualTo(GameState.LOBBY)
-                        .or(handler.currentPlayerCountProperty().isEqualTo(handler.getMaxPlayerCount())));
+                    .disableProperty()
+                    .bind(
+                            handler.stateProperty().isNotEqualTo(GameState.LOBBY)
+                                    .or(handler.currentPlayerCountProperty().isEqualTo(handler.getMaxPlayerCount())));
             addAiItem
-                .setOnAction(event -> aiExecutorService.submit(() -> {
-                    final AI ai = new AI(UUID.randomUUID().toString(), 1);
+                    .setOnAction(event -> aiExecutorService.submit(() -> {
+                        final AI ai = new AI(UUID.randomUUID().toString(), 1);
 
-                    try {
-                        ai.connect(InetAddress.getLocalHost().getHostName(), Properties.PORT);
-                    } catch (final IOException exception) {
-                        LOGGER.error(exception);
-                    }
-                }));
+                        try {
+                            ai.connect(InetAddress.getLocalHost().getHostName(), Properties.PORT);
+                        } catch (final IOException exception) {
+                            LOGGER.error(exception);
+                        }
+                    }));
         });
         return new ContextMenu(
-            launchItem,
-            pauseResumeItem,
-            abortItem,
-            new SeparatorMenuItem(),
-            addAiItem);
+                launchItem,
+                pauseResumeItem,
+                abortItem,
+                new SeparatorMenuItem(),
+                addAiItem);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -264,8 +256,8 @@ public final class MainController extends AbstractController<Parent> {
             row.setOnDragDetected(event -> {
                 if (row.isEmpty())
                     return;
-                final ClipboardContent content   = new ClipboardContent();
-                final Dragboard        dragboard = row.startDragAndDrop(TransferMode.LINK);
+                final ClipboardContent content = new ClipboardContent();
+                final Dragboard dragboard = row.startDragAndDrop(TransferMode.LINK);
 
                 LOGGER.trace(CONTROLLER_MARKER, "Detected drag for content '{}'.", row.getItem());
 

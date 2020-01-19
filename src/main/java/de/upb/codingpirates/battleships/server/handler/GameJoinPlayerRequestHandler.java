@@ -34,10 +34,10 @@ public final class GameJoinPlayerRequestHandler extends AbstractServerMessageHan
             throw new NotAllowedException("game.handler.gameJoinPlayerRequest.noPlayer");
 
         final GameState gameState =
-            gameManager
-                .getGameHandler(message.getGameId())
-                .getGame()
-                .getState();
+                gameManager
+                        .getGameHandler(message.getGameId())
+                        .getGame()
+                        .getState();
 
         switch (gameState) {
         case IN_PROGRESS:

@@ -127,13 +127,13 @@ public class GameHandler implements Translator {
     private static final int MAX_SPECTATOR_COUNT = Integer.MAX_VALUE;
 
     public GameHandler(@Nonnull final String name, final int id, @Nonnull final Configuration config, final boolean tournament, @Nonnull final ClientManager clientManager) {
-        this.game          = new Game(id, name, getState(), config, tournament);
+        this.game = new Game(id, name, getState(), config, tournament);
         this.clientManager = clientManager;
 
         currentPlayerCountProperty.addListener((observable, oldValue, newValue) ->
-            game.setCurrentPlayerCount(newValue.intValue()));
+                game.setCurrentPlayerCount(newValue.intValue()));
         stateProperty.addListener((observable, oldValue, newValue) ->
-            game.setState(newValue));
+                game.setState(newValue));
     }
 
     /*
@@ -197,6 +197,7 @@ public class GameHandler implements Translator {
 
     /**
      * adds the client as the spectator or player to the game
+     *
      * @throws InvalidActionException if game is full
      */
     public void addClient(@Nonnull AbstractClient client) throws InvalidActionException {
@@ -204,7 +205,7 @@ public class GameHandler implements Translator {
             case PLAYER:
                 if (playersById.size() >= game.getConfig().getMaxPlayerCount())
                     throw new InvalidActionException("game.isFull");
-                playersById.put(client.getId(), (Client)client);
+                playersById.put(client.getId(), (Client) client);
                 fieldsByPlayerId.put(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(), client.getId()));
                 currentPlayerCountProperty.set(currentPlayerCountProperty.get() + 1);
                 break;
@@ -431,13 +432,13 @@ public class GameHandler implements Translator {
                     this.sendUpdateNotification(newHits);
 
                     this.deadPlayer.forEach(client -> {
-                        LOGGER.info(ServerMarker.GAME, "{} has lost",client);
+                        LOGGER.info(ServerMarker.GAME, "{} has lost", client);
                         this.ships.remove(client.getId());
                         this.removeDeadPlayer(client);
                     });
-                    if(ships.size() <= 1){
+                    if (ships.size() <= 1) {
                         this.stage = GameStage.FINISHED;
-                    }else {
+                    } else {
                         clientManager.sendMessageToClients(NotificationBuilder.roundStartNotification(), getAllClients());
                     }
                 }
@@ -453,12 +454,12 @@ public class GameHandler implements Translator {
             case FINISHED:
                 OptionalInt winnerScore = score.values().stream().mapToInt(value -> value).max();
                 Collection<Integer> winner;
-                if(winnerScore.isPresent())
+                if (winnerScore.isPresent())
                     winner = score.entrySet().stream().filter(entry -> entry.getValue() == winnerScore.getAsInt()).map(Map.Entry::getKey).collect(Collectors.toList());
                 else
                     winner = Lists.newArrayList();
-                LOGGER.debug("Game {} has finished",game.getId());
-                this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, winner),getAllClients());
+                LOGGER.debug("Game {} has finished", game.getId());
+                this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, winner), getAllClients());
                 setState(GameState.FINISHED);
                 break;
             default:
@@ -502,7 +503,7 @@ public class GameHandler implements Translator {
     public void pauseGame() {
         if (getState() == GameState.IN_PROGRESS) {
             this.game.setState(GameState.PAUSED);
-            switch (stage){
+            switch (stage) {
                 case VISUALIZATION:
                     this.pauseTimeCache = getConfiguration().getVisualizationTime() - (System.currentTimeMillis() - timeStamp);
                     break;
@@ -528,6 +529,7 @@ public class GameHandler implements Translator {
 
     /**
      * stops game
+     *
      * @param points if {@code false} all points will be set to 0
      */
     public void abortGame(boolean points) {
@@ -537,7 +539,7 @@ public class GameHandler implements Translator {
                 this.createEmptyScore();
             }
             this.sendUpdateNotification(EMPTY);
-            this.getAllClients().forEach(client ->this.removeClient(client.getId()));
+            this.getAllClients().forEach(client -> this.removeClient(client.getId()));
         }
     }
 
@@ -570,12 +572,12 @@ public class GameHandler implements Translator {
     private void performShots() {
         this.newHits.clear();
         List<Ship> sunkShips = Lists.newArrayList();
-        Map<Shot,List<Integer>> shotListMap = Maps.newHashMap();
+        Map<Shot, List<Integer>> shotListMap = Maps.newHashMap();
         Map<HitType, List<Shot>> hitToPoint = Maps.newHashMap();
         for (Map.Entry<Integer, Collection<Shot>> entry : shots.entrySet()) {
             for (Shot shot : entry.getValue()) {
-                shotListMap.compute(shot, (shot1, list) ->{
-                    if(list != null){
+                shotListMap.compute(shot, (shot1, list) -> {
+                    if (list != null) {
                         list.add(entry.getKey());
                         return list;
                     }
@@ -616,23 +618,10 @@ public class GameHandler implements Translator {
             }
         }
         //add points for each hit to the player who shot a Shot at a position
-        if(hitToPoint.containsKey(HitType.HIT)){
-            for(Shot shot : hitToPoint.get(HitType.HIT)) {
+        if (hitToPoint.containsKey(HitType.HIT)) {
+            for (Shot shot : hitToPoint.get(HitType.HIT)) {
                 int points = getConfiguration().getHitPoints() / shotListMap.get(shot).size();
-                shotListMap.get(shot).forEach( client ->
-                score.compute(client, (id, point) -> {
-                    if (point == null) {
-                        return points;
-                    } else {
-                        return point + points;
-                    }
-                }));
-            }
-        }
-        if(hitToPoint.containsKey(HitType.SUNK)){
-            for(Shot shot : hitToPoint.get(HitType.SUNK)) {
-                int points = getConfiguration().getSunkPoints() / shotListMap.get(shot).size();
-                shotListMap.get(shot).forEach( client ->
+                shotListMap.get(shot).forEach(client ->
                         score.compute(client, (id, point) -> {
                             if (point == null) {
                                 return points;
@@ -642,30 +631,43 @@ public class GameHandler implements Translator {
                         }));
             }
         }
-        Map<Integer,List<Integer>> remove = Maps.newHashMap();
+        if (hitToPoint.containsKey(HitType.SUNK)) {
+            for (Shot shot : hitToPoint.get(HitType.SUNK)) {
+                int points = getConfiguration().getSunkPoints() / shotListMap.get(shot).size();
+                shotListMap.get(shot).forEach(client ->
+                        score.compute(client, (id, point) -> {
+                            if (point == null) {
+                                return points;
+                            } else {
+                                return point + points;
+                            }
+                        }));
+            }
+        }
+        Map<Integer, List<Integer>> remove = Maps.newHashMap();
         this.ships.forEach((clientId, ships) -> ships.forEach((shipId, ship) -> {
-            if(sunkShips.contains(ship)){
+            if (sunkShips.contains(ship)) {
                 remove.computeIfAbsent(clientId, id -> Lists.newArrayList()).add(shipId);
             }
         }));
-        remove.forEach((clientId, ships) -> ships.forEach( ship -> this.ships.get(clientId).remove(ship)));
-        this.ships.forEach((clientId, ships)->{
-            if(ships.isEmpty()){
+        remove.forEach((clientId, ships) -> ships.forEach(ship -> this.ships.get(clientId).remove(ship)));
+        this.ships.forEach((clientId, ships) -> {
+            if (ships.isEmpty()) {
                 Client player = this.playersById.get(clientId);
                 this.deadPlayer.add(player);
                 this.livingPlayer.remove(player);
             }
         });
         this.shots.clear();
-        if(shots.size() < livingPlayer.size()){
-            for (Client player : livingPlayer){
-                if(!shots.containsKey(player.getId())){
-                    switch (getConfiguration().getPenaltyKind()){
+        if (shots.size() < livingPlayer.size()) {
+            for (Client player : livingPlayer) {
+                if (!shots.containsKey(player.getId())) {
+                    switch (getConfiguration().getPenaltyKind()) {
                         case KICK:
                             this.removeClient(player.getId());
                             break;
                         case POINTLOSS:
-                            this.score.compute(player.getId(), (id, oldValue)-> oldValue != null? oldValue - getConfiguration().getPenaltyMinusPoints() * 4 : - getConfiguration().getPenaltyMinusPoints() * 4);
+                            this.score.compute(player.getId(), (id, oldValue) -> oldValue != null ? oldValue - getConfiguration().getPenaltyMinusPoints() * 4 : -getConfiguration().getPenaltyMinusPoints() * 4);
                             break;
                         default:
                             break;
@@ -677,9 +679,10 @@ public class GameHandler implements Translator {
 
     /**
      * removed dead player
+     *
      * @param client
      */
-    private void removeDeadPlayer(Client client){
+    private void removeDeadPlayer(Client client) {
         client.setDead(true);
     }
 
@@ -695,7 +698,7 @@ public class GameHandler implements Translator {
      * @return remaining round time
      * @throws InvalidActionException if there is no round running
      */
-    public long getRemainingTime() throws InvalidActionException{
+    public long getRemainingTime() throws InvalidActionException {
         if (getState() != GameState.IN_PROGRESS && getState() != GameState.PAUSED)
             throw new InvalidActionException("game.noTimerActive");
         if (getState() == GameState.PAUSED)

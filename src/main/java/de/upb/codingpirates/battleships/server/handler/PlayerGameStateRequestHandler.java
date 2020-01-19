@@ -27,7 +27,7 @@ public final class PlayerGameStateRequestHandler extends AbstractServerMessageHa
     public void handleMessage(@Nonnull final PlayerGameStateRequest message, @Nonnull final Id connectionId) throws GameException {
 
         AbstractClient client = clientManager.getClient(connectionId.getInt());
-        if(client == null)
+        if (client == null)
             throw new InvalidActionException("player does not exists");
         if (!client.handleClientAs().equals(ClientType.PLAYER))
             throw new NotAllowedException("game.handler.gameJoinPlayerRequest.noPlayer");
@@ -35,13 +35,13 @@ public final class PlayerGameStateRequestHandler extends AbstractServerMessageHa
         final GameHandler handler = gameManager.getGameHandlerForClientId(connectionId.getInt());
 
         clientManager.sendMessageToId(
-            ResponseBuilder.playerGameStateResponse()
-                .gameState(handler.getGame().getState())
-                .hits(handler.getHitShots())
-                .sunk(handler.getSunkShots())
-                .ships(handler.getStartShip().get(connectionId.getInt()))
-                .players(handler.getPlayers())
-                .build(),
-            connectionId);
+                ResponseBuilder.playerGameStateResponse()
+                        .gameState(handler.getGame().getState())
+                        .hits(handler.getHitShots())
+                        .sunk(handler.getSunkShots())
+                        .ships(handler.getStartShip().get(connectionId.getInt()))
+                        .players(handler.getPlayers())
+                        .build(),
+                connectionId);
     }
 }

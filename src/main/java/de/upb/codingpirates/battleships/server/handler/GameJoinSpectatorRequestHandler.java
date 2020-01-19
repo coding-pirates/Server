@@ -20,7 +20,7 @@ public final class GameJoinSpectatorRequestHandler extends AbstractServerMessage
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Inject
-    public GameJoinSpectatorRequestHandler(@Nonnull final ClientManager clientManager, @Nonnull final GameManager   gameManager) {
+    public GameJoinSpectatorRequestHandler(@Nonnull final ClientManager clientManager, @Nonnull final GameManager gameManager) {
         super(clientManager, gameManager, GameJoinSpectatorRequest.class);
     }
 
@@ -35,7 +35,7 @@ public final class GameJoinSpectatorRequestHandler extends AbstractServerMessage
         if (client == null) {
             LOGGER.error("Cannot get Client for id {}", connectionId);
             return;
-        } else if(client.getClientType() != ClientType.SPECTATOR){
+        } else if (client.getClientType() != ClientType.SPECTATOR) {
             LOGGER.error("Player {} tried to join as spectator", connectionId);
             return;
         }

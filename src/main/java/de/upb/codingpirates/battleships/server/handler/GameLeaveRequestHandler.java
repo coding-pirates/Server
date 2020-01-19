@@ -23,7 +23,7 @@ public final class GameLeaveRequestHandler extends AbstractServerMessageHandler<
 
     @Override
     protected void handleMessage(GameLeaveRequest message, Id connectionId) throws GameException {
-        if(this.clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.PLAYER)) {
+        if (this.clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.PLAYER)) {
             Collection<Client> players = this.gameManager.getGameHandlerForClientId(connectionId.getInt()).getPlayers();
             players.removeIf(player -> connectionId.getInt() == player.getId());
             this.clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(connectionId.getInt()), players);

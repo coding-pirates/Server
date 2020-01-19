@@ -13,7 +13,6 @@ import org.apache.logging.log4j.MarkerManager;
 /**
  * @param <T> The type of the object contained within the FXML file.
  *            Must be a subtype of {@link Parent}, as it is expected to belong to a view.
- *
  * @author Andre Blanke
  */
 abstract class AbstractController<T extends Parent> implements Initializable {

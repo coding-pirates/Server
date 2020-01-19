@@ -559,17 +559,17 @@ public final class ConfigurationController extends AbstractController<Parent> {
             displayInsufficientFieldSizeAlert(exception.getRecommendedSize());
         } catch (final IOException exception) {
             final String contentText =
-                String.format(resourceBundle.getString("configuration.export.exceptionAlert.contentText"), exportPath);
+                    String.format(resourceBundle.getString("configuration.export.exceptionAlert.contentText"), exportPath);
 
             LOGGER.error(exception);
 
             AlertBuilder
-                .ofThrowable(exception, resourceBundle.getString("configuration.export.exceptionAlert.labelText"))
-                .title(resourceBundle.getString("configuration.export.exceptionAlert.title"))
-                .headerText(resourceBundle.getString("configuration.export.exceptionAlert.headerText"))
-                .contentText(contentText)
-                .build()
-                .showAndWait();
+                    .ofThrowable(exception, resourceBundle.getString("configuration.export.exceptionAlert.labelText"))
+                    .title(resourceBundle.getString("configuration.export.exceptionAlert.title"))
+                    .headerText(resourceBundle.getString("configuration.export.exceptionAlert.headerText"))
+                    .contentText(contentText)
+                    .build()
+                    .showAndWait();
         }
     }
 
@@ -592,17 +592,17 @@ public final class ConfigurationController extends AbstractController<Parent> {
             setControlsFromConfiguration(gson.fromJson(configurationJson, Configuration.class));
         } catch (final IOException exception) {
             final String contentText =
-                String.format(resourceBundle.getString("configuration.import.exceptionAlert.contentText"), target);
+                    String.format(resourceBundle.getString("configuration.import.exceptionAlert.contentText"), target);
 
             LOGGER.error(exception);
 
             AlertBuilder
-                .ofThrowable(exception, resourceBundle.getString("configuration.import.exceptionAlert.labelText"))
-                .title(resourceBundle.getString("configuration.import.exceptionAlert.title"))
-                .headerText(resourceBundle.getString("configuration.import.exceptionAlert.headerText"))
-                .contentText(contentText)
-                .build()
-                .showAndWait();
+                    .ofThrowable(exception, resourceBundle.getString("configuration.import.exceptionAlert.labelText"))
+                    .title(resourceBundle.getString("configuration.import.exceptionAlert.title"))
+                    .headerText(resourceBundle.getString("configuration.import.exceptionAlert.headerText"))
+                    .contentText(contentText)
+                    .build()
+                    .showAndWait();
         }
     }
     // </editor-fold>

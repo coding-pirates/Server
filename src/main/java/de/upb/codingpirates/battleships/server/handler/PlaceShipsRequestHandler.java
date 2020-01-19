@@ -30,7 +30,7 @@ public final class PlaceShipsRequestHandler extends AbstractServerMessageHandler
         LOGGER.debug(ServerMarker.HANDLER, "Handling PlaceShipsRequest from clientId {}.", connectionId.getInt());
 
         AbstractClient client = clientManager.getClient(connectionId.getInt());
-        if(client == null)
+        if (client == null)
             throw new InvalidActionException("player does not exists");
         if (!client.handleClientAs().equals(ClientType.PLAYER))
             throw new NotAllowedException("game.handler.gameJoinPlayerRequest.noPlayer");
@@ -38,8 +38,8 @@ public final class PlaceShipsRequestHandler extends AbstractServerMessageHandler
         final int clientId = connectionId.getInt();
 
         gameManager
-            .getGameHandlerForClientId(connectionId.getInt())
-            .addShipPlacement(clientId, message.getPositions());
+                .getGameHandlerForClientId(connectionId.getInt())
+                .addShipPlacement(clientId, message.getPositions());
         clientManager.sendMessageToId(ResponseBuilder.placeShipsResponse(), connectionId);
     }
 }
