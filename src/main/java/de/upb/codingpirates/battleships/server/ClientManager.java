@@ -125,7 +125,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      * @param clients
      */
     public void sendMessageToClients(Message message, Collection<? extends AbstractClient> clients) {
-        this.sendMessage(message, (AbstractClient[])clients.toArray());
+        this.sendMessage(message, clients.toArray(new AbstractClient[0]));
     }
 
     /**
