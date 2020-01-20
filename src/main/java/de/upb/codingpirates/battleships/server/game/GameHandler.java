@@ -443,7 +443,6 @@ public class GameHandler implements Translator {
                         clientManager.sendMessageToClients(NotificationBuilder.roundStartNotification(), getAllClients());
                     }
                 }
-
                 break;
             case SHOTS:
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().getRoundTime()) {
@@ -657,22 +656,6 @@ public class GameHandler implements Translator {
                 this.livingPlayer.remove(player);
             }
         });
-        if(shots.size() < livingPlayer.size()){
-            for (Client player : livingPlayer){
-                if(!shots.containsKey(player.getId())){
-                    switch (getConfiguration().getPenaltyKind()){
-                        case KICK:
-                            this.removeClient(player.getId());
-                            break;
-                        case POINTLOSS:
-                            this.score.compute(player.getId(), (id, oldValue)-> oldValue != null? oldValue - getConfiguration().getPenaltyMinusPoints() * 4 : - getConfiguration().getPenaltyMinusPoints() * 4);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-        }
         this.shots.clear();
     }
 
