@@ -6,6 +6,7 @@ import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.request.GameJoinSpectatorRequest;
+import de.upb.codingpirates.battleships.network.message.response.ResponseBuilder;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
@@ -31,5 +32,8 @@ public final class GameJoinSpectatorRequestHandler extends AbstractServerMessage
         if (client.getClientType().equals(ClientType.PLAYER)) {
             ((Client)client).setSpectator(true);
         }
+
+        gameManager.addClientToGame(message.getGameId(), client);
+        clientManager.sendMessageToClient(ResponseBuilder.gameJoinSpectatorResponse(message.getGameId()), clientManager.getClient(connectionId.getInt()));
     }
 }
