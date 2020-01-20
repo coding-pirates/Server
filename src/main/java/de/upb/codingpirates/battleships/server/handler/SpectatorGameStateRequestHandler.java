@@ -47,7 +47,7 @@ public final class SpectatorGameStateRequestHandler extends AbstractServerMessag
                                 .build(),
                         connectionId);
                 if(handler.getState().equals(GameState.FINISHED)){
-                    clientManager.sendMessageToClient(NotificationBuilder.finishNotification(handler.getScore(), handler.getWinner()));
+                    clientManager.sendMessageToId(NotificationBuilder.finishNotification(handler.getScore(), handler.getWinner()), connectionId);
                 }
         }
     }
