@@ -125,6 +125,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      * @param clients
      */
     public void sendMessageToClients(Message message, Collection<? extends AbstractClient> clients) {
+        if(clients.size()<=0)return;
         this.sendMessage(message, clients.toArray(new AbstractClient[0]));
     }
 
@@ -135,13 +136,13 @@ public class ClientManager implements ConnectionHandler, Translator {
      * @param clients
      */
     @SafeVarargs
-    public final <T extends AbstractClient> void sendMessage(Message message, @Nonnull T... clients) {
-        for (AbstractClient client : clients) {
-            try {
-                this.connectionManager.send(new Id(client.getId()), message);
-            } catch (IOException e) {
-                LOGGER.error(ServerMarker.CONNECTION, "could not send message", e);
-            }
+    public final <T extends AbstractClient> void sendMessage(Message message, T... clients) {
+        if(clients == null || clients.length == 0) {
+            LOGGER.debug(ServerMarker.CLIENT, "Didn't send {} to clients. Clients are empty", message);
+            return;
+        }
+        for (AbstractClient client1 : clients) {
+            this.send(message, new Id(client1.getId()));
         }
     }
 
@@ -151,13 +152,13 @@ public class ClientManager implements ConnectionHandler, Translator {
      * @param message
      * @param clients
      */
-    public void sendMessage(Message message, @Nonnull Integer... clients) {
+    public void sendMessage(Message message, int... clients) {
+        if(clients == null || clients.length == 0) {
+            LOGGER.debug(ServerMarker.CLIENT, "Didn't send {} to clients. Clients are empty", message);
+            return;
+        }
         for (Integer clientId : clients) {
-            try {
-                this.connectionManager.send(new Id(clientId), message);
-            } catch (IOException e) {
-                LOGGER.error(ServerMarker.CONNECTION, "could not send message", e);
-            }
+            this.send(message, new Id(clientId));
         }
     }
 
@@ -167,13 +168,21 @@ public class ClientManager implements ConnectionHandler, Translator {
      * @param message
      * @param clients
      */
-    public void sendMessage(Message message, @Nonnull Id... clients) {
-        for (Id clientId : clients) {
-            try {
-                this.connectionManager.send(clientId, message);
-            } catch (IOException e) {
-                LOGGER.error(ServerMarker.CONNECTION, "could not send message", e);
-            }
+    public void sendMessage(Message message, Id... clients) {
+        if(clients == null || clients.length == 0) {
+            LOGGER.debug(ServerMarker.CLIENT, "Didn't send {} to clients. Clients are empty", message);
+            return;
+        }
+        for (Id client1 : clients) {
+            this.send(message, client1);
+        }
+    }
+
+    private void send(Message message, Id id){
+        try {
+            this.connectionManager.send(id, message);
+        } catch (IOException e) {
+            LOGGER.error(ServerMarker.CONNECTION, "could not send message", e);
         }
     }
 

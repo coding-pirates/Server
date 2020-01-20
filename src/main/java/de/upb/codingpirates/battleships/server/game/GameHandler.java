@@ -336,10 +336,11 @@ public class GameHandler implements Translator {
      * @param ships map from ship id to placementinfo
      * @throws GameException if to many ships have been placed or the ships for the player has already been placed
      */
-    public void addShipPlacement(int clientId,@Nonnull Map<Integer, PlacementInfo> ships) throws GameException {
+    public void addShipPlacement(int clientId, @Nonnull Map<Integer, PlacementInfo> ships) throws GameException {
         if(this.getStage().equals(GameStage.PLACESHIPS)) {
             if (ships.size() > getConfiguration().getShips().size()) {
                 LOGGER.debug("Client {} would have set to many ships", clientId);
+                applyPenalty(clientId);
                 throw new NotAllowedException("game.player.toManyShips");
             }
             this.startShip.put(clientId, ships);
@@ -353,6 +354,18 @@ public class GameHandler implements Translator {
         }
     }
 
+    private void applyPenalty(int clientId){
+        switch (getConfiguration().getPenaltyKind()){
+            case KICK:
+                this.removeInactivePlayer(clientId);
+            case POINTLOSS:
+                this.score.compute(clientId, (clientId1, score) -> score == null?-getConfiguration().getPenaltyMinusPoints():score - getConfiguration().getPenaltyMinusPoints());
+                break;
+            default:
+                break;
+        }
+    }
+
     /**
      * adds shots placement for a player
      * @param clientId id of the player
@@ -361,6 +374,7 @@ public class GameHandler implements Translator {
      */
     public void addShotPlacement(int clientId,@Nonnull Collection<Shot> shots) throws GameException {
         if (shots.size() > getConfiguration().getShotCount()) {
+            applyPenalty(clientId);
             throw new NotAllowedException("game.player.toManyShots");
         }
         for (Shot shot: shots){
@@ -552,7 +566,7 @@ public class GameHandler implements Translator {
                 }
             }
         }
-        List<Client> clients1 = playersById.entrySet().stream().filter(integerClientEntry -> !clients.contains(integerClientEntry.getKey())).map(Map.Entry::getValue).collect(Collectors.toList());
+        int[] clients1 = playersById.keySet().stream().filter(client -> !clients.contains(client)).mapToInt(i -> i).toArray();
         this.removeInactivePlayer(clients1);
     }
 
@@ -660,9 +674,11 @@ public class GameHandler implements Translator {
     /**
      * removes player that didn't placed their ships
      */
-    private void removeInactivePlayer(Collection<Client> clients) {
-        clientManager.sendMessageToClients(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, PlaceShipsRequest.MESSAGE_ID, translate("game.player.noPlacedShips")), clients);
-        clients.forEach(client -> this.removeClient(client.getId()));
+    private void removeInactivePlayer(int... clients) {
+        clientManager.sendMessage(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, PlaceShipsRequest.MESSAGE_ID, translate("game.player.noPlacedShips")), clients);
+        for(Integer clientId: clients){
+            this.removeClient(clientId);
+        }
     }
 
     /**
@@ -692,7 +708,7 @@ public class GameHandler implements Translator {
     private void sendUpdateNotification(List<Shot> hitShots) {
         this.clientManager.sendMessageToClients(NotificationBuilder.playerUpdateNotification(hitShots, score, this.sunkShots), this.livingPlayer);
         SpectatorUpdateNotification spectatorUpdateNotification = NotificationBuilder.spectatorUpdateNotification(hitShots, this.score, this.sunkShots, this.missedShots);
-        this.clientManager.sendMessageToClients(spectatorUpdateNotification, this.spectatorsById.values());
+        this.clientManager.sendMessageToClients(spectatorUpdateNotification, Lists.newArrayList(this.spectatorsById.values()));
         this.clientManager.sendMessageToClients(spectatorUpdateNotification, this.deadPlayer);
     }
 
