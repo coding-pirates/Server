@@ -229,6 +229,7 @@ public class GameHandler implements Translator {
             this.ships.remove(clientId);
             this.startShip.remove(clientId);
 
+            this.testGameFinished();
             currentPlayerCountProperty.set(getCurrentPlayerCount() - 1);
             clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(clientId), getAllClients());
         }
@@ -432,16 +433,7 @@ public class GameHandler implements Translator {
                     this.stage = GameStage.SHOTS;
                     this.timeStamp = System.currentTimeMillis();
 
-                    this.deadPlayer.forEach(client -> {
-                        LOGGER.info(ServerMarker.GAME, "{} has lost",client);
-                        this.ships.remove(client.getId());
-                        this.removeDeadPlayer(client);
-                    });
-                    if(ships.size() <= 1){
-                        this.stage = GameStage.FINISHED;
-                    }else {
-                        clientManager.sendMessageToClients(NotificationBuilder.roundStartNotification(), getAllClients());
-                    }
+                    this.deadPlayer.forEach(this::removeDeadPlayer);
                 }
                 break;
             case SHOTS:
@@ -642,20 +634,7 @@ public class GameHandler implements Translator {
                         }));
             }
         }
-        Map<Integer,List<Integer>> remove = Maps.newHashMap();
-        this.ships.forEach((clientId, ships) -> ships.forEach((shipId, ship) -> {
-            if(sunkShips.contains(ship)){
-                remove.computeIfAbsent(clientId, id -> Lists.newArrayList()).add(shipId);
-            }
-        }));
-        remove.forEach((clientId, ships) -> ships.forEach( ship -> this.ships.get(clientId).remove(ship)));
-        this.ships.forEach((clientId, ships)->{
-            if(ships.isEmpty()){
-                Client player = this.playersById.get(clientId);
-                this.deadPlayer.add(player);
-                this.livingPlayer.remove(player);
-            }
-        });
+        this.ships.values().forEach(map -> map.values().removeIf(sunkShips::contains));
         this.shots.clear();
     }
 
@@ -664,7 +643,18 @@ public class GameHandler implements Translator {
      * @param client
      */
     private void removeDeadPlayer(Client client){
+        LOGGER.info(ServerMarker.GAME, "{} has lost",client);
+        this.ships.remove(client.getId());
         client.setDead(true);
+        this.testGameFinished();
+    }
+
+    private void testGameFinished(){
+        if(ships.size() <= 1){
+            this.stage = GameStage.FINISHED;
+        }else {
+            clientManager.sendMessageToClients(NotificationBuilder.roundStartNotification(), getAllClients());
+        }
     }
 
     /**
