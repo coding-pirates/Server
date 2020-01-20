@@ -560,9 +560,6 @@ public class GameHandler implements Translator {
                     this.ships.computeIfAbsent(clientEntry.getKey(), id -> Maps.newHashMap()).put(shipEntry.getKey(), ship);
                 }
             }
-            if(clientEntry.getValue().size() < getConfiguration().getShips().size()){
-                this.placeRandomShips(clientEntry.getKey(),clientEntry.getValue());
-            }
         }
         List<Client> clients1 = playersById.entrySet().stream().filter(integerClientEntry -> !clients.contains(integerClientEntry.getKey())).map(Map.Entry::getValue).collect(Collectors.toList());
         this.removeInactivePlayer(clients1);
@@ -724,15 +721,6 @@ public class GameHandler implements Translator {
         SpectatorUpdateNotification spectatorUpdateNotification = NotificationBuilder.spectatorUpdateNotification(hitShots, this.score, this.sunkShots, this.missedShots);
         this.clientManager.sendMessageToClients(spectatorUpdateNotification, this.spectatorsById.values());
         this.clientManager.sendMessageToClients(spectatorUpdateNotification, this.deadPlayer);
-    }
-
-    /**
-     * place all not placed ships randomly to their field
-     * @param client client id
-     * @param alreadyPlaced all already placed ships
-     */
-    private void placeRandomShips(int client, Map<Integer, PlacementInfo> alreadyPlaced){
-        //TODO fill
     }
 
     private void createEmptyScore(){
