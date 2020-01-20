@@ -25,6 +25,6 @@ public final class PointsRequestHandler extends AbstractServerMessageHandler<Poi
             gameManager
                 .getGameHandlerForClientId(connectionId.getInt())
                 .getScore();
-        clientManager.sendMessageToId(ResponseBuilder.pointsResponse(scores), connectionId);
+        clientManager.sendMessage(ResponseBuilder.pointsResponse(scores), connectionId);
     }
 }

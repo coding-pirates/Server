@@ -34,7 +34,7 @@ public final class PlaceShipsRequestHandler extends AbstractServerMessageHandler
             case PLAYER:
                 if(!((Client)client).isDead()){
                     gameManager.getGameHandlerForClientId(connectionId.getInt()).addShipPlacement(connectionId.getInt(), message.getPositions());
-                    clientManager.sendMessageToId(ResponseBuilder.placeShipsResponse(), connectionId);
+                    clientManager.sendMessage(ResponseBuilder.placeShipsResponse(), connectionId);
                     break;
                 }
             case SPECTATOR:

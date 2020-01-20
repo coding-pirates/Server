@@ -31,7 +31,7 @@ public final class GameLeaveRequestHandler extends AbstractServerMessageHandler<
                 this.clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(connectionId.getInt()), players);
             case SPECTATOR:
                 this.gameManager.removeClientFromGame(connectionId.getInt());
-                this.clientManager.sendMessageToId(ResponseBuilder.gameLeaveResponse(), connectionId);
+                this.clientManager.sendMessage(ResponseBuilder.gameLeaveResponse(), connectionId);
         }
     }
 }

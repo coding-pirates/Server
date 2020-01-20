@@ -34,6 +34,6 @@ public final class GameJoinSpectatorRequestHandler extends AbstractServerMessage
         }
 
         gameManager.addClientToGame(message.getGameId(), client);
-        clientManager.sendMessageToClient(ResponseBuilder.gameJoinSpectatorResponse(message.getGameId()), clientManager.getClient(connectionId.getInt()));
+        clientManager.sendMessage(ResponseBuilder.gameJoinSpectatorResponse(message.getGameId()), clientManager.getClient(connectionId.getInt()));
     }
 }

@@ -583,7 +583,7 @@ public class GameHandler implements Translator {
                     return Lists.newArrayList(entry.getKey());
                 });
                 if (shot.getClientId() == entry.getKey()) {
-                    this.clientManager.sendMessageToInt(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.shotOwnShip")), entry.getKey());
+                    this.clientManager.sendMessage(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.shotOwnShip")), entry.getKey());
                     continue;
                 }
                 ShotHit hit = this.fieldsByPlayerId.get(shot.getClientId()).hit(shot);
@@ -606,7 +606,7 @@ public class GameHandler implements Translator {
                     case NONE:
                         for (Shot shot1 : this.hitShots) {
                             if (shot1.equals(shot)) {
-                                this.clientManager.sendMessageToInt(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.alreadyHit")), entry.getKey());
+                                this.clientManager.sendMessage(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.alreadyHit")), entry.getKey());
                                 break;
                             }
                         }

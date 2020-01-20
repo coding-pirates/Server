@@ -41,6 +41,6 @@ public final class LobbyRequestHandler extends AbstractServerMessageHandler<Lobb
                 .map(GameHandler::getGame)
                 .collect(Collectors.toList());
 
-        this.clientManager.sendMessageToId(ResponseBuilder.lobbyResponse(games), connectionId);
+        this.clientManager.sendMessage(ResponseBuilder.lobbyResponse(games), connectionId);
     }
 }

@@ -31,7 +31,7 @@ public final class ShotsRequestHandler extends AbstractServerMessageHandler<Shot
                     gameManager
                             .getGameHandlerForClientId(connectionId.getInt())
                             .addShotPlacement(connectionId.getInt(), message.getShots());
-                    clientManager.sendMessageToId(ResponseBuilder.shotsResponse(), connectionId);
+                    clientManager.sendMessage(ResponseBuilder.shotsResponse(), connectionId);
                     break;
                 }
             case SPECTATOR:

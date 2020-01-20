@@ -52,6 +52,6 @@ public final class GameJoinPlayerRequestHandler extends AbstractServerMessageHan
         final int gameId = message.getGameId();
 
         gameManager.addClientToGame(gameId, client);
-        clientManager.sendMessageToClient(ResponseBuilder.gameJoinPlayerResponse(gameId), client);
+        clientManager.sendMessage(ResponseBuilder.gameJoinPlayerResponse(gameId), client);
     }
 }

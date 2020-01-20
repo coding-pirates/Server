@@ -32,7 +32,7 @@ public final class PlayerGameStateRequestHandler extends AbstractServerMessageHa
                 if(!((Client)client).isDead()){
                     final GameHandler handler = gameManager.getGameHandlerForClientId(connectionId.getInt());
 
-                    clientManager.sendMessageToId(
+                    clientManager.sendMessage(
                             ResponseBuilder.playerGameStateResponse()
                                     .gameState(handler.getState())
                                     .hits(handler.getHitShots())
