@@ -431,7 +431,6 @@ public class GameHandler implements Translator {
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().getVisualizationTime()) {
                     this.stage = GameStage.SHOTS;
                     this.timeStamp = System.currentTimeMillis();
-                    this.sendUpdateNotification(newHits);
 
                     this.deadPlayer.forEach(client -> {
                         LOGGER.info(ServerMarker.GAME, "{} has lost",client);
@@ -449,6 +448,7 @@ public class GameHandler implements Translator {
             case SHOTS:
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().getRoundTime()) {
                     this.performShots();
+                    this.sendUpdateNotification(newHits);
                     this.timeStamp = System.currentTimeMillis();
                     this.stage = GameStage.VISUALIZATION;
                 }
