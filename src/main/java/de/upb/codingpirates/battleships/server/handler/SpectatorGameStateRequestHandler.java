@@ -3,10 +3,12 @@ package de.upb.codingpirates.battleships.server.handler;
 import com.google.common.collect.ImmutableMap;
 import de.upb.codingpirates.battleships.logic.AbstractClient;
 import de.upb.codingpirates.battleships.logic.GameStage;
+import de.upb.codingpirates.battleships.logic.GameState;
 import de.upb.codingpirates.battleships.logic.PlacementInfo;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.Id;
+import de.upb.codingpirates.battleships.network.message.notification.NotificationBuilder;
 import de.upb.codingpirates.battleships.network.message.request.SpectatorGameStateRequest;
 import de.upb.codingpirates.battleships.network.message.response.ResponseBuilder;
 import de.upb.codingpirates.battleships.server.ClientManager;
@@ -44,6 +46,9 @@ public final class SpectatorGameStateRequestHandler extends AbstractServerMessag
                                 .gameState(handler.getState())
                                 .build(),
                         connectionId);
+                if(handler.getState().equals(GameState.FINISHED)){
+                    clientManager.sendMessageToClient(NotificationBuilder.finishNotification(handler.getScore(), handler.getWinner()));
+                }
         }
     }
 }
