@@ -20,6 +20,7 @@
   xmlns:fx="http://javafx.com/fxml"
   fx:controller="de.upb.codingpirates.battleships.server.gui.controllers.MainController"
   fx:id="root"
+  id="root"
   stylesheets="@/css/main.css">
   <VBox>
     <MenuBar>
@@ -133,7 +134,7 @@
       <Tab
         closable="false"
         text="%tab.configuration.text">
-        <fx:include resources="lang.configuration" source="configuration.fxml"/>
+        <fx:include fx:id="configuration" resources="lang.configuration" source="configuration.fxml"/>
       </Tab>
     </TabPane>
   </VBox>

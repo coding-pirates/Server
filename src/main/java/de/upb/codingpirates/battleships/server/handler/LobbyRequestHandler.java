@@ -1,6 +1,7 @@
 package de.upb.codingpirates.battleships.server.handler;
 
 import de.upb.codingpirates.battleships.logic.Game;
+import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.request.LobbyRequest;
@@ -26,10 +27,11 @@ public final class LobbyRequestHandler extends AbstractServerMessageHandler<Lobb
     }
 
     @Override
-    public void handleMessage(@Nonnull final LobbyRequest message, @Nonnull final Id connectionId) throws NotAllowedException {
+    public void handleMessage(@Nonnull final LobbyRequest message, @Nonnull final Id connectionId) throws NotAllowedException, InvalidActionException {
         LOGGER.debug("Handling LobbyRequest for clientId {}.", connectionId);
 
-        if (this.clientManager.getClient(connectionId.getInt()) == null)
+
+        if (!this.clientManager.existsClient(connectionId.getInt()))
             throw new NotAllowedException("game.handler.lobbyRequestHandler.notRegistered");
 
         final List<Game> games =
@@ -39,6 +41,6 @@ public final class LobbyRequestHandler extends AbstractServerMessageHandler<Lobb
                         .map(GameHandler::getGame)
                         .collect(Collectors.toList());
 
-        this.clientManager.sendMessageToId(ResponseBuilder.lobbyResponse(games), connectionId);
+        this.clientManager.sendMessage(ResponseBuilder.lobbyResponse(games), connectionId);
     }
 }

@@ -2,13 +2,13 @@ package de.upb.codingpirates.battleships.server.handler;
 
 import com.google.common.collect.ImmutableMap;
 import de.upb.codingpirates.battleships.logic.AbstractClient;
-import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.logic.GameStage;
+import de.upb.codingpirates.battleships.logic.GameState;
 import de.upb.codingpirates.battleships.logic.PlacementInfo;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
-import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.Id;
+import de.upb.codingpirates.battleships.network.message.notification.NotificationBuilder;
 import de.upb.codingpirates.battleships.network.message.request.SpectatorGameStateRequest;
 import de.upb.codingpirates.battleships.network.message.response.ResponseBuilder;
 import de.upb.codingpirates.battleships.server.ClientManager;
@@ -31,20 +31,24 @@ public final class SpectatorGameStateRequestHandler extends AbstractServerMessag
     @Override
     public void handleMessage(@Nonnull final SpectatorGameStateRequest message, @Nonnull final Id connectionId) throws GameException {
         AbstractClient client = clientManager.getClient(connectionId.getInt());
-        if (client == null)
-            throw new InvalidActionException("player does not exists");
-        if (!client.handleClientAs().equals(ClientType.SPECTATOR))
-            throw new NotAllowedException("game.handler.spectatorGameStateRequest.noSpectator");
 
-        final GameHandler handler = gameManager.getGameHandlerForClientId(connectionId.getInt());
+        switch (client.handleClientAs()) {
+            case PLAYER:
+                throw new NotAllowedException("game.handler.spectatorGameStateRequest.noSpectator");
+            case SPECTATOR:
+                final GameHandler handler = gameManager.getGameHandlerForClientId(connectionId.getInt());
 
-        clientManager.sendMessageToId(
-                ResponseBuilder.spectatorGameStateResponse()
-                        .players(handler.getPlayers())
-                        .shots(handler.getShots())
-                        .ships(handler.getStage().equals(GameStage.PLACESHIPS) || handler.getStage().equals(GameStage.START) ? EMPTY : handler.getStartShip())
-                        .gameState(handler.getGame().getState())
-                        .build(),
-                connectionId);
+                clientManager.sendMessage(
+                        ResponseBuilder.spectatorGameStateResponse()
+                                .players(handler.getPlayers())
+                                .shots(handler.getShots())
+                                .ships(handler.getStage().equals(GameStage.PLACESHIPS) || handler.getStage().equals(GameStage.START) ? EMPTY : handler.getStartShip())
+                                .gameState(handler.getState())
+                                .build(),
+                        connectionId);
+                if (handler.getState().equals(GameState.FINISHED)) {
+                    clientManager.sendMessage(NotificationBuilder.finishNotification(handler.getScore(), handler.getWinner()), connectionId);
+                }
+        }
     }
 }

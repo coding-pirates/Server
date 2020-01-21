@@ -27,6 +27,6 @@ public final class ServerJoinRequestHandler extends AbstractServerMessageHandler
         LOGGER.debug("Handling ServerJoinRequest from clientId {}, with name '{}', as type {}.", connectionId, message.getName(), message.getClientType());
 
         clientManager.create(connectionId.getInt(), message.getName(), message.getClientType());
-        clientManager.sendMessageToId(ResponseBuilder.serverJoinResponse(connectionId.getInt()), connectionId);
+        clientManager.sendMessage(ResponseBuilder.serverJoinResponse(connectionId.getInt()), connectionId);
     }
 }

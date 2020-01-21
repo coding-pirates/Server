@@ -1,7 +1,7 @@
 package de.upb.codingpirates.battleships.server.handler;
 
+import de.upb.codingpirates.battleships.logic.AbstractClient;
 import de.upb.codingpirates.battleships.logic.Client;
-import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.notification.NotificationBuilder;
@@ -23,12 +23,15 @@ public final class GameLeaveRequestHandler extends AbstractServerMessageHandler<
 
     @Override
     protected void handleMessage(GameLeaveRequest message, Id connectionId) throws GameException {
-        if (this.clientManager.getClientTypeFromID(connectionId.getInt()).equals(ClientType.PLAYER)) {
-            Collection<Client> players = this.gameManager.getGameHandlerForClientId(connectionId.getInt()).getPlayers();
-            players.removeIf(player -> connectionId.getInt() == player.getId());
-            this.clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(connectionId.getInt()), players);
+        AbstractClient client = this.clientManager.getClient(connectionId.getInt());
+        switch (client.handleClientAs()) {
+            case PLAYER:
+                Collection<Client> players = this.gameManager.getGameHandlerForClientId(connectionId.getInt()).getPlayers();
+                players.removeIf(player -> connectionId.getInt() == player.getId());
+                this.clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(connectionId.getInt()), players);
+            case SPECTATOR:
+                this.gameManager.removeClientFromGame(connectionId.getInt());
+                this.clientManager.sendMessage(ResponseBuilder.gameLeaveResponse(), connectionId);
         }
-        this.gameManager.removeClientFromGame(connectionId.getInt());
-        this.clientManager.sendMessageToId(ResponseBuilder.gameLeaveResponse(), connectionId);
     }
 }

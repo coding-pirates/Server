@@ -44,6 +44,8 @@ import java.util.concurrent.Executors;
  */
 public final class MainController extends AbstractController<Parent> {
 
+    @FXML
+    private Parent configuration;
     /**
      * The controller associated with the {@code configuration.fxml} file.
      */
@@ -123,12 +125,14 @@ public final class MainController extends AbstractController<Parent> {
 
     /**
      * Factory method for instantiating a new {@link ContextMenu} for the provided {@link TableRow}.
-     * <p>
+     *
      * The created {@code ContextMenu} supports starting, pausing, unpausing, an aborting {@link Game}s via their
      * associated {@link GameHandler}.
      *
      * @param row The {@code TableRow} for which a new {@code ContextMenu} is to be created.
+     *
      * @return A new {@code ContextMenu} for the provided {@code row}.
+     *
      * @see #initializeTableViews()
      */
     @Nonnull

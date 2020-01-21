@@ -26,6 +26,6 @@ public final class RemainingTimeRequestHandler extends AbstractServerMessageHand
                 .getGameHandlerForClientId(connectionId.getInt())
                 .getRemainingTime();
 
-        clientManager.sendMessageToId(ResponseBuilder.remainingTimeResponse(remainingTime), connectionId);
+        clientManager.sendMessage(ResponseBuilder.remainingTimeResponse(remainingTime), connectionId);
     }
 }
