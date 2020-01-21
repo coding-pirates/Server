@@ -5,6 +5,7 @@ import java.util.stream.Stream;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -17,6 +18,7 @@ import static com.google.common.collect.Sets.newHashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/** @author Andre Blanke */
 public final class ConfigurationControllerTest {
 
     @CsvSource({

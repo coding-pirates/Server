@@ -1,9 +1,11 @@
 package de.upb.codingpirates.battleships.server;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import de.upb.codingpirates.battleships.network.dispatcher.MessageDispatcher;
-import de.upb.codingpirates.battleships.server.gui.util.ResourceBundleWrapper;
+import java.io.IOException;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
+
+import javax.annotation.Nonnull;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -11,23 +13,26 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
+import de.upb.codingpirates.battleships.network.dispatcher.MessageDispatcher;
+import de.upb.codingpirates.battleships.server.gui.util.ResourceBundleWrapper;
 
 /**
+ * The entry point of the server.
+ *
  * @author Andre Blanke
  */
 public final class BattleshipsServerApplication extends Application {
 
     @Nonnull
-    private final Injector injector;
+    private final Injector injector = Guice.createInjector(new ServerModule());
 
     /**
      * The title of this JavaFX application {@link Stage}.
-     * 
-     * @see #start(Stage) 
+     *
+     * @see #start(Stage)
      */
     private static final String TITLE = "Battleships Server";
 
@@ -36,7 +41,6 @@ public final class BattleshipsServerApplication extends Application {
     }
 
     public BattleshipsServerApplication() {
-        injector = Guice.createInjector(new ServerModule());
         injector.getInstance(MessageDispatcher.class);
     }
 

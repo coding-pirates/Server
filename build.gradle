@@ -1,12 +1,15 @@
 apply plugin: "java" //enables java settings for gradle
 apply plugin: "application" //adds a run task for this project
 
+apply from: "${rootProject.rootDir}/gradle/javadoc.gradle"
+
 dependencies {
     //adds maven dependencies for gradle to download
     //implementation means the files will be compiled into the jar
     //testImplementation means the files will only compiled for testing purpose and not served in the final programm
 
     //adds local network & logic files as dependencies
+    implementation project(":ai")
     implementation project(":network")
     implementation project(":logic")
 
@@ -14,8 +17,8 @@ dependencies {
 
     implementation group: 'com.google.inject', name: 'guice', version: '4.2.2'
 
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.1'
-    runtime group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.1'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.3'
+    runtime group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.3'
 
     implementation group: 'com.google.guava', name: 'guava', version: '28.1-jre'
 
@@ -58,6 +61,7 @@ test {
 }
 
 jar{
+    baseName = "server_${project.server_version}"
     manifest {
         attributes 'Implementation-Title': 'Battleships Server',
                 'Implementation-Version': "${project.server_version}",

@@ -1,6 +1,5 @@
 package de.upb.codingpirates.battleships.server;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
@@ -63,10 +62,6 @@ public class GameManager {
      * @return {@code -1} if game was created successful, {@code > 0} if the selected field size of the Configuration is too small
      */
     public int createGame(@Nonnull Configuration configuration, @Nonnull String name, boolean tournament) {
-        int size = checkField(configuration);
-        if (size != -1) {
-            return size;
-        }
         int id = this.idManager.generate().getInt();
         LOGGER.debug(ServerMarker.GAME, "Create game: {} with id: {}", name, id);
         this.gameHandlersById.putIfAbsent(id, new GameHandler(name, id, configuration, tournament, clientManager));
@@ -78,15 +73,14 @@ public class GameManager {
      *
      * @param gameId
      * @param client
-     * @param clientType
      * @throws InvalidActionException if game does not exist
      */
-    public void addClientToGame(int gameId, @Nonnull Client client, @Nonnull ClientType clientType) throws GameException {
-        LOGGER.debug(ServerMarker.GAME, "Adding client {}, with type {}, to game {}", client.getId(), clientType, gameId);
+    public void addClientToGame(int gameId, @Nonnull AbstractClient client) throws GameException {
+        LOGGER.debug(ServerMarker.GAME, "Adding client {}, with type {}, to game {}", client.getId(), client.getClientType(), gameId);
         if(this.clientToGame.containsKey(client.getId())){
-            if(clientType.equals(ClientType.PLAYER)) {
+            if(client.getClientType().equals(ClientType.PLAYER) && client.handleClientAs().equals(ClientType.PLAYER)) {
                 GameHandler handler = this.gameHandlersById.get(this.clientToGame.get(client.getId()));
-                if(handler.getGame().getState().equals(GameState.FINISHED)){
+                if(handler.getState().equals(GameState.FINISHED)){
                     this.clientToGame.remove(client.getId());
                 }
                 throw new NotAllowedException("game.gameManager.alreadyIngame");
@@ -95,11 +89,15 @@ public class GameManager {
             }
         }
         if (this.gameHandlersById.containsKey(gameId)) {
-            this.gameHandlersById.get(gameId).addClient(clientType, client);
+            this.gameHandlersById.get(gameId).addClient(client);
             this.clientToGame.put(client.getId(), gameId);
         } else {
             LOGGER.error(ServerMarker.GAME, "Can't find game {}", gameId);
             throw new InvalidActionException("game.gameManager.noGame");
+        }
+        //Todo remove call
+        if (this.getGameHandler(gameId).getGame().getCurrentPlayerCount() >= this.getGameHandler(gameId).getGame().getMaxPlayerCount()){
+            launchGame(gameId);
         }
     }
 
@@ -203,30 +201,6 @@ public class GameManager {
      */
     private void run() {
         this.gameHandlersById.values().forEach(GameHandler::run);
-    }
-
-    /**
-     * checks if the ships can fit into the field
-     *
-     * @param configuration the configuration which should be checked
-     * @return {@code -1} if it fits, else recommendation for a field size;
-     */
-    private int checkField(@Nonnull Configuration configuration) {//TODO better algorithm
-        Collection<ShipType> ships = configuration.getShips().values();
-
-        List<BoundingBox> boxes = Lists.newArrayList();
-
-        for (ShipType ship : ships) {
-            int x = ship.getPositions().stream().max((a, b) -> Math.max(Math.abs(a.getX()), Math.abs(b.getX()))).get().getX();
-            int y = ship.getPositions().stream().max((a, b) -> Math.max(Math.abs(a.getY()), Math.abs(b.getY()))).get().getY();
-            boxes.add(new BoundingBox(x + 1, y + 1));
-        }
-
-        int maxFields = boxes.stream().mapToInt(BoundingBox::getSize).sum();
-        if (maxFields > configuration.getHeight() * configuration.getWidth()) {
-            return (int) Math.sqrt(maxFields);
-        }
-        return -1;
     }
 
     public ObservableMap<Integer, GameHandler> getGameMappings() {

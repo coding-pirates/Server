@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import java.lang.Integer?>
-<?import java.util.ArrayList?>
 
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.HBox?>
@@ -287,23 +286,6 @@
         maxWidth="Infinity"
         onAction="#onStartNewGameButtonAction"
         text="%game.startNew.button.text"/>
-      <fx:define>
-        <!--
-          The 'Parent tag has no default property' errors appear to be an IDE bug and can
-          safely be ignored.
-        -->
-        <ArrayList fx:id="spinners">
-          <fx:reference source="maxPlayerCountSpinner"/>
-          <fx:reference source="shotCountSpinner"/>
-          <fx:reference source="hitPointsSpinner"/>
-          <fx:reference source="sunkPointsSpinner"/>
-          <fx:reference source="roundTimeSpinner"/>
-          <fx:reference source="visualizationTimeSpinner"/>
-          <fx:reference source="heightSpinner"/>
-          <fx:reference source="widthSpinner"/>
-          <fx:reference source="penaltyMinusPointsSpinner"/>
-        </ArrayList>
-      </fx:define>
     </GridPane>
   </HBox>
 </VBox>

@@ -13,30 +13,27 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
-import java.util.List;
+import java.util.Collection;
 
 public final class ConnectionClosedReportHandler extends AbstractServerMessageHandler<ConnectionClosedReport> {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Inject
-    public ConnectionClosedReportHandler(@Nonnull final ClientManager clientManager,
-                                         @Nonnull final GameManager   gameManager) {
+    public ConnectionClosedReportHandler(@Nonnull final ClientManager clientManager, @Nonnull final GameManager gameManager) {
         super(clientManager, gameManager, ConnectionClosedReport.class);
     }
 
     @Override
-    public void handleMessage(final ConnectionClosedReport message, final Id connectionId)
-            throws InvalidActionException {
+    public void handleMessage(final ConnectionClosedReport message, final Id connectionId) throws InvalidActionException {
         LOGGER.debug(ServerMarker.HANDLER, "Handling ConnectionClosedReport for clientId {}.", connectionId);
 
-        clientManager.disconnect(connectionId.getInt());
-        gameManager.removeClientFromGame(connectionId.getInt());
-
-        final List<Client> clients =
-            gameManager
-                .getGameHandlerForClientId(connectionId.getInt())
-                .getAllClients();
-
-        clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(connectionId.getInt()), clients);
+        switch (this.clientManager.getClient(connectionId.getInt()).handleClientAs()){
+            case PLAYER:
+                Collection<Client> player = gameManager.getGameHandlerForClientId(connectionId.getInt()).getPlayers();
+                clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(connectionId.getInt()), player);
+            case SPECTATOR:
+                this.gameManager.removeClientFromGame(connectionId.getInt());
+                this.clientManager.disconnect(connectionId.getInt());
+        }
     }
 }

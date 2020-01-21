@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
@@ -19,7 +20,10 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
@@ -35,12 +39,10 @@ import org.apache.logging.log4j.Logger;
 
 import org.jetbrains.annotations.Contract;
 
-import de.upb.codingpirates.battleships.logic.Configuration;
-import de.upb.codingpirates.battleships.logic.PenaltyType;
-import de.upb.codingpirates.battleships.logic.Point2D;
-import de.upb.codingpirates.battleships.logic.ShipType;
+import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.server.GameManager;
-import de.upb.codingpirates.battleships.server.gui.control.Alerts;
+import de.upb.codingpirates.battleships.server.gui.controllers.ConfigurationValidator.InsufficientFieldSizeException;
+import de.upb.codingpirates.battleships.server.gui.util.AlertBuilder;
 
 import static java.util.stream.Collectors.*;
 
@@ -105,15 +107,22 @@ public final class ConfigurationController extends AbstractController<Parent> {
     @FXML
     private TextField gameNameTextField;
 
-    private final Gson        gson;
+    private final Gson gson;
+
     private final GameManager gameManager;
+
+    private final ConfigurationValidator validator;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Inject
-    private ConfigurationController(@Nonnull final Gson gson, @Nonnull final GameManager gameManager) {
+    private ConfigurationController(
+            @Nonnull final Gson gson,
+            @Nonnull final GameManager gameManager,
+            @Nonnull final ConfigurationValidator validator) {
         this.gson        = gson;
         this.gameManager = gameManager;
+        this.validator   = validator;
     }
 
     // <editor-fold desc="toShipTypeLabel">
@@ -346,36 +355,58 @@ public final class ConfigurationController extends AbstractController<Parent> {
             resourceBundle.getString("configuration.fileExtension.glob")
         );
 
+        //setupSpinners();
         setupShipTypeConfigurationControls();
         setupPenaltyMinusPointsControls();
     }
     // </editor-fold>
 
-    private void displayInvalidConfigurationAlert(@Nonnull final ShipTypeConfiguration invalidConfiguration) {
-        Alert alert = new Alert(AlertType.ERROR);
+    private void displayInvalidShipTypeConfigurationAlert(@Nonnull final ShipTypeConfiguration invalidConfiguration) {
+        final Alert alert = new Alert(AlertType.ERROR);
 
         alert.setTitle(
             resourceBundle.getString("configuration.ships.invalidConfigurationAlert.title"));
         alert.setHeaderText(
             resourceBundle.getString("configuration.ships.invalidConfigurationAlert.headerText"));
 
-        final String contentText;
         if (!invalidConfiguration.hasMinimumSize()) {
-            contentText = String.format(
+            alert.setContentText(String.format(
                 resourceBundle.getString("configuration.ships.invalidConfigurationAlert.contentText.sizeInsufficient"),
                 invalidConfiguration.label,
                 ShipTypeConfiguration.MINIMUM_SHIP_TYPE_SIZE,
                 invalidConfiguration.marks.size()
-            );
+            ));
         } else {
-            contentText = String.format(
+            alert.setContentText(String.format(
                 resourceBundle.getString("configuration.ships.invalidConfigurationAlert.contentText.notConnected"),
                 invalidConfiguration.label
-            );
+            ));
         }
-        alert.setContentText(contentText);
-
         alert.showAndWait();
+    }
+
+    private void displayInsufficientFieldSizeAlert(final int recommendedSize) {
+        final Alert alert = new Alert(AlertType.WARNING);
+
+        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+
+        alert.setTitle(
+            resourceBundle.getString("configuration.insufficientFieldSizeAlert.title"));
+        alert.setHeaderText(
+            resourceBundle.getString("configuration.insufficientFieldSizeAlert.headerText"));
+        alert.setContentText(
+            String.format(
+                resourceBundle.getString("configuration.insufficientFieldSizeAlert.contentText"),
+                recommendedSize));
+
+        alert.showAndWait().ifPresent(result -> {
+            widthSpinner
+                .getValueFactory()
+                .setValue(recommendedSize);
+            heightSpinner
+                .getValueFactory()
+                .setValue(recommendedSize);
+        });
     }
 
     // <editor-fold desc="Configuration import and export">
@@ -432,20 +463,25 @@ public final class ConfigurationController extends AbstractController<Parent> {
      */
     @Nonnull
     @Contract(" -> new")
-    private Configuration getConfigurationFromControls() throws InvalidShipTypeConfigurationException {
-        return new Configuration(
-            maxPlayerCountSpinner.getValue(),
-            heightSpinner.getValue(),
-            widthSpinner.getValue(),
-            shotCountSpinner.getValue(),
-            hitPointsSpinner.getValue(),
-            sunkPointsSpinner.getValue(),
-            (long) roundTimeSpinner.getValue()         * 1_000, /* Convert s to ms. */
-            (long) visualizationTimeSpinner.getValue() * 1_000,
-            getShipTypesFromControls(),
-            penaltyMinusPointsSpinner.getValue(),
-            penaltyTypeComboBox.getSelectionModel().getSelectedItem()
-        );
+    private Configuration getConfigurationFromControls()
+            throws InsufficientFieldSizeException, InvalidShipTypeConfigurationException {
+        final Configuration configuration =
+            new Configuration.Builder()
+                .maxPlayerCount(maxPlayerCountSpinner.getValue())
+                .width(widthSpinner.getValue())
+                .height(heightSpinner.getValue())
+                .shotCount(shotCountSpinner.getValue())
+                .hitPoints(hitPointsSpinner.getValue())
+                .sunkPoints(sunkPointsSpinner.getValue())
+                .roundTime((long) roundTimeSpinner.getValue()                 * 1_000L) /* Convert s to ms. */
+                .visualizationTime((long) visualizationTimeSpinner.getValue() * 1_000L)
+                .ships(getShipTypesFromControls())
+                .penaltyMinusPoints(penaltyMinusPointsSpinner.getValue())
+                .penaltyKind(penaltyTypeComboBox.getValue())
+                .build();
+        validator.validate(configuration);
+
+        return configuration;
     }
 
     /**
@@ -518,20 +554,21 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
             Files.write(exportPath, configurationJson.getBytes(StandardCharsets.UTF_8));
         } catch (final InvalidShipTypeConfigurationException exception) {
-            displayInvalidConfigurationAlert(exception.invalidConfiguration);
+            displayInvalidShipTypeConfigurationAlert(exception.getInvalidConfiguration());
+        } catch (final InsufficientFieldSizeException exception) {
+            displayInsufficientFieldSizeAlert(exception.getRecommendedSize());
         } catch (final IOException exception) {
             final String contentText =
                 String.format(resourceBundle.getString("configuration.export.exceptionAlert.contentText"), exportPath);
 
             LOGGER.error(exception);
 
-            Alerts
-                .exceptionAlert(
-                    resourceBundle.getString("configuration.export.exceptionAlert.title"),
-                    resourceBundle.getString("configuration.export.exceptionAlert.headerText"),
-                    contentText,
-                    resourceBundle.getString("configuration.export.exceptionAlert.labelText"),
-                    exception)
+            AlertBuilder
+                .ofThrowable(exception, resourceBundle.getString("configuration.export.exceptionAlert.labelText"))
+                .title(resourceBundle.getString("configuration.export.exceptionAlert.title"))
+                .headerText(resourceBundle.getString("configuration.export.exceptionAlert.headerText"))
+                .contentText(contentText)
+                .build()
                 .showAndWait();
         }
     }
@@ -559,13 +596,12 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
             LOGGER.error(exception);
 
-            Alerts
-                .exceptionAlert(
-                    resourceBundle.getString("configuration.import.exceptionAlert.title"),
-                    resourceBundle.getString("configuration.import.exceptionAlert.headerText"),
-                    contentText,
-                    resourceBundle.getString("configuration.import.exceptionAlert.labelText"),
-                    exception)
+            AlertBuilder
+                .ofThrowable(exception, resourceBundle.getString("configuration.import.exceptionAlert.labelText"))
+                .title(resourceBundle.getString("configuration.import.exceptionAlert.title"))
+                .headerText(resourceBundle.getString("configuration.import.exceptionAlert.headerText"))
+                .contentText(contentText)
+                .build()
                 .showAndWait();
         }
     }
@@ -597,7 +633,9 @@ public final class ConfigurationController extends AbstractController<Parent> {
 
             gameManager.createGame(configuration,gameNameTextField.getText(),false);
         } catch (final InvalidShipTypeConfigurationException exception) {
-            displayInvalidConfigurationAlert(exception.invalidConfiguration);
+            displayInvalidShipTypeConfigurationAlert(exception.getInvalidConfiguration());
+        } catch (final InsufficientFieldSizeException exception) {
+            displayInsufficientFieldSizeAlert(exception.getRecommendedSize());
         }
     }
 
@@ -872,6 +910,10 @@ public final class ConfigurationController extends AbstractController<Parent> {
          */
         private InvalidShipTypeConfigurationException(@Nonnull final ShipTypeConfiguration invalidConfiguration) {
             this.invalidConfiguration = invalidConfiguration;
+        }
+
+        private ShipTypeConfiguration getInvalidConfiguration() {
+            return invalidConfiguration;
         }
     }
 }

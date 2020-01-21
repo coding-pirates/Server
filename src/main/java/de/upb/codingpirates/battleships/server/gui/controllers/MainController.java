@@ -1,7 +1,12 @@
 package de.upb.codingpirates.battleships.server.gui.controllers;
 
+import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
@@ -10,32 +15,34 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.collections.MapChangeListener;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.DataFormat;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.TransferMode;
+import javafx.scene.input.*;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import org.jetbrains.annotations.Contract;
 
-import de.upb.codingpirates.battleships.logic.ClientType;
+import de.upb.codingpirates.battleships.ai.AI;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Game;
 import de.upb.codingpirates.battleships.logic.GameState;
-import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
+import de.upb.codingpirates.battleships.network.Properties;
+import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
-import de.upb.codingpirates.battleships.server.gui.control.Alerts;
+import de.upb.codingpirates.battleships.server.gui.util.AlertBuilder;
 
 /**
  * The controller associated with the {@code main.fxml} file.
+ *
+ * Its main task is updating the {@link #gameTableView}, {@link #tournamentTableView}, and {@link #playerTableView}
+ * when updates from the backing {@link GameManager}, {@link TournamentManager}, and {@link ClientManager} arrive.
  *
  * @author Andre Blanke
  */
@@ -43,17 +50,30 @@ public final class MainController extends AbstractController<Parent> {
 
     @FXML
     private Parent configuration;
+    /**
+     * The controller associated with the {@code configuration.fxml} file.
+     */
     @FXML
     private ConfigurationController configurationController;
 
     @FXML
-    private TableView<Game>   gameTableView;
+    private TableView<GameHandler> gameTableView;
+    @FXML
+    private TableView<?> tournamentTableView;
+
     @FXML
     private TableView<Client> playerTableView;
 
     private final ClientManager clientManager;
     private final GameManager   gameManager;
 
+    private final ExecutorService aiExecutorService = Executors.newCachedThreadPool();
+
+    /**
+     * The MIME type used for serialized Java objects, namely instances of {@link Client}.
+     *
+     * @see #initializeTableViews()
+     */
     private static final DataFormat SERIALIZED_MIME_TYPE =
         new DataFormat("application/x-java-serialized-object");
 
@@ -80,6 +100,11 @@ public final class MainController extends AbstractController<Parent> {
         initializeTableViews();
     }
 
+    /**
+     * Updates the user interface whenever the {@link ClientManager#getPlayerMappings()} map changes.
+     *
+     * @param change The change which occurred to the {@link javafx.collections.ObservableMap}.
+     */
     private void onPlayerMappingsChange(
             @Nonnull final MapChangeListener.Change<? extends Integer, ? extends Client> change) {
         if (change.wasAdded())
@@ -88,34 +113,45 @@ public final class MainController extends AbstractController<Parent> {
             playerTableView.getItems().remove(change.getValueRemoved());
     }
 
+    /**
+     * Updates the user interface whenever the {@link GameManager#getGameMappings()} map changes.
+     *
+     * @param change The change which occurred to the {@link javafx.collections.ObservableMap}.
+     */
     private void onGameMappingsChange(
             @Nonnull final MapChangeListener.Change<? extends Integer, ? extends GameHandler> change) {
         if (change.wasAdded())
-            gameTableView.getItems().add(change.getValueAdded().getGame());
+            gameTableView.getItems().add(change.getValueAdded());
         else if (change.wasRemoved())
-            gameTableView.getItems().remove(change.getValueRemoved().getGame());
+            gameTableView.getItems().remove(change.getValueRemoved());
 
     }
 
+    /**
+     * Factory method for instantiating a new {@link ContextMenu} for the provided {@link TableRow}.
+     *
+     * The created {@code ContextMenu} supports starting, pausing, unpausing, an aborting {@link Game}s via their
+     * associated {@link GameHandler}.
+     *
+     * @param row The {@code TableRow} for which a new {@code ContextMenu} is to be created.
+     *
+     * @return A new {@code ContextMenu} for the provided {@code row}.
+     *
+     * @see #initializeTableViews()
+     */
     @Nonnull
     @Contract("_ -> new")
-    private ContextMenu newGameTableRowContextMenu(@Nonnull final TableRow<Game> row) {
+    private ContextMenu newGameHandlerTableRowContextMenu(@Nonnull final TableRow<GameHandler> row) {
         final MenuItem launchItem      = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.launch.text"));
         final MenuItem pauseResumeItem = new MenuItem();
         final MenuItem abortItem       = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.abort.text"));
+        final MenuItem addAiItem       = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.addAi.text"));
 
         row.itemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue == null)
                 return;
 
-            final GameHandler handler;
-            final Game game = row.getItem();
-
-            try {
-                handler = gameManager.getGameHandler(game.getId());
-            } catch (final InvalidActionException exception) {
-                throw new RuntimeException(exception);
-            }
+            final GameHandler handler = row.getItem();
 
             final BooleanBinding inProgress = handler.stateProperty().isEqualTo(GameState.IN_PROGRESS);
             final BooleanBinding paused     = handler.stateProperty().isEqualTo(GameState.PAUSED);
@@ -138,7 +174,7 @@ public final class MainController extends AbstractController<Parent> {
                         .otherwise(resourceBundle.getString("overview.game.table.contextMenu.pause.text")));
             pauseResumeItem
                 .setOnAction(event -> {
-                    if (game.getState() == GameState.PAUSED)
+                    if (handler.getState() == GameState.PAUSED)
                         handler.continueGame();
                     else
                         handler.pauseGame();
@@ -149,47 +185,77 @@ public final class MainController extends AbstractController<Parent> {
                 .bind(handler.stateProperty().isEqualTo(GameState.FINISHED));
             abortItem
                 .setOnAction(event ->
-                    Alerts
-                        .alert(
-                            resourceBundle.getString("overview.game.table.contextMenu.abort.alert.title"),
-                            resourceBundle.getString("overview.game.table.contextMenu.abort.alert.headerText"),
-                            resourceBundle.getString("overview.game.table.contextMenu.abort.alert.contentText"),
-                            AlertType.CONFIRMATION,
-                            ButtonType.YES,
-                            ButtonType.NO)
+                    AlertBuilder
+                        .of(AlertType.CONFIRMATION)
+                        .title(resourceBundle.getString("overview.game.table.contextMenu.abort.alert.title"))
+                        .headerText(resourceBundle.getString("overview.game.table.contextMenu.abort.alert.headerText"))
+                        .contentText(resourceBundle.getString("overview.game.table.contextMenu.abort.alert.contentText"))
+                        .buttonTypes(ButtonType.YES, ButtonType.NO)
+                        .build()
                         .showAndWait()
                         .ifPresent(alertResult -> handler.abortGame(alertResult == ButtonType.YES)));
+            addAiItem
+                .disableProperty()
+                .bind(
+                    handler.stateProperty().isNotEqualTo(GameState.LOBBY)
+                        .or(handler.currentPlayerCountProperty().isEqualTo(handler.getMaxPlayerCount())));
+            addAiItem
+                .setOnAction(event -> aiExecutorService.submit(() -> {
+                    final AI ai = new AI(UUID.randomUUID().toString(), 1);
+
+                    try {
+                        ai.connect(InetAddress.getLocalHost().getHostName(), Properties.PORT);
+                    } catch (final IOException exception) {
+                        LOGGER.error(exception);
+                    }
+                }));
         });
-        return new ContextMenu(launchItem, pauseResumeItem, abortItem);
+        return new ContextMenu(
+            launchItem,
+            pauseResumeItem,
+            abortItem,
+            new SeparatorMenuItem(),
+            addAiItem);
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private void initializeTableViews() {
+        final EventHandler<? super DragEvent> clientDragOverHandler = event -> {
+            final Dragboard dragboard = event.getDragboard();
+            final TableRow<?> row = (TableRow<?>) event.getGestureSource();
+
+            if (!row.isEmpty() && dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
+                event.acceptTransferModes(TransferMode.LINK);
+                event.consume();
+            }
+        };
+
         gameTableView.setRowFactory(tableView -> {
-            final TableRow<Game> row = new TableRow<>();
+            final TableRow<GameHandler> row = new TableRow<>();
 
-            row.setContextMenu(newGameTableRowContextMenu(row));
+            row.setContextMenu(newGameHandlerTableRowContextMenu(row));
 
-            row.setOnDragOver(event -> {
-                final Dragboard dragboard = event.getDragboard();
-
-                if (!row.isEmpty() && dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
-                    event.acceptTransferModes(TransferMode.LINK);
-                    event.consume();
-                }
-            });
+            row.setOnDragOver(clientDragOverHandler);
             row.setOnDragDropped(event -> {
-                final Dragboard dragboard = event.getDragboard();
-                final Object    content   = dragboard.getContent(SERIALIZED_MIME_TYPE);
+                final Object content = event.getDragboard().getContent(SERIALIZED_MIME_TYPE);
+
+                LOGGER.trace(CONTROLLER_MARKER, "Drag dropped for content '{}'.", content);
 
                 if (row.isEmpty() || !(content instanceof Client) || (row.getItem().getState() != GameState.LOBBY))
                     return;
 
                 try {
-                    gameManager.getGameHandler(row.getItem().getId()).addClient(ClientType.PLAYER, (Client) content);
-                } catch (final InvalidActionException exception) {
+                    gameManager.addClientToGame(row.getItem().getId(), (Client) content);
+                } catch (final GameException exception) {
                     LOGGER.error(exception);
                 }
             });
+            return row;
+        });
+        tournamentTableView.setRowFactory(tableView -> {
+            final TableRow row = new TableRow<>();
+
+            row.setOnDragOver(clientDragOverHandler);
             return row;
         });
         playerTableView.setRowFactory(tableView -> {
@@ -200,6 +266,8 @@ public final class MainController extends AbstractController<Parent> {
                     return;
                 final ClipboardContent content   = new ClipboardContent();
                 final Dragboard        dragboard = row.startDragAndDrop(TransferMode.LINK);
+
+                LOGGER.trace(CONTROLLER_MARKER, "Detected drag for content '{}'.", row.getItem());
 
                 content.put(SERIALIZED_MIME_TYPE, row.getItem());
 
