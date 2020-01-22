@@ -2,7 +2,10 @@ package de.upb.codingpirates.battleships.server.game;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import de.upb.codingpirates.battleships.logic.*;
+import de.upb.codingpirates.battleships.logic.Configuration;
+import de.upb.codingpirates.battleships.logic.Game;
+import de.upb.codingpirates.battleships.logic.GameStage;
+import de.upb.codingpirates.battleships.logic.TournamentState;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.message.notification.NotificationBuilder;
 import de.upb.codingpirates.battleships.server.ClientManager;
@@ -68,7 +71,7 @@ public class TournamentHandler implements Runnable, GameListener {
     }
 
     private Configuration getConfiguration(){
-        return configuration.get(configuration.size() > roundCount + 1 ? roundCount : roundCount - configuration.size());
+        return configuration.get(roundCount % configuration.size());
     }
 
     private void newGame(){
