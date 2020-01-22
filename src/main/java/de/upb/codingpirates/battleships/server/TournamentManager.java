@@ -75,4 +75,8 @@ public class TournamentManager {
     private void run() {
         this.tournamentHandlerByInt.values().forEach(TournamentHandler::run);
     }
+
+    public ObservableMap<Integer, TournamentHandler> getTournamentMappings() {
+        return tournamentHandlerByInt;
+    }
 }

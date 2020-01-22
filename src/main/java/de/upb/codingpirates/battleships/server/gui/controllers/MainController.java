@@ -14,7 +14,7 @@ import javax.inject.Inject;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.collections.MapChangeListener;
+import javafx.collections.MapChangeListener.Change;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
@@ -37,6 +37,7 @@ import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.TournamentManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
+import de.upb.codingpirates.battleships.server.game.TournamentHandler;
 import de.upb.codingpirates.battleships.server.gui.util.AlertBuilder;
 import de.upb.codingpirates.battleships.server.util.ServerProperties;
 
@@ -61,13 +62,14 @@ public final class MainController extends AbstractController<Parent> {
     @FXML
     private TableView<GameHandler> gameTableView;
     @FXML
-    private TableView<?> tournamentTableView;
+    private TableView<TournamentHandler> tournamentTableView;
 
     @FXML
     private TableView<Client> playerTableView;
 
-    private final ClientManager clientManager;
-    private final GameManager   gameManager;
+    private final ClientManager     clientManager;
+    private final GameManager       gameManager;
+    private final TournamentManager tournamentManager;
 
     private final ExecutorService aiExecutorService = Executors.newCachedThreadPool();
 
@@ -82,9 +84,13 @@ public final class MainController extends AbstractController<Parent> {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Inject
-    public MainController(@Nonnull final ClientManager clientManager, @Nonnull final GameManager gameManager) {
-        this.clientManager = clientManager;
-        this.gameManager   = gameManager;
+    public MainController(
+            @Nonnull final ClientManager clientManager,
+            @Nonnull final GameManager gameManager,
+            @Nonnull final TournamentManager tournamentManager) {
+        this.clientManager     = clientManager;
+        this.gameManager       = gameManager;
+        this.tournamentManager = tournamentManager;
     }
 
     // <editor-fold desc="Initialization">
@@ -98,17 +104,20 @@ public final class MainController extends AbstractController<Parent> {
         gameManager
             .getGameMappings()
             .addListener(this::onGameMappingsChange);
+        tournamentManager
+            .getTournamentMappings()
+            .addListener(this::onTournamentMappingsChange);
 
         initializeTableViews();
     }
 
+    // <editor-fold desc="on*MappingsChange">
     /**
      * Updates the user interface whenever the {@link ClientManager#getPlayerMappings()} map changes.
      *
      * @param change The change which occurred to the {@link javafx.collections.ObservableMap}.
      */
-    private void onPlayerMappingsChange(
-            @Nonnull final MapChangeListener.Change<? extends Integer, ? extends Client> change) {
+    private void onPlayerMappingsChange(@Nonnull final Change<? extends Integer, ? extends Client> change) {
         if (change.wasAdded())
             playerTableView.getItems().add(change.getValueAdded());
         else if (change.wasRemoved())
@@ -120,14 +129,20 @@ public final class MainController extends AbstractController<Parent> {
      *
      * @param change The change which occurred to the {@link javafx.collections.ObservableMap}.
      */
-    private void onGameMappingsChange(
-            @Nonnull final MapChangeListener.Change<? extends Integer, ? extends GameHandler> change) {
+    private void onGameMappingsChange(@Nonnull final Change<? extends Integer, ? extends GameHandler> change) {
         if (change.wasAdded())
             gameTableView.getItems().add(change.getValueAdded());
         else if (change.wasRemoved())
             gameTableView.getItems().remove(change.getValueRemoved());
-
     }
+
+    private void onTournamentMappingsChange(@Nonnull final Change<? extends Integer, ? extends TournamentHandler> change) {
+        if (change.wasAdded())
+            tournamentTableView.getItems().add(change.getValueAdded());
+        else if (change.wasRemoved())
+            tournamentTableView.getItems().remove(change.getValueRemoved());
+    }
+    // </editor-fold>
 
     /**
      * Factory method for instantiating a new {@link ContextMenu} for the provided {@link TableRow}.
@@ -230,7 +245,6 @@ public final class MainController extends AbstractController<Parent> {
             addAiItem);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     private void initializeTableViews() {
         final EventHandler<? super DragEvent> clientDragOverHandler = event -> {
             final Dragboard dragboard = event.getDragboard();
@@ -265,7 +279,7 @@ public final class MainController extends AbstractController<Parent> {
             return row;
         });
         tournamentTableView.setRowFactory(tableView -> {
-            final TableRow row = new TableRow<>();
+            final TableRow<TournamentHandler> row = new TableRow<>();
 
             row.setOnDragOver(clientDragOverHandler);
             return row;
