@@ -7,7 +7,6 @@ import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionExc
 import de.upb.codingpirates.battleships.network.message.notification.NotificationBuilder;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
-import de.upb.codingpirates.battleships.server.exceptions.InvalidGameSizeException;
 import de.upb.codingpirates.battleships.server.util.GameListener;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import de.upb.codingpirates.battleships.server.util.ServerProperties;
@@ -73,27 +72,25 @@ public class TournamentHandler implements Runnable, GameListener {
     }
 
     private void newGame(){
-        try {
-            GameHandler handler = gameManager.createGame(getConfiguration(),name+"_"+roundCount, this);
-            this.games.add(handler.getGame());
-            if(gameHandler != null) {
-                gameHandler.getPlayers().forEach(player -> {
-                    try {
-                        handler.addClient(ClientType.PLAYER, player);
-                    } catch (InvalidActionException e) {
-                        LOGGER.error(ServerMarker.TOURNAMENT, "Could not add player {} to next game ({})", player.getId(), roundCount);
-                    }
-                });
-                gameHandler.getSpectators().forEach(spectator -> {
-                    try {
-                        handler.addClient(ClientType.SPECTATOR, spectator);
-                    } catch (InvalidActionException e) {
-                        LOGGER.error(ServerMarker.TOURNAMENT, "Could not add spectator {} to next game ({})", spectator.getId(), roundCount);
-                    }
-                });
-            }
-            gameHandler = handler;
-        } catch (InvalidGameSizeException ignored) {}//configurations already checked
+        GameHandler handler = gameManager.createGame(getConfiguration(),name+"_"+roundCount, this);
+        this.games.add(handler.getGame());
+        if(gameHandler != null) {
+            gameHandler.getPlayers().forEach(player -> {
+                try {
+                    handler.addClient(player);
+                } catch (InvalidActionException e) {
+                    LOGGER.error(ServerMarker.TOURNAMENT, "Could not add player {} to next game ({})", player.getId(), roundCount);
+                }
+            });
+            gameHandler.getSpectators().forEach(spectator -> {
+                try {
+                    handler.addClient(spectator);
+                } catch (InvalidActionException e) {
+                    LOGGER.error(ServerMarker.TOURNAMENT, "Could not add spectator {} to next game ({})", spectator.getId(), roundCount);
+                }
+            });
+        }
+        gameHandler = handler;
     }
 
     @Override

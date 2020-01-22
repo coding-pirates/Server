@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.logic.util.Pair;
-import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
@@ -69,7 +68,7 @@ public class GameManager {
      * @param tournamentHandler
      * @return {@code -1} if game was created successful, {@code > 0} if the selected field size of the Configuration is too small
      */
-    public GameHandler createGame(@Nonnull Configuration configuration, @Nonnull String name, @Nullable TournamentHandler tournamentHandler) throws InvalidGameSizeException {
+    public GameHandler createGame(@Nonnull Configuration configuration, @Nonnull String name, @Nullable TournamentHandler tournamentHandler) {
         int id = this.idManager.generate().getInt();
         LOGGER.debug(ServerMarker.GAME, "Create game: {} with id: {}", name, id);
         GameHandler gameHandler = new GameHandler(name, id, configuration, tournamentHandler != null, clientManager, this);
@@ -77,7 +76,7 @@ public class GameManager {
         return gameHandler;
     }
 
-    public GameHandler createGame(@Nonnull Configuration configuration, @Nonnull String name) throws InvalidGameSizeException {
+    public GameHandler createGame(@Nonnull Configuration configuration, @Nonnull String name) {
         return createGame(configuration, name, null);
     }
 

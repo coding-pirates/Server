@@ -8,9 +8,6 @@ import org.apache.logging.log4j.Logger;
 
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.network.module.ServerNetworkModule;
-import de.upb.codingpirates.battleships.server.ClientManager;
-import de.upb.codingpirates.battleships.server.GameManager;
-import de.upb.codingpirates.battleships.server.TournamentManager;
 import de.upb.codingpirates.battleships.server.gui.controllers.BoundingBoxConfigurationValidator;
 import de.upb.codingpirates.battleships.server.gui.controllers.ConfigurationValidator;
 import de.upb.codingpirates.battleships.server.handler.*;

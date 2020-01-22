@@ -630,7 +630,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
         try {
             configuration = getConfigurationFromControls();
 
-            gameManager.createGame(configuration, gameNameTextField.getText(),false);
+            gameManager.createGame(configuration, gameNameTextField.getText());
         } catch (final InvalidShipTypeConfigurationException exception) {
             displayInvalidShipTypeConfigurationAlert(exception.getInvalidConfiguration());
         } catch (final InsufficientFieldSizeException exception) {

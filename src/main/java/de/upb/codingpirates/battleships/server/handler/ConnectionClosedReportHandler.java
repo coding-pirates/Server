@@ -1,5 +1,6 @@
 package de.upb.codingpirates.battleships.server.handler;
 
+import de.upb.codingpirates.battleships.logic.AbstractClient;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
@@ -14,7 +15,7 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
-import java.util.Collection;
+import java.util.List;
 
 public final class ConnectionClosedReportHandler extends AbstractServerMessageHandler<ConnectionClosedReport> {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -28,7 +29,7 @@ public final class ConnectionClosedReportHandler extends AbstractServerMessageHa
     public void handleMessage(final ConnectionClosedReport message, final Id connectionId) throws InvalidActionException {
         LOGGER.debug(ServerMarker.HANDLER, "Handling ConnectionClosedReport for clientId {}.", connectionId);
 
-        final List<Client> clients = gameManager
+        final List<AbstractClient> clients = gameManager
                 .getGameHandlerForClientId(connectionId.getInt())
                 .getAllClients();
 

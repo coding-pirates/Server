@@ -4,9 +4,7 @@ import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.logic.Configuration;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.id.IdManager;
-import de.upb.codingpirates.battleships.server.exceptions.InvalidGameSizeException;
 import de.upb.codingpirates.battleships.server.game.TournamentHandler;
-import de.upb.codingpirates.battleships.server.util.ConfigurationChecker;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
@@ -17,7 +15,7 @@ import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import java.util.*;
 
-public class TournamentManager implements ConfigurationChecker {
+public class TournamentManager {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Nonnull
@@ -45,10 +43,7 @@ public class TournamentManager implements ConfigurationChecker {
         }, 1L, 1L);
     }
 
-    public TournamentHandler createTournament(@Nonnull List<Configuration> configuration, @Nonnull String name, int rounds) throws InvalidGameSizeException {
-        for(Configuration config: configuration){
-            checkField(config);
-        }
+    public TournamentHandler createTournament(@Nonnull List<Configuration> configuration, @Nonnull String name, int rounds) {
         int id = this.idManager.generate().getInt();
         LOGGER.info(ServerMarker.TOURNAMENT, "Create Tournament: {} with id: {}", name, id);
         TournamentHandler tournamentHandler = new TournamentHandler(name, clientManager, gameManager, configuration, id, rounds);
