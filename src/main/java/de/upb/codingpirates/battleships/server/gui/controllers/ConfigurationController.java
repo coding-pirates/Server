@@ -371,27 +371,22 @@ public final class ConfigurationController extends AbstractController<Parent> {
     // </editor-fold>
 
     private void displayInvalidShipTypeConfigurationAlert(@Nonnull final ShipTypeConfiguration invalidConfiguration) {
-        final Alert alert = new Alert(AlertType.ERROR);
-
-        alert.setTitle(
-            resourceBundle.getString("configuration.ships.invalidConfigurationAlert.title"));
-        alert.setHeaderText(
-            resourceBundle.getString("configuration.ships.invalidConfigurationAlert.headerText"));
-
-        if (!invalidConfiguration.hasMinimumSize()) {
-            alert.setContentText(String.format(
-                resourceBundle.getString("configuration.ships.invalidConfigurationAlert.contentText.sizeInsufficient"),
-                invalidConfiguration.label,
-                ShipTypeConfiguration.MINIMUM_SHIP_TYPE_SIZE,
-                invalidConfiguration.marks.size()
-            ));
-        } else {
-            alert.setContentText(String.format(
-                resourceBundle.getString("configuration.ships.invalidConfigurationAlert.contentText.notConnected"),
-                invalidConfiguration.label
-            ));
-        }
-        alert.showAndWait();
+            AlertBuilder
+                .of(AlertType.ERROR)
+                .title(resourceBundle.getString("configuration.ships.invalidConfigurationAlert.title"))
+                .headerText(resourceBundle.getString("configuration.ships.invalidConfigurationAlert.headerText"))
+                .contentText(
+                    invalidConfiguration.hasMinimumSize()
+                        ? String.format(
+                            resourceBundle.getString("configuration.ships.invalidConfigurationAlert.contentText.notConnected"),
+                            invalidConfiguration.label)
+                        : String.format(
+                            resourceBundle.getString("configuration.ships.invalidConfigurationAlert.contentText.sizeInsufficient"),
+                            invalidConfiguration.label,
+                            ShipTypeConfiguration.MINIMUM_SHIP_TYPE_SIZE,
+                            invalidConfiguration.marks.size()))
+                .build()
+                .showAndWait();
     }
 
     private void displayInsufficientFieldSizeAlert(final int recommendedSize) {
