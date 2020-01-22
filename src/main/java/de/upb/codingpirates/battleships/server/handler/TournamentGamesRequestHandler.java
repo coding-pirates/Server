@@ -24,8 +24,8 @@ public final class TournamentGamesRequestHandler extends AbstractServerMessageHa
     }
 
     @Override
-    protected void handleMessage(TournamentGamesRequest message, Id connectionId) throws GameException {
+    protected void handleMessage(TournamentGamesRequest message, @Nonnull Id connectionId) throws GameException {
         TournamentHandler handler = this.tournamentManager.getTournamentByClient(connectionId.getInt());
-        this.clientManager.sendMessageToId(ResponseBuilder.tournamentGamesResponse(handler.getGames()),connectionId);
+        this.clientManager.sendMessage(ResponseBuilder.tournamentGamesResponse(handler.getGames()), connectionId);
     }
 }
