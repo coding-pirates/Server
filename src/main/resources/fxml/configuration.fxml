@@ -285,6 +285,9 @@
           <GameType fx:value="TOURNAMENT"/>
         </FXCollections>
       </items>
+      <value>
+        <GameType fx:value="GAME"/>
+      </value>
     </ComboBox>
     <TextField
       fx:id="gameNameTextField"

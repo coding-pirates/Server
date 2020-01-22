@@ -610,7 +610,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
         AlertBuilder
             .of(AlertType.ERROR)
             .title(resourceBundle.getString("game.name.invalidNameAlert.title"))
-            .headerText(resourceBundle.getString("game.name.invalidNameAlert.header"))
+            .headerText(String.format(resourceBundle.getString("game.name.invalidNameAlert.header"), invalidName))
             .contentText(resourceBundle.getString("game.name.invalidNameAlert.contentText"))
             .build()
             .showAndWait();
