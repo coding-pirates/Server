@@ -1,7 +1,7 @@
 apply plugin: "java" //enables java settings for gradle
 apply plugin: "application" //adds a run task for this project
 
-apply from: "${rootProject.rootDir}/gradle/javadoc.gradle"
+apply from: "${rootProject.rootDir}/gradle/java.gradle"
 
 dependencies {
     //adds maven dependencies for gradle to download
@@ -9,6 +9,7 @@ dependencies {
     //testImplementation means the files will only compiled for testing purpose and not served in the final programm
 
     //adds local network & logic files as dependencies
+    implementation project(":ai")
     implementation project(":network")
     implementation project(":logic")
 
@@ -16,8 +17,8 @@ dependencies {
 
     implementation group: 'com.google.inject', name: 'guice', version: '4.2.2'
 
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.1'
-    runtime group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.1'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.3'
+    runtime group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.3'
 
     implementation group: 'com.google.guava', name: 'guava', version: '28.1-jre'
 
@@ -26,6 +27,7 @@ dependencies {
     //test dependencies
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.5.2'
     testImplementation project(":client")
+
 }
 
 //set java version for the resulting java bytecode & java version of the dev environment
@@ -60,10 +62,14 @@ test {
 }
 
 jar{
+    baseName = "server_${project.server_version}"
     manifest {
         attributes 'Implementation-Title': 'Battleships Server',
                 'Implementation-Version': "${project.server_version}",
                 'Main-Class': 'de.upb.codingpirates.battleships.server.BattleshipsServerApplication'
     }
-    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    from ( configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } ) {
+        exclude 'META-INF/**'
+        exclude 'log4j2.xml'
+    }
 }

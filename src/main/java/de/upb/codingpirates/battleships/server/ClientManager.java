@@ -1,6 +1,5 @@
 package de.upb.codingpirates.battleships.server;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.logic.AbstractClient;
 import de.upb.codingpirates.battleships.logic.Client;
@@ -21,7 +20,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Collection;
@@ -93,18 +91,6 @@ public class ClientManager implements ConnectionHandler, Translator {
         return client;
     }
 
-    @Nullable
-    public ClientType getTypeFromId(int id){
-        if(this.clients.containsKey(id))
-            return this.clients.get(id).getClientType();
-        return null;
-    }
-
-    @Nullable
-    public ClientType getTypeFromId(Id id){
-        return this.getTypeFromId(id.getInt());
-    }
-
     /**
      * disconnect client with specific id
      *
@@ -133,51 +119,14 @@ public class ClientManager implements ConnectionHandler, Translator {
     }
 
     /**
-     * send message to all clients represented by the integer ids
-     *
-     * @param message
-     * @param clients
-     */
-    public void sendMessageToInts(Message message, Collection<Integer> clients) {
-        try {
-            for (int client : clients) {
-                this.connectionManager.send(new Id(client), message);
-            }
-        } catch (IOException e) {
-            LOGGER.error(ServerMarker.CONNECTION, "could not send message", e);
-        }
-    }
-
-    /**
-     * send message to all clients represented by the ids
-     *
-     * @param message
-     * @param clients
-     */
-    public void sendMessageToIds(Message message, Collection<Id> clients) {
-        try {
-            for (Id client : clients) {
-                this.connectionManager.send(client, message);
-            }
-        } catch (IOException e) {
-            LOGGER.error(ServerMarker.CONNECTION, "could not send message", e);
-        }
-    }
-
-    /**
      * send message to all clients listed
      *
      * @param message
      * @param clients
      */
     public void sendMessageToClients(Message message, Collection<? extends AbstractClient> clients) {
-        try {
-            for (AbstractClient client : clients) {
-                this.connectionManager.send(new Id(client.getId()), message);
-            }
-        } catch (IOException e) {
-            LOGGER.error(ServerMarker.CONNECTION, "could not send message", e);
-        }
+        if(clients.size()<=0)return;
+        this.sendMessage(message, clients.toArray(new AbstractClient[0]));
     }
 
     /**
@@ -186,8 +135,15 @@ public class ClientManager implements ConnectionHandler, Translator {
      * @param message
      * @param clients
      */
-    public <T extends AbstractClient> void sendMessageToClient(Message message, T... clients) {
-        this.sendMessageToClients(message, Lists.newArrayList(clients));
+    @SafeVarargs
+    public final <T extends AbstractClient> void sendMessage(Message message, T... clients) {
+        if(clients == null || clients.length == 0) {
+            LOGGER.debug(ServerMarker.CLIENT, "Didn't send {} to clients. Clients are empty", message);
+            return;
+        }
+        for (AbstractClient client1 : clients) {
+            this.send(message, new Id(client1.getId()));
+        }
     }
 
     /**
@@ -196,8 +152,14 @@ public class ClientManager implements ConnectionHandler, Translator {
      * @param message
      * @param clients
      */
-    public void sendMessageToInt(Message message, Integer... clients) {
-        this.sendMessageToInts(message, Lists.newArrayList(clients));
+    public void sendMessage(Message message, int... clients) {
+        if(clients == null || clients.length == 0) {
+            LOGGER.debug(ServerMarker.CLIENT, "Didn't send {} to clients. Clients are empty", message);
+            return;
+        }
+        for (Integer clientId : clients) {
+            this.send(message, new Id(clientId));
+        }
     }
 
     /**
@@ -206,8 +168,22 @@ public class ClientManager implements ConnectionHandler, Translator {
      * @param message
      * @param clients
      */
-    public void sendMessageToId(Message message, Id... clients) {
-        this.sendMessageToIds(message, Lists.newArrayList(clients));
+    public void sendMessage(Message message, Id... clients) {
+        if(clients == null || clients.length == 0) {
+            LOGGER.debug(ServerMarker.CLIENT, "Didn't send {} to clients. Clients are empty", message);
+            return;
+        }
+        for (Id client1 : clients) {
+            this.send(message, client1);
+        }
+    }
+
+    private void send(Message message, Id id){
+        try {
+            this.connectionManager.send(id, message);
+        } catch (IOException e) {
+            LOGGER.error(ServerMarker.CONNECTION, "could not send message", e);
+        }
     }
 
     /**
@@ -225,16 +201,24 @@ public class ClientManager implements ConnectionHandler, Translator {
     /**
      * @return Client for id or {@code null} if client id is not represent
      */
-    @Nullable
-    public AbstractClient getClient(int id) {
-        LOGGER.debug(clients.size());
-        return this.clients.get(id);
+    @Nonnull
+    public AbstractClient getClient(int id) throws InvalidActionException {
+        if(clients.containsKey(id))
+            return this.clients.get(id);
+        throw new InvalidActionException("game.clientManager.clientNotExist");
+    }
+
+    /**
+     * @return Client for id or {@code null} if client id is not represent
+     */
+    public boolean existsClient(int id) {
+        return clients.containsKey(id);
     }
 
     @Override
     public void handleBattleshipException(@Nonnull final BattleshipException exception) {
         if (exception.getConnectionId() != null) {
-            this.sendMessageToId(NotificationBuilder.errorNotification(exception.getErrorType(), exception.getMessageId(), this.translate(exception.getMessage())), exception.getConnectionId());
+            this.sendMessage(NotificationBuilder.errorNotification(exception.getErrorType(), exception.getMessageId(), this.translate(exception.getMessage())), exception.getConnectionId());
         } else {
             LOGGER.warn(ServerMarker.CLIENT, "could not send ErrorNotification. Could not identify source client");
         }

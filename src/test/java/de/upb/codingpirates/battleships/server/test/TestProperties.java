@@ -13,6 +13,7 @@ class TestProperties {
     static final int playerCount = 2;
     static final boolean simple = true;
     static final int testCase = 1;
+    static final int tournamentPlayer =8;
     /**
      * set this address if you want to test on a server with different ip
      */

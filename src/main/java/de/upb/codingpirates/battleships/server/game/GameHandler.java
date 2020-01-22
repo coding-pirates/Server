@@ -1,5 +1,6 @@
 package de.upb.codingpirates.battleships.server.game;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.logic.*;
@@ -10,6 +11,9 @@ import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
+import de.upb.codingpirates.battleships.server.GameManager;
+import de.upb.codingpirates.battleships.server.exceptions.GameFullExeption;
+import de.upb.codingpirates.battleships.server.util.GameListener;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import de.upb.codingpirates.battleships.server.util.Translator;
 import javafx.beans.property.IntegerProperty;
@@ -20,18 +24,28 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static de.upb.codingpirates.battleships.server.util.ServerProperties.MAX_SPECTATOR_COUNT;
+import static de.upb.codingpirates.battleships.server.util.ServerProperties.MIN_PLAYER_COUNT;
 
 /**
  * @author Paul Becker
  */
-public class GameHandler implements Translator {
+public class GameHandler implements Runnable, Translator {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Nonnull
-    private ClientManager clientManager;
+    private final ClientManager clientManager;
+
+    @Nonnull
+    private final GameManager gameManager;
+
+    @Nullable
+    private final GameListener gameListener;
 
     /** The core {@link Game} object wrapped by this {@code GameHandler}. */
     @Nonnull
@@ -53,7 +67,7 @@ public class GameHandler implements Translator {
      * @see #playersById
      */
     @Nonnull
-    private final Map<Integer, Spectator> spectatorsById = Collections.synchronizedMap(Maps.newHashMap());
+    private final Map<Integer, AbstractClient> spectatorsById = Collections.synchronizedMap(Maps.newHashMap());
 
     /**
      * Maps IDs of {@link Client}s whose {@link ClientType} is {@link ClientType#PLAYER} to their {@link Field}s.
@@ -104,40 +118,25 @@ public class GameHandler implements Translator {
     private final List<Shot> sunkShots = Collections.synchronizedList(Lists.newArrayList());
 
     /**
-     * list of all sunken ships
-     */
-    @Nonnull
-    private final List<Ship> sunkenShips = Collections.synchronizedList(Lists.newArrayList());
-
-    /**
      * maps from ship to shots that hit the ship
      */
     @Nonnull
     private final Map<Ship, List<Shot>> shipToShots = Collections.synchronizedMap(Maps.newHashMap());
 
-    /**
-     * The minimum amount of {@link Client}s with {@link ClientType#PLAYER} required in order to launch a game using
-     * the {@link #launchGame()} method.
-     *
-     * @see #launchGame()
-     */
-    public static final int MIN_PLAYER_COUNT = 2;
-
-    /**
-     * The maximum amount of {@link Client}s with {@link ClientType#SPECTATOR} which can spectate a {@link Game}.
-     *
-     * @see #addClient(AbstractClient)
-     */
-    private static final int MAX_SPECTATOR_COUNT = Integer.MAX_VALUE;
-
-    public GameHandler(@Nonnull final String name, final int id, @Nonnull final Configuration config, final boolean tournament, @Nonnull final ClientManager clientManager) {
+    public GameHandler(@Nonnull final String name, final int id, @Nonnull final Configuration config, final boolean tournament, @Nonnull final ClientManager clientManager, @Nonnull GameManager gameManager, @Nullable GameListener gameListener) {
         this.game          = new Game(id, name, GameState.LOBBY, config, tournament);
         this.clientManager = clientManager;
+        this.gameManager   = gameManager;
+        this.gameListener  = gameListener;
 
-        stateProperty()
-            .addListener((observable, oldValue, newValue) -> game.setState(newValue));
         currentPlayerCountProperty
             .addListener((observable, oldValue, newValue) -> game.setCurrentPlayerCount(newValue.intValue()));
+        stateProperty
+            .addListener((observable, oldValue, newValue) -> game.setState(newValue));
+    }
+
+    public GameHandler(@Nonnull final String name, final int id, @Nonnull final Configuration config, final boolean tournament, @Nonnull final ClientManager clientManager, @Nonnull GameManager gameManager) {
+        this(name, id, config, tournament, clientManager, gameManager, null);
     }
 
     /*
@@ -153,14 +152,12 @@ public class GameHandler implements Translator {
     // <editor-fold desc="currentPlayerCountProperty">
     private final IntegerProperty currentPlayerCountProperty = new SimpleIntegerProperty();
 
-    public void incrementCurrentPlayerCount() {
-        if (currentPlayerCountProperty.get() < Integer.MAX_VALUE)
-            currentPlayerCountProperty.add(1);
+    public int getCurrentPlayerCount() {
+        return currentPlayerCountProperty.get();
     }
 
-    public void decrementCurrentPlayerCount() {
-        if (currentPlayerCountProperty.get() > 0)
-            currentPlayerCountProperty.subtract(1);
+    public void setCurrentPlayerCount(final int currentPlayerCount) {
+        currentPlayerCountProperty.set(currentPlayerCount);
     }
 
     public IntegerProperty currentPlayerCountProperty() {
@@ -169,7 +166,7 @@ public class GameHandler implements Translator {
     // </editor-fold>
 
     // <editor-fold desc="stateProperty">
-    private final ObjectProperty<GameState> stateProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<GameState> stateProperty = new SimpleObjectProperty<>(GameState.LOBBY);
 
     public GameState getState() {
         return stateProperty.get();
@@ -184,23 +181,41 @@ public class GameHandler implements Translator {
     }
     // </editor-fold>
 
+    /*
+     * TODO: Remove these three "synthetic" properties and replace them with a better implementation of
+     *  PropertyValueFactory which allows usage of the ".".
+     */
+
+    public int getId() {
+        return getGame().getId();
+    }
+
+    public String getName() {
+        return getGame().getName();
+    }
+
+    public int getMaxPlayerCount() {
+        return getGame().getConfig().getMaxPlayerCount();
+    }
+
     /**
      * adds the client as the spectator or player to the game
-     * @throws InvalidActionException if game is full
+     * @throws GameFullExeption if game is full
      */
     public void addClient(@Nonnull AbstractClient client) throws InvalidActionException {
-        switch (client.getClientType()) {
+        switch (client.handleClientAs()) {
             case PLAYER:
                 if (playersById.size() >= game.getConfig().getMaxPlayerCount())
-                    throw new InvalidActionException("game.isFull");
-                playersById.put(client.getId(), (Client)client);
+                    throw new GameFullExeption();
+                playersById.put(client.getId(), (Client) client);
                 fieldsByPlayerId.put(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(),client.getId()));
-                incrementCurrentPlayerCount();
+                currentPlayerCountProperty.set(currentPlayerCountProperty.get() + 1);
                 break;
             case SPECTATOR:
                 if (spectatorsById.size() >= MAX_SPECTATOR_COUNT)
-                    throw new InvalidActionException("game.isFull");
-                spectatorsById.putIfAbsent(client.getId(), (Spectator)client);
+                    throw new GameFullExeption();
+                spectatorsById.putIfAbsent(client.getId(), (Spectator) client);
+                break;
         }
     }
 
@@ -218,7 +233,9 @@ public class GameHandler implements Translator {
             this.ships.remove(clientId);
             this.startShip.remove(clientId);
 
-            decrementCurrentPlayerCount();
+            this.testGameFinished();
+            currentPlayerCountProperty.set(getCurrentPlayerCount() - 1);
+            clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(clientId), getAllClients());
         }
         this.spectatorsById.remove(clientId);
     }
@@ -246,7 +263,7 @@ public class GameHandler implements Translator {
     }
 
     @Nonnull
-    public Collection<Spectator> getSpectators() {
+    public Collection<AbstractClient> getSpectators() {
         return spectatorsById.values();
     }
 
@@ -263,7 +280,7 @@ public class GameHandler implements Translator {
 
     /** @return the {@link Configuration} from the {@link Game} object */
     @Nonnull
-    private Configuration getConfiguration() {
+    public Configuration getConfiguration() {
         return game.getConfig();
     }
 
@@ -323,9 +340,11 @@ public class GameHandler implements Translator {
      * @param ships map from ship id to placementinfo
      * @throws GameException if to many ships have been placed or the ships for the player has already been placed
      */
-    public void addShipPlacement(int clientId,@Nonnull Map<Integer, PlacementInfo> ships) throws GameException {
+    public void addShipPlacement(int clientId, @Nonnull Map<Integer, PlacementInfo> ships) throws GameException {
+        if(this.getStage().equals(GameStage.PLACESHIPS)) {
             if (ships.size() > getConfiguration().getShips().size()) {
                 LOGGER.debug("Client {} would have set to many ships", clientId);
+                applyPenalty(clientId);
                 throw new NotAllowedException("game.player.toManyShips");
             }
             this.startShip.put(clientId, ships);
@@ -334,6 +353,21 @@ public class GameHandler implements Translator {
                 throw new InvalidActionException("game.player.toLessShips");
             }
             LOGGER.debug("Ships placed successful for player {}", clientId);
+        }else {
+            throw new InvalidActionException("Its not the time to place ships");
+        }
+    }
+
+    private void applyPenalty(int clientId){
+        switch (getConfiguration().getPenaltyKind()){
+            case KICK:
+                this.removeInactivePlayer(clientId);
+            case POINTLOSS:
+                this.score.compute(clientId, (clientId1, score) -> score == null?-getConfiguration().getPenaltyMinusPoints():score - getConfiguration().getPenaltyMinusPoints());
+                break;
+            default:
+                break;
+        }
     }
 
     /**
@@ -344,6 +378,7 @@ public class GameHandler implements Translator {
      */
     public void addShotPlacement(int clientId,@Nonnull Collection<Shot> shots) throws GameException {
         if (shots.size() > getConfiguration().getShotCount()) {
+            applyPenalty(clientId);
             throw new NotAllowedException("game.player.toManyShots");
         }
         for (Shot shot: shots){
@@ -362,10 +397,13 @@ public class GameHandler implements Translator {
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 
+    private static final List<Shot> EMPTY = ImmutableList.of();
     private long timeStamp = 0L;
     private long pauseTimeCache = 0L;
     private GameStage stage = GameStage.START;
-    private List<Integer> deadPlayer = Lists.newArrayList();
+    private List<Client> livingPlayer = Lists.newArrayList();
+    private List<Client> deadPlayer = Lists.newArrayList();
+    private List<Shot> newHits = Lists.newArrayList();
 
     /**
      * main method, called every tick
@@ -386,15 +424,21 @@ public class GameHandler implements Translator {
      * {@link GameStage#FINISHED}:
      * sends {@link FinishNotification} and sets gameState to {@link GameState#FINISHED}
      */
+    @Override
     public void run() {
-        if(!game.getState().equals(GameState.IN_PROGRESS))return;
+        if (getState() != GameState.IN_PROGRESS)
+            return;
         switch (this.stage) {
             case START:
                 if (timeStamp < System.currentTimeMillis() - 1000L) {
                     this.startGame();
-                    this.sendUpdateNotification();
+                    this.sendUpdateNotification(EMPTY);
                     this.createEmptyScore();
+                    this.livingPlayer.clear();
+                    this.deadPlayer.clear();
+                    this.livingPlayer.addAll(playersById.values());
                 }
+                break;
             case PLACESHIPS:
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().getRoundTime()) {
                     this.placeShips();
@@ -407,42 +451,37 @@ public class GameHandler implements Translator {
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().getVisualizationTime()) {
                     this.stage = GameStage.SHOTS;
                     this.timeStamp = System.currentTimeMillis();
-                    this.sendUpdateNotification();
 
-                    this.deadPlayer.forEach(clientId -> {
-                        LOGGER.info(ServerMarker.GAME, "{} has lost",clientId);
-                        this.ships.remove(clientId);
-                        this.removeDeadPlayer(clientId);
-                    });
-                    if(ships.size() <= 1){
-                        this.stage = GameStage.FINISHED;
-                    }else {
-                        clientManager.sendMessageToClients(NotificationBuilder.roundStartNotification(), getAllClients());
-                    }
+                    this.deadPlayer.forEach(this::removeDeadPlayer);
                 }
-
                 break;
             case SHOTS:
                 if (System.currentTimeMillis() - timeStamp >= getConfiguration().getRoundTime()) {
                     this.performShots();
+                    this.sendUpdateNotification(newHits);
                     this.timeStamp = System.currentTimeMillis();
                     this.stage = GameStage.VISUALIZATION;
                 }
                 break;
             case FINISHED:
-                OptionalInt winnerScore = score.values().stream().mapToInt(value -> value).max();
-                Collection<Integer> winner;
-                if(winnerScore.isPresent())
-                    winner = score.entrySet().stream().filter(entry -> entry.getValue() == winnerScore.getAsInt()).map(Map.Entry::getKey).collect(Collectors.toList());
-                else
-                    winner = Lists.newArrayList();
                 LOGGER.debug("Game {} has finished",game.getId());
-                this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, winner),getAllClients());
+                this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, getWinner()), getAllClients());
                 this.game.setState(GameState.FINISHED);
+                if(this.gameListener != null)
+                    this.gameListener.onGameFinished();
+                this.gameManager.gameFinished(this.game.getId());
                 break;
             default:
                 break;
         }
+    }
+
+    public Collection<Integer> getWinner(){
+        OptionalInt winnerScore = score.values().stream().mapToInt(value -> value).max();
+        Collection<Integer> winner = Lists.newArrayList();
+        if(winnerScore.isPresent())
+            winner.addAll(score.entrySet().stream().filter(entry -> entry.getValue() == winnerScore.getAsInt()).map(Map.Entry::getKey).collect(Collectors.toList()));
+        return winner;
     }
 
     /**
@@ -450,11 +489,11 @@ public class GameHandler implements Translator {
      * @return {@code false} if player count is under 2
      */
     public boolean launchGame() {
-        if (this.game.getState() == GameState.LOBBY) {
+        if (getState() == GameState.LOBBY) {
             if (this.playersById.size() < MIN_PLAYER_COUNT) {
                 return false;
             }
-            this.game.setState(GameState.IN_PROGRESS);
+            this.setState(GameState.IN_PROGRESS);
             this.stage = GameStage.START;
             this.timeStamp = System.currentTimeMillis();
         }
@@ -470,6 +509,7 @@ public class GameHandler implements Translator {
             this.startShip.clear();
             this.stage = GameStage.PLACESHIPS;
             this.timeStamp = System.currentTimeMillis();
+            this.playersById.values().forEach(client -> client.setDead(false));
             this.clientManager.sendMessageToClients(NotificationBuilder.gameInitNotification(getPlayers(), this.getConfiguration()), getAllClients());
         }
     }
@@ -478,8 +518,9 @@ public class GameHandler implements Translator {
      * saves remaining time of the round and pauses the game
      */
     public void pauseGame() {
-        if (this.game.getState() == GameState.IN_PROGRESS) {
-            this.game.setState(GameState.PAUSED);
+        LOGGER.debug(ServerMarker.GAME, "paused game {}, {}", this.game.getId(), this.game.getName());
+        if (getState() == GameState.IN_PROGRESS) {
+            this.setState(GameState.PAUSED);
             switch (stage){
                 case VISUALIZATION:
                     this.pauseTimeCache = getConfiguration().getVisualizationTime() - (System.currentTimeMillis() - timeStamp);
@@ -491,6 +532,7 @@ public class GameHandler implements Translator {
                 default:
                     break;
             }
+            this.clientManager.sendMessageToClients(NotificationBuilder.pauseNotification(), this.getAllClients());
         }
     }
 
@@ -498,9 +540,11 @@ public class GameHandler implements Translator {
      * uses saved remain time to return to game
      */
     public void continueGame() {
-        if (this.game.getState() == GameState.PAUSED) {
-            this.game.setState(GameState.IN_PROGRESS);
+        LOGGER.debug(ServerMarker.GAME, "continued game {}, {}", this.game.getId(), this.game.getName());
+        if (getState() == GameState.PAUSED) {
+            setState(GameState.IN_PROGRESS);
             this.timeStamp = System.currentTimeMillis() + pauseTimeCache;
+            this.clientManager.sendMessageToClients(NotificationBuilder.continueNotification(), this.getAllClients());
         }
     }
 
@@ -508,14 +552,15 @@ public class GameHandler implements Translator {
      * stops game
      * @param points if {@code false} all points will be set to 0
      */
-    public void abortGame(boolean points){
-        if(this.game.getState() != GameState.FINISHED){
-            this.game.setState(GameState.FINISHED);
-            if(!points){
+    public void abortGame(boolean points) {
+        LOGGER.debug(ServerMarker.GAME, "abort game {}, {}", this.game.getId(), this.game.getName());
+        if (this.getState() != GameState.FINISHED) {
+            this.setState(GameState.FINISHED);
+            if (!points) {
                 this.createEmptyScore();
             }
-            this.sendUpdateNotification();
-            this.getAllClients().forEach(client ->this.clientManager.disconnect(client.getId()));
+            this.sendUpdateNotification(EMPTY);
+            this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, this.getWinner()),this.getAllClients());
         }
     }
 
@@ -534,11 +579,8 @@ public class GameHandler implements Translator {
                     this.ships.computeIfAbsent(clientEntry.getKey(), id -> Maps.newHashMap()).put(shipEntry.getKey(), ship);
                 }
             }
-            if(clientEntry.getValue().size() < getConfiguration().getShips().size()){
-                this.placeRandomShips(clientEntry.getKey(),clientEntry.getValue());
-            }
         }
-        List<Client> clients1 = playersById.entrySet().stream().filter(integerClientEntry -> !clients.contains(integerClientEntry.getKey())).map(Map.Entry::getValue).collect(Collectors.toList());
+        int[] clients1 = playersById.keySet().stream().filter(client -> !clients.contains(client)).mapToInt(i -> i).toArray();
         this.removeInactivePlayer(clients1);
     }
 
@@ -546,32 +588,44 @@ public class GameHandler implements Translator {
      * perform all shots in {@link #shots}
      */
     private void performShots() {
+        this.newHits.clear();
         List<Ship> sunkShips = Lists.newArrayList();
-        Map<HitType, Map<Shot, List<Integer>>> hitToPoint = Maps.newHashMap();
+        Map<Shot,List<Integer>> shotListMap = Maps.newHashMap();
+        Map<HitType, List<Shot>> hitToPoint = Maps.newHashMap();
         for (Map.Entry<Integer, Collection<Shot>> entry : shots.entrySet()) {
             for (Shot shot : entry.getValue()) {
+                shotListMap.compute(shot, (shot1, list) ->{
+                    if(list != null){
+                        list.add(entry.getKey());
+                        return list;
+                    }
+                    return Lists.newArrayList(entry.getKey());
+                });
                 if (shot.getClientId() == entry.getKey()) {
-                    this.clientManager.sendMessageToInt(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.shotOwnShip")), entry.getKey());
+                    this.clientManager.sendMessage(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.shotOwnShip")), entry.getKey());
                     continue;
                 }
-                ShotHit hit = fieldsByPlayerId.get(shot.getClientId()).hit(shot);
+                ShotHit hit = this.fieldsByPlayerId.get(shot.getClientId()).hit(shot);
                 switch (hit.getHitType()) {
                     case HIT:
-                        hitToPoint.computeIfAbsent(HitType.HIT, hitType -> Maps.newHashMap()).computeIfAbsent(hit.getShot(), shot1 -> Lists.newArrayList()).add(entry.getKey());
+                        hitToPoint.computeIfAbsent(HitType.HIT, hitType -> Lists.newArrayList()).add(hit.getShot());
                         this.hitShots.add(shot);
+                        this.newHits.add(shot);
                         this.shipToShots.computeIfAbsent(hit.getShip(), (ship -> Lists.newArrayList())).add(hit.getShot());
                         break;
                     case SUNK:
-                        hitToPoint.computeIfAbsent(HitType.SUNK, hitType -> Maps.newHashMap()).computeIfAbsent(hit.getShot(), point2D -> Lists.newArrayList()).add(entry.getKey());
+                        hitToPoint.computeIfAbsent(HitType.SUNK, hitType -> Lists.newArrayList()).add(hit.getShot());
                         this.hitShots.add(shot);
+                        this.newHits.add(shot);
                         this.shipToShots.computeIfAbsent(hit.getShip(), (ship -> Lists.newArrayList())).add(hit.getShot());
+                        this.sunkShots.add(shot);
                         sunkShips.add(hit.getShip());
                         LOGGER.info(ServerMarker.INGAME,"Ship has been sunk of {}",shot.getClientId());
                         break;
                     case NONE:
                         for (Shot shot1 : this.hitShots) {
                             if (shot1.equals(shot)) {
-                                this.clientManager.sendMessageToInt(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.alreadyHit")), entry.getKey());
+                                this.clientManager.sendMessage(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.alreadyHit")), entry.getKey());
                                 break;
                             }
                         }
@@ -583,9 +637,9 @@ public class GameHandler implements Translator {
         }
         //add points for each hit to the player who shot a Shot at a position
         if(hitToPoint.containsKey(HitType.HIT)){
-            for(Map.Entry<Shot, List<Integer>> entry : hitToPoint.get(HitType.HIT).entrySet()) {
-                int points = getConfiguration().getHitPoints() / entry.getValue().size();
-                entry.getValue().forEach( client ->
+            for(Shot shot : hitToPoint.get(HitType.HIT)) {
+                int points = getConfiguration().getHitPoints() / shotListMap.get(shot).size();
+                shotListMap.get(shot).forEach( client ->
                 score.compute(client, (id, point) -> {
                     if (point == null) {
                         return points;
@@ -596,9 +650,9 @@ public class GameHandler implements Translator {
             }
         }
         if(hitToPoint.containsKey(HitType.SUNK)){
-            for(Map.Entry<Shot, List<Integer>> entry : hitToPoint.get(HitType.SUNK).entrySet()) {
-                int points = getConfiguration().getSunkPoints() / entry.getValue().size();
-                entry.getValue().forEach( client ->
+            for(Shot shot : hitToPoint.get(HitType.SUNK)) {
+                int points = getConfiguration().getSunkPoints() / shotListMap.get(shot).size();
+                shotListMap.get(shot).forEach( client ->
                         score.compute(client, (id, point) -> {
                             if (point == null) {
                                 return points;
@@ -608,38 +662,37 @@ public class GameHandler implements Translator {
                         }));
             }
         }
-        Map<Integer,List<Integer>> remove = Maps.newHashMap();
-        this.ships.forEach((clientId, ships) -> ships.forEach((shipId, ship) -> {
-            if(sunkShips.contains(ship)){
-                remove.computeIfAbsent(clientId, id -> Lists.newArrayList()).add(shipId);
-            }
-        }));
-        remove.forEach((clientId, ships) -> ships.forEach( ship -> this.ships.get(clientId).remove(ship)));
-        this.ships.forEach((clientId, ships)->{
-            if(ships.isEmpty()){
-                this.deadPlayer.add(clientId);
-            }
-        });
-        sunkShips.forEach((ship -> this.sunkShots.addAll(this.shipToShots.get(ship))));
+        this.ships.values().forEach(map -> map.values().removeIf(sunkShips::contains));
         this.shots.clear();
     }
 
     /**
      * removed dead player
-     * @param clientId
+     * @param client
      */
-    private void removeDeadPlayer(int clientId){//TODO what should be done if player is dead
-        this.removeClient(clientId);
-        clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(clientId), this.getAllClients());
+    private void removeDeadPlayer(Client client){
+        LOGGER.info(ServerMarker.GAME, "{} has lost",client);
+        this.ships.remove(client.getId());
+        client.setDead(true);
+        this.testGameFinished();
+    }
+
+    private void testGameFinished(){
+        if(ships.size() <= 1){
+            this.stage = GameStage.FINISHED;
+        }else {
+            clientManager.sendMessageToClients(NotificationBuilder.roundStartNotification(), getAllClients());
+        }
     }
 
     /**
      * removes player that didn't placed their ships
      */
-    private void removeInactivePlayer(Collection<Client> clients) {
-        clientManager.sendMessageToClients(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, PlaceShipsRequest.MESSAGE_ID, translate("game.player.noPlacedShips")), clients);
-        clients.forEach(client -> this.removeClient(client.getId()));
-        clients.forEach(client -> clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(client.getId()), clients));
+    private void removeInactivePlayer(int... clients) {
+        clientManager.sendMessage(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, PlaceShipsRequest.MESSAGE_ID, translate("game.player.noPlacedShips")), clients);
+        for(Integer clientId: clients){
+            this.removeClient(clientId);
+        }
     }
 
     /**
@@ -647,9 +700,12 @@ public class GameHandler implements Translator {
      * @throws InvalidActionException if there is no round running
      */
     public long getRemainingTime() throws InvalidActionException{
-        if(!this.game.getState().equals(GameState.IN_PROGRESS) && !this.game.getState().equals(GameState.PAUSED))throw new InvalidActionException("game.noTimerActive");
-        if(this.game.getState().equals(GameState.PAUSED))return this.pauseTimeCache;
-        switch (stage){
+        if (getState() != GameState.IN_PROGRESS && getState() != GameState.PAUSED)
+            throw new InvalidActionException("game.noTimerActive");
+        if (getState() == GameState.PAUSED)
+            return this.pauseTimeCache;
+
+        switch (stage) {
             case PLACESHIPS:
             case SHOTS:
                 return System.currentTimeMillis() - this.timeStamp - getConfiguration().getRoundTime();
@@ -663,18 +719,11 @@ public class GameHandler implements Translator {
     /**
      * send spectator & player update notifications
      */
-    private void sendUpdateNotification(){
-        this.clientManager.sendMessageToClients(NotificationBuilder.playerUpdateNotification(this.hitShots, score, this.sunkShots), this.playersById.values());
-        this.clientManager.sendMessageToClients(NotificationBuilder.spectatorUpdateNotification(this.hitShots, this.score, this.sunkShots, this.missedShots), this.spectatorsById.values());
-    }
-
-    /**
-     * place all not placed ships randomly to their field
-     * @param client client id
-     * @param alreadyPlaced all already placed ships
-     */
-    private void placeRandomShips(int client, Map<Integer, PlacementInfo> alreadyPlaced){
-        //TODO fill
+    private void sendUpdateNotification(List<Shot> hitShots) {
+        this.clientManager.sendMessageToClients(NotificationBuilder.playerUpdateNotification(hitShots, score, this.sunkShots), this.livingPlayer);
+        SpectatorUpdateNotification spectatorUpdateNotification = NotificationBuilder.spectatorUpdateNotification(hitShots, this.score, this.sunkShots, this.missedShots);
+        this.clientManager.sendMessageToClients(spectatorUpdateNotification, Lists.newArrayList(this.spectatorsById.values()));
+        this.clientManager.sendMessageToClients(spectatorUpdateNotification, this.deadPlayer);
     }
 
     private void createEmptyScore(){

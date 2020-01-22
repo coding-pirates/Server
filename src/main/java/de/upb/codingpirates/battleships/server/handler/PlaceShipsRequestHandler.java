@@ -1,6 +1,9 @@
 package de.upb.codingpirates.battleships.server.handler;
 
+import de.upb.codingpirates.battleships.logic.AbstractClient;
+import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
+import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.response.ResponseBuilder;
@@ -17,21 +20,25 @@ public final class PlaceShipsRequestHandler extends AbstractServerMessageHandler
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Inject
-    public PlaceShipsRequestHandler(@Nonnull final ClientManager clientManager,
-                                    @Nonnull final GameManager gameManager) {
+    public PlaceShipsRequestHandler(@Nonnull final ClientManager clientManager, @Nonnull final GameManager gameManager) {
         super(clientManager, gameManager, PlaceShipsRequest.class);
     }
 
     @Override
-    public void handleMessage(final @Nonnull PlaceShipsRequest message,
-                              final @Nonnull Id connectionId) throws GameException {
+    public void handleMessage(final @Nonnull PlaceShipsRequest message, final @Nonnull Id connectionId) throws GameException {
         LOGGER.debug(ServerMarker.HANDLER, "Handling PlaceShipsRequest from clientId {}.", connectionId.getInt());
 
-        final int clientId = connectionId.getInt();
+        AbstractClient client = clientManager.getClient(connectionId.getInt());
 
-        gameManager
-            .getGameHandlerForClientId(connectionId.getInt())
-            .addShipPlacement(clientId, message.getPositions());
-        clientManager.sendMessageToId(ResponseBuilder.placeShipsResponse(), connectionId);
+        switch (client.handleClientAs()){
+            case PLAYER:
+                if(!((Client)client).isDead()){
+                    gameManager.getGameHandlerForClientId(connectionId.getInt()).addShipPlacement(connectionId.getInt(), message.getPositions());
+                    clientManager.sendMessage(ResponseBuilder.placeShipsResponse(), connectionId);
+                    break;
+                }
+            case SPECTATOR:
+                throw new NotAllowedException("game.handler.gameJoinPlayerRequest.noPlayer");
+        }
     }
 }
