@@ -6,7 +6,6 @@ import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.IdManager;
-import de.upb.codingpirates.battleships.network.message.notification.NotificationBuilder;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import javafx.collections.FXCollections;
@@ -134,9 +133,7 @@ public class GameManager {
      * @param gameId gameId
      */
     public void pauseGame(int gameId) {
-        LOGGER.debug(ServerMarker.GAME, "paused game {}, {}", gameId, this.gameHandlersById.get(gameId).getGame().getName());
         this.gameHandlersById.get(gameId).pauseGame();
-        clientManager.sendMessageToClients(NotificationBuilder.pauseNotification(), this.gameHandlersById.get(gameId).getAllClients());
     }
 
     /**
@@ -145,9 +142,7 @@ public class GameManager {
      * @param gameId gameId
      */
     public void continueGame(int gameId) {
-        LOGGER.debug(ServerMarker.GAME, "continued game {}, {}", gameId, this.gameHandlersById.get(gameId).getGame().getName());
         this.gameHandlersById.get(gameId).continueGame();
-        clientManager.sendMessageToClients(NotificationBuilder.continueNotification(), this.gameHandlersById.get(gameId).getAllClients());
     }
 
     /**
@@ -157,7 +152,6 @@ public class GameManager {
      * @param points if {@code false} all points will be set to 0
      */
     public void abortGame(int gameId, boolean points) {
-        LOGGER.debug(ServerMarker.GAME, "abort game {}, {}", gameId, this.gameHandlersById.get(gameId).getGame().getName());
         this.gameHandlersById.get(gameId).abortGame(points);
     }
 

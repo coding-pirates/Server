@@ -510,6 +510,7 @@ public class GameHandler implements Translator {
      * saves remaining time of the round and pauses the game
      */
     public void pauseGame() {
+        LOGGER.debug(ServerMarker.GAME, "paused game {}, {}", this.game.getId(), this.game.getName());
         if (getState() == GameState.IN_PROGRESS) {
             this.setState(GameState.PAUSED);
             switch (stage){
@@ -523,6 +524,7 @@ public class GameHandler implements Translator {
                 default:
                     break;
             }
+            this.clientManager.sendMessageToClients(NotificationBuilder.pauseNotification(), this.getAllClients());
         }
     }
 
@@ -530,9 +532,11 @@ public class GameHandler implements Translator {
      * uses saved remain time to return to game
      */
     public void continueGame() {
+        LOGGER.debug(ServerMarker.GAME, "continued game {}, {}", this.game.getId(), this.game.getName());
         if (getState() == GameState.PAUSED) {
             setState(GameState.IN_PROGRESS);
             this.timeStamp = System.currentTimeMillis() + pauseTimeCache;
+            this.clientManager.sendMessageToClients(NotificationBuilder.continueNotification(), this.getAllClients());
         }
     }
 
@@ -541,6 +545,7 @@ public class GameHandler implements Translator {
      * @param points if {@code false} all points will be set to 0
      */
     public void abortGame(boolean points) {
+        LOGGER.debug(ServerMarker.GAME, "abort game {}, {}", this.game.getId(), this.game.getName());
         if (getState() != GameState.FINISHED) {
             setState(GameState.FINISHED);
             if (!points) {
