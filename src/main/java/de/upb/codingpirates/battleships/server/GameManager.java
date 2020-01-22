@@ -1,19 +1,24 @@
 package de.upb.codingpirates.battleships.server;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.logic.*;
+import de.upb.codingpirates.battleships.logic.util.Pair;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.IdManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
+import de.upb.codingpirates.battleships.server.game.TournamentHandler;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
+import de.upb.codingpirates.battleships.server.util.ServerProperties;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.*;
 
@@ -40,11 +45,13 @@ public class GameManager {
      */
     private final Map<Integer, Integer> clientToGame = Collections.synchronizedMap(Maps.newHashMap());
 
+    private final List<Pair<Integer, Long>> removeGames = Collections.synchronizedList(Lists.newArrayList());
+
     @Inject
     public GameManager(@Nonnull ClientManager handler, @Nonnull IdManager idManager) {
         this.clientManager = handler;
         this.idManager = idManager;
-        new Timer().schedule(new TimerTask() {
+        new Timer("Server Main").schedule(new TimerTask() {
             @Override
             public void run() {
                 GameManager.this.run();
@@ -57,14 +64,19 @@ public class GameManager {
      *
      * @param configuration
      * @param name
-     * @param tournament
+     * @param tournamentHandler
      * @return {@code -1} if game was created successful, {@code > 0} if the selected field size of the Configuration is too small
      */
-    public int createGame(@Nonnull Configuration configuration, @Nonnull String name, boolean tournament) {
+    public GameHandler createGame(@Nonnull Configuration configuration, @Nonnull String name, @Nullable TournamentHandler tournamentHandler) {
         int id = this.idManager.generate().getInt();
         LOGGER.debug(ServerMarker.GAME, "Create game: {} with id: {}", name, id);
-        this.gameHandlersById.putIfAbsent(id, new GameHandler(name, id, configuration, tournament, clientManager));
-        return -1;
+        GameHandler gameHandler = new GameHandler(name, id, configuration, tournamentHandler != null, clientManager, this);
+        this.gameHandlersById.put(id, gameHandler);
+        return gameHandler;
+    }
+
+    public GameHandler createGame(@Nonnull Configuration configuration, @Nonnull String name) {
+        return createGame(configuration, name, null);
     }
 
     /**
@@ -190,11 +202,37 @@ public class GameManager {
         return this.gameHandlersById.get(id);
     }
 
+    public void gameFinished(int id){
+        if(!gameHandlersById.containsKey(id)){
+            LOGGER.debug(ServerMarker.GAME,"Could not finish game {}, can't find it", id);
+            return;
+        }
+        if(gameHandlersById.get(id).getGame().isTournament()){
+
+        }
+        this.gameHandlersById.get(id).getAllClients().forEach(client -> this.clientToGame.remove(client.getId()));
+        this.removeGames.add(Pair.of(id, System.currentTimeMillis() + ServerProperties.MAX_FINISHED_GAME_EXIST_TIME));
+    }
+
+    public void removeGames(){
+        long time = System.currentTimeMillis();
+        this.removeGames.removeIf(integerLongPair -> {
+            if(integerLongPair.getValue() <= time && !gameHandlersById.get(integerLongPair.getKey()).getGame().isTournament()){
+                gameHandlersById.remove(integerLongPair.getKey());
+                return true;
+            }
+            return false;
+        });
+    }
+
     /**
      * run method for every game
      */
     private void run() {
         this.gameHandlersById.values().forEach(GameHandler::run);
+
+        if (System.currentTimeMillis() % 10_000 == 0)
+            removeGames();
     }
 
     public ObservableMap<Integer, GameHandler> getGameMappings() {

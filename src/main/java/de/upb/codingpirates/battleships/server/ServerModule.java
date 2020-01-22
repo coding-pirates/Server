@@ -25,11 +25,10 @@ public final class ServerModule extends AbstractModule {
 
         bind(ConfigurationValidator.class).to(BoundingBoxConfigurationValidator.class);
 
-        //bind interface ConnectionHandler to Class ClientManager in one instance
         bind(ConnectionHandler.class).to(ClientManager.class).in(Singleton.class);
         bind(ClientManager.class).in(Singleton.class);
-        //bind class GameManager in one instance
         bind(GameManager.class).in(Singleton.class);
+        bind(TournamentManager.class).in(Singleton.class);
 
         //bind all message handler to one instance
         bind(ConnectionClosedReportHandler.class).in(Singleton.class);

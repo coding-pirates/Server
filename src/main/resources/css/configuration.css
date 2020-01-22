@@ -21,6 +21,10 @@ TitledPane {
     -fx-padding: 5px;
 }
 
+#launch-game-box {
+    -fx-spacing: 10px;
+}
+
 .ship-configuration-cell {
     -fx-stroke: black;
 }
