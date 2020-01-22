@@ -61,6 +61,7 @@ test {
 }
 
 jar{
+    baseName = "server_${project.server_version}"
     manifest {
         attributes 'Implementation-Title': 'Battleships Server',
                 'Implementation-Version': "${project.server_version}",

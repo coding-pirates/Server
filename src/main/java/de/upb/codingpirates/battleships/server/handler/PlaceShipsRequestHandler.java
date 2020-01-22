@@ -1,9 +1,8 @@
 package de.upb.codingpirates.battleships.server.handler;
 
 import de.upb.codingpirates.battleships.logic.AbstractClient;
-import de.upb.codingpirates.battleships.logic.ClientType;
+import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
-import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import de.upb.codingpirates.battleships.network.exceptions.game.NotAllowedException;
 import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
@@ -30,16 +29,16 @@ public final class PlaceShipsRequestHandler extends AbstractServerMessageHandler
         LOGGER.debug(ServerMarker.HANDLER, "Handling PlaceShipsRequest from clientId {}.", connectionId.getInt());
 
         AbstractClient client = clientManager.getClient(connectionId.getInt());
-        if(client == null)
-            throw new InvalidActionException("player does not exists");
-        if (!client.handleClientAs().equals(ClientType.PLAYER))
-            throw new NotAllowedException("game.handler.gameJoinPlayerRequest.noPlayer");
 
-        final int clientId = connectionId.getInt();
-
-        gameManager
-            .getGameHandlerForClientId(connectionId.getInt())
-            .addShipPlacement(clientId, message.getPositions());
-        clientManager.sendMessageToId(ResponseBuilder.placeShipsResponse(), connectionId);
+        switch (client.handleClientAs()){
+            case PLAYER:
+                if(!((Client)client).isDead()){
+                    gameManager.getGameHandlerForClientId(connectionId.getInt()).addShipPlacement(connectionId.getInt(), message.getPositions());
+                    clientManager.sendMessage(ResponseBuilder.placeShipsResponse(), connectionId);
+                    break;
+                }
+            case SPECTATOR:
+                throw new NotAllowedException("game.handler.gameJoinPlayerRequest.noPlayer");
+        }
     }
 }

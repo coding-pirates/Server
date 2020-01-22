@@ -1,6 +1,5 @@
 package de.upb.codingpirates.battleships.server;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.logic.util.Pair;
@@ -90,9 +89,9 @@ public class GameManager {
     public void addClientToGame(int gameId, @Nonnull AbstractClient client) throws GameException {
         LOGGER.debug(ServerMarker.GAME, "Adding client {}, with type {}, to game {}", client.getId(), client.getClientType(), gameId);
         if(this.clientToGame.containsKey(client.getId())){
-            if(client.getClientType().equals(ClientType.PLAYER)) {
+            if(client.getClientType().equals(ClientType.PLAYER) && client.handleClientAs().equals(ClientType.PLAYER)) {
                 GameHandler handler = this.gameHandlersById.get(this.clientToGame.get(client.getId()));
-                if(handler.getGame().getState().equals(GameState.FINISHED)){
+                if(handler.getState().equals(GameState.FINISHED)){
                     this.clientToGame.remove(client.getId());
                 }
                 throw new NotAllowedException("game.gameManager.alreadyIngame");
@@ -108,7 +107,7 @@ public class GameManager {
             throw new InvalidActionException("game.gameManager.noGame");
         }
         //Todo remove call
-        if (this.getGameHandler(gameId).getPlayers().size() == 2){
+        if (this.getGameHandler(gameId).getGame().getCurrentPlayerCount() >= this.getGameHandler(gameId).getGame().getMaxPlayerCount()){
             launchGame(gameId);
         }
     }
