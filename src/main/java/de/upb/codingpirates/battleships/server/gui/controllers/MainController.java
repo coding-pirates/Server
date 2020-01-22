@@ -35,6 +35,7 @@ import de.upb.codingpirates.battleships.network.Properties;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
+import de.upb.codingpirates.battleships.server.TournamentManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
 import de.upb.codingpirates.battleships.server.gui.util.AlertBuilder;
 import de.upb.codingpirates.battleships.server.util.ServerProperties;
