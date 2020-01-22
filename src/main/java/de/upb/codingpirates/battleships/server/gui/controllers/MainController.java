@@ -162,7 +162,7 @@ public final class MainController extends AbstractController<Parent> {
             launchItem
                 .setOnAction(event -> {
                     LOGGER.trace(CONTROLLER_MARKER, "Attempting to launch game '{}'.", handler.getGame().getName());
-                    handler.launchGame();
+                    gameManager.launchGame(handler.getGame().getId());
                 });
 
             pauseResumeItem
@@ -179,10 +179,11 @@ public final class MainController extends AbstractController<Parent> {
                 .setOnAction(event -> {
                     if (handler.getState() == GameState.PAUSED) {
                         LOGGER.trace(CONTROLLER_MARKER, "Attempting to resume game '{}'.", handler.getGame().getName());
+                        gameManager.continueGame(handler.getGame().getId());
                         handler.continueGame();
                     } else {
-                        handler.pauseGame();
                         LOGGER.trace(CONTROLLER_MARKER, "Attempting to pause game '{}'.", handler.getGame().getName());
+                        gameManager.pauseGame(handler.getGame().getId());
                     }
                 });
 
@@ -201,7 +202,7 @@ public final class MainController extends AbstractController<Parent> {
                         .showAndWait()
                         .ifPresent(alertResult -> {
                             LOGGER.trace(CONTROLLER_MARKER, "Attempting to abort game '{}'.", handler.getGame().getName());
-                            handler.abortGame(alertResult == ButtonType.YES);
+                            gameManager.abortGame(handler.getGame().getId(), alertResult == ButtonType.YES);
                         }));
             addAiItem
                 .disableProperty()
