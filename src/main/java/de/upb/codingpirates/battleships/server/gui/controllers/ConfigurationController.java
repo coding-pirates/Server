@@ -893,7 +893,6 @@ public final class ConfigurationController extends AbstractController<Parent> {
          * @see #toShipType()
          */
         @Contract(pure = true)
-        @SuppressWarnings("BooleanMethodIsAlwaysInverted")
         private boolean hasMinimumSize() {
             return marks.size() >= MINIMUM_SHIP_TYPE_SIZE;
         }
