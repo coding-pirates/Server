@@ -278,7 +278,7 @@
     </TitledPane>
   </GridPane>
   <HBox id="launch-game-box">
-    <ComboBox>
+    <ComboBox fx:id="gameTypeComboBox">
       <items>
         <FXCollections fx:factory="observableArrayList">
           <GameType fx:value="GAME"/>
