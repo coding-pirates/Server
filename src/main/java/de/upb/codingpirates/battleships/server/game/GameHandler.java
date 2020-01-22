@@ -25,7 +25,6 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -555,12 +554,13 @@ public class GameHandler implements Runnable, Translator {
      */
     public void abortGame(boolean points) {
         LOGGER.debug(ServerMarker.GAME, "abort game {}, {}", this.game.getId(), this.game.getName());
-        if (getState() != GameState.FINISHED) {
-            setState(GameState.FINISHED);
+        if (this.getState() != GameState.FINISHED) {
+            this.setState(GameState.FINISHED);
             if (!points) {
                 this.createEmptyScore();
             }
             this.sendUpdateNotification(EMPTY);
+            this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, this.getWinner()),this.getAllClients());
         }
     }
 
