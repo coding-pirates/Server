@@ -11,6 +11,9 @@ import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.server.ClientManager;
+import de.upb.codingpirates.battleships.server.GameManager;
+import de.upb.codingpirates.battleships.server.exceptions.GameFullExeption;
+import de.upb.codingpirates.battleships.server.util.GameListener;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import de.upb.codingpirates.battleships.server.util.Translator;
 import javafx.beans.property.IntegerProperty;
@@ -21,19 +24,29 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static de.upb.codingpirates.battleships.server.util.ServerProperties.MAX_SPECTATOR_COUNT;
+import static de.upb.codingpirates.battleships.server.util.ServerProperties.MIN_PLAYER_COUNT;
+
 /**
  * @author Paul Becker
  */
-public class GameHandler implements Translator {
+public class GameHandler implements Runnable, Translator {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Nonnull
-    private ClientManager clientManager;
+    private final ClientManager clientManager;
+
+    @Nonnull
+    private final GameManager gameManager;
+
+    @Nullable
+    private final GameListener gameListener;
 
     /** The core {@link Game} object wrapped by this {@code GameHandler}. */
     @Nonnull
@@ -111,29 +124,20 @@ public class GameHandler implements Translator {
     @Nonnull
     private final Map<Ship, List<Shot>> shipToShots = Collections.synchronizedMap(Maps.newHashMap());
 
-    /**
-     * The minimum amount of {@link Client}s with {@link ClientType#PLAYER} required in order to launch a game using
-     * the {@link #launchGame()} method.
-     *
-     * @see #launchGame()
-     */
-    public static final int MIN_PLAYER_COUNT = 2;
-
-    /**
-     * The maximum amount of {@link Client}s with {@link ClientType#SPECTATOR} which can spectate a {@link Game}.
-     *
-     * @see #addClient(AbstractClient)
-     */
-    private static final int MAX_SPECTATOR_COUNT = Integer.MAX_VALUE;
-
-    public GameHandler(@Nonnull final String name, final int id, @Nonnull final Configuration config, final boolean tournament, @Nonnull final ClientManager clientManager) {
-        this.game          = new Game(id, name, getState(), config, tournament);
+    public GameHandler(@Nonnull final String name, final int id, @Nonnull final Configuration config, final boolean tournament, @Nonnull final ClientManager clientManager, @Nonnull GameManager gameManager, @Nullable GameListener gameListener) {
+        this.game          = new Game(id, name, GameState.LOBBY, config, tournament);
         this.clientManager = clientManager;
+        this.gameManager   = gameManager;
+        this.gameListener  = gameListener;
 
-        currentPlayerCountProperty.addListener((observable, oldValue, newValue) ->
-            game.setCurrentPlayerCount(newValue.intValue()));
-        stateProperty.addListener((observable, oldValue, newValue) ->
-            game.setState(newValue));
+        currentPlayerCountProperty
+            .addListener((observable, oldValue, newValue) -> game.setCurrentPlayerCount(newValue.intValue()));
+        stateProperty
+            .addListener((observable, oldValue, newValue) -> game.setState(newValue));
+    }
+
+    public GameHandler(@Nonnull final String name, final int id, @Nonnull final Configuration config, final boolean tournament, @Nonnull final ClientManager clientManager, @Nonnull GameManager gameManager) {
+        this(name, id, config, tournament, clientManager, gameManager, null);
     }
 
     /*
@@ -197,20 +201,20 @@ public class GameHandler implements Translator {
 
     /**
      * adds the client as the spectator or player to the game
-     * @throws InvalidActionException if game is full
+     * @throws GameFullExeption if game is full
      */
-    public void addClient(@Nonnull AbstractClient client) throws InvalidActionException {
+    public void addClient(@Nonnull AbstractClient client) throws GameFullExeption {
         switch (client.getClientType()) {
             case PLAYER:
                 if (playersById.size() >= game.getConfig().getMaxPlayerCount())
-                    throw new InvalidActionException("game.isFull");
-                playersById.put(client.getId(), (Client)client);
-                fieldsByPlayerId.put(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(), client.getId()));
+                    throw new GameFullExeption();
+                playersById.put(client.getId(), (Client) client);
+                fieldsByPlayerId.put(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(),client.getId()));
                 currentPlayerCountProperty.set(currentPlayerCountProperty.get() + 1);
                 break;
             case SPECTATOR:
                 if (spectatorsById.size() >= MAX_SPECTATOR_COUNT)
-                    throw new InvalidActionException("game.isFull");
+                    throw new new GameFullExeption();
                 spectatorsById.putIfAbsent(client.getId(), (Spectator) client);
                 break;
         }
@@ -276,7 +280,7 @@ public class GameHandler implements Translator {
 
     /** @return the {@link Configuration} from the {@link Game} object */
     @Nonnull
-    private Configuration getConfiguration() {
+    public Configuration getConfiguration() {
         return game.getConfig();
     }
 
@@ -402,6 +406,7 @@ public class GameHandler implements Translator {
      * {@link GameStage#FINISHED}:
      * sends {@link FinishNotification} and sets gameState to {@link GameState#FINISHED}
      */
+    @Override
     public void run() {
         if (getState() != GameState.IN_PROGRESS)
             return;
@@ -459,7 +464,10 @@ public class GameHandler implements Translator {
                     winner = Lists.newArrayList();
                 LOGGER.debug("Game {} has finished",game.getId());
                 this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, winner),getAllClients());
-                setState(GameState.FINISHED);
+                this.game.setState(GameState.FINISHED);
+                if(this.gameListener != null)
+                    this.gameListener.onGameFinished();
+                this.gameManager.gameFinished(this.game.getId());
                 break;
             default:
                 break;

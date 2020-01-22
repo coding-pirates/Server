@@ -355,7 +355,6 @@ public final class ConfigurationController extends AbstractController<Parent> {
             resourceBundle.getString("configuration.fileExtension.glob")
         );
 
-        //setupSpinners();
         setupShipTypeConfigurationControls();
         setupPenaltyMinusPointsControls();
     }
@@ -631,7 +630,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
         try {
             configuration = getConfigurationFromControls();
 
-            gameManager.createGame(configuration,gameNameTextField.getText(),false);
+            gameManager.createGame(configuration, gameNameTextField.getText(),false);
         } catch (final InvalidShipTypeConfigurationException exception) {
             displayInvalidShipTypeConfigurationAlert(exception.getInvalidConfiguration());
         } catch (final InsufficientFieldSizeException exception) {

@@ -8,6 +8,9 @@ import org.apache.logging.log4j.Logger;
 
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.network.module.ServerNetworkModule;
+import de.upb.codingpirates.battleships.server.ClientManager;
+import de.upb.codingpirates.battleships.server.GameManager;
+import de.upb.codingpirates.battleships.server.TournamentManager;
 import de.upb.codingpirates.battleships.server.gui.controllers.BoundingBoxConfigurationValidator;
 import de.upb.codingpirates.battleships.server.gui.controllers.ConfigurationValidator;
 import de.upb.codingpirates.battleships.server.handler.*;
@@ -25,11 +28,10 @@ public final class ServerModule extends AbstractModule {
 
         bind(ConfigurationValidator.class).to(BoundingBoxConfigurationValidator.class);
 
-        //bind interface ConnectionHandler to Class ClientManager in one instance
         bind(ConnectionHandler.class).to(ClientManager.class).in(Singleton.class);
         bind(ClientManager.class).in(Singleton.class);
-        //bind class GameManager in one instance
         bind(GameManager.class).in(Singleton.class);
+        bind(TournamentManager.class).in(Singleton.class);
 
         //bind all message handler to one instance
         bind(ConnectionClosedReportHandler.class).in(Singleton.class);

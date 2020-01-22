@@ -37,6 +37,7 @@ import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
 import de.upb.codingpirates.battleships.server.gui.util.AlertBuilder;
+import de.upb.codingpirates.battleships.server.util.ServerProperties;
 
 /**
  * The controller associated with the {@code main.fxml} file.
@@ -158,7 +159,7 @@ public final class MainController extends AbstractController<Parent> {
 
             launchItem
                 .disableProperty()
-                .bind(handler.currentPlayerCountProperty().lessThan(GameHandler.MIN_PLAYER_COUNT));
+                .bind(handler.currentPlayerCountProperty().lessThan(ServerProperties.MIN_PLAYER_COUNT));
             launchItem
                 .setOnAction(event -> {
                     LOGGER.trace(CONTROLLER_MARKER, "Attempting to launch game '{}'.", handler.getGame().getName());

@@ -28,12 +28,13 @@ public final class ConnectionClosedReportHandler extends AbstractServerMessageHa
     public void handleMessage(final ConnectionClosedReport message, final Id connectionId) throws InvalidActionException {
         LOGGER.debug(ServerMarker.HANDLER, "Handling ConnectionClosedReport for clientId {}.", connectionId);
 
-        if(this.clientManager.getClientTypeFromID(connectionId.getInt()) != ClientType.PLAYER){
-            Collection<Client> player = gameManager.getGameHandlerForClientId(connectionId.getInt()).getPlayers();
-            clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(connectionId.getInt()), player);
-        }
+        final List<Client> clients = gameManager
+                .getGameHandlerForClientId(connectionId.getInt())
+                .getAllClients();
 
-        this.gameManager.removeClientFromGame(connectionId.getInt());
-        this.clientManager.disconnect(connectionId.getInt());
+        clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(connectionId.getInt()), clients);
+
+        clientManager.disconnect(connectionId.getInt());
+        gameManager.removeClientFromGame(connectionId.getInt());
     }
 }
