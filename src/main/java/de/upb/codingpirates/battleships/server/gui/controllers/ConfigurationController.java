@@ -607,13 +607,13 @@ public final class ConfigurationController extends AbstractController<Parent> {
     // </editor-fold>
 
     private void displayInvalidNameAlert(final String invalidName) {
-        final Alert alert = new Alert(AlertType.ERROR);
-
-        alert.setContentText(resourceBundle.getString("game.name.invalidNameAlert.contentText"));
-        alert.setTitle(resourceBundle.getString("game.name.invalidNameAlert.title"));
-        alert.setHeaderText(String.format(resourceBundle.getString("game.name.invalidNameAlert.header"), invalidName));
-
-        alert.showAndWait();
+        AlertBuilder
+            .of(AlertType.ERROR)
+            .title(resourceBundle.getString("game.name.invalidNameAlert.title"))
+            .headerText(resourceBundle.getString("game.name.invalidNameAlert.header"))
+            .contentText(resourceBundle.getString("game.name.invalidNameAlert.contentText"))
+            .build()
+            .showAndWait();
     }
 
     @FXML
