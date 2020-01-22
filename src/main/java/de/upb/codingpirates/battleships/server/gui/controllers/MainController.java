@@ -160,7 +160,10 @@ public final class MainController extends AbstractController<Parent> {
                 .disableProperty()
                 .bind(handler.currentPlayerCountProperty().lessThan(GameHandler.MIN_PLAYER_COUNT));
             launchItem
-                .setOnAction(event -> handler.launchGame());
+                .setOnAction(event -> {
+                    LOGGER.trace(CONTROLLER_MARKER, "Attempting to launch game '{}'.", handler.getGame().getName());
+                    gameManager.launchGame(handler.getGame().getId());
+                });
 
             pauseResumeItem
                 .disableProperty()
@@ -174,10 +177,14 @@ public final class MainController extends AbstractController<Parent> {
                         .otherwise(resourceBundle.getString("overview.game.table.contextMenu.pause.text")));
             pauseResumeItem
                 .setOnAction(event -> {
-                    if (handler.getState() == GameState.PAUSED)
+                    if (handler.getState() == GameState.PAUSED) {
+                        LOGGER.trace(CONTROLLER_MARKER, "Attempting to resume game '{}'.", handler.getGame().getName());
+                        gameManager.continueGame(handler.getGame().getId());
                         handler.continueGame();
-                    else
-                        handler.pauseGame();
+                    } else {
+                        LOGGER.trace(CONTROLLER_MARKER, "Attempting to pause game '{}'.", handler.getGame().getName());
+                        gameManager.pauseGame(handler.getGame().getId());
+                    }
                 });
 
             abortItem
@@ -193,7 +200,10 @@ public final class MainController extends AbstractController<Parent> {
                         .buttonTypes(ButtonType.YES, ButtonType.NO)
                         .build()
                         .showAndWait()
-                        .ifPresent(alertResult -> handler.abortGame(alertResult == ButtonType.YES)));
+                        .ifPresent(alertResult -> {
+                            LOGGER.trace(CONTROLLER_MARKER, "Attempting to abort game '{}'.", handler.getGame().getName());
+                            gameManager.abortGame(handler.getGame().getId(), alertResult == ButtonType.YES);
+                        }));
             addAiItem
                 .disableProperty()
                 .bind(
