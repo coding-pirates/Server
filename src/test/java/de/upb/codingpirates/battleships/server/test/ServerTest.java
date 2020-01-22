@@ -11,8 +11,7 @@ import de.upb.codingpirates.battleships.network.dispatcher.MessageDispatcher;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.TournamentManager;
-import de.upb.codingpirates.battleships.server.exceptions.InvalidGameSizeException;
-import de.upb.codingpirates.battleships.server.network.ServerModule;
+import de.upb.codingpirates.battleships.server.ServerModule;
 
 import java.util.HashMap;
 
@@ -43,12 +42,7 @@ public abstract class ServerTest {
                 gameManager = injector.getInstance(GameManager.class);
                 clientManager = injector.getInstance(ClientManager.class);
                 tournamentManager = injector.getInstance(TournamentManager.class);
-                try {
-                    gameManager.createGame(TEST_CONFIG, "test");
-                } catch (InvalidGameSizeException e) {
-                    failed = true;
-                    serverThread.stop();
-                }
+                gameManager.createGame(TEST_CONFIG, "test");
                 while (true) {
 
                 }
