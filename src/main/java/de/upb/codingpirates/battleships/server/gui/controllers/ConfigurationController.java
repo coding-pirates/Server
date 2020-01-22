@@ -24,7 +24,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
@@ -396,27 +395,23 @@ public final class ConfigurationController extends AbstractController<Parent> {
     }
 
     private void displayInsufficientFieldSizeAlert(final int recommendedSize) {
-        final Alert alert = new Alert(AlertType.WARNING);
-
-        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
-
-        alert.setTitle(
-            resourceBundle.getString("configuration.insufficientFieldSizeAlert.title"));
-        alert.setHeaderText(
-            resourceBundle.getString("configuration.insufficientFieldSizeAlert.headerText"));
-        alert.setContentText(
-            String.format(
+        AlertBuilder
+            .of(AlertType.WARNING)
+            .title(resourceBundle.getString("configuration.insufficientFieldSizeAlert.title"))
+            .headerText(resourceBundle.getString("configuration.insufficientFieldSizeAlert.headerText"))
+            .contentText(String.format(
                 resourceBundle.getString("configuration.insufficientFieldSizeAlert.contentText"),
-                recommendedSize));
-
-        alert.showAndWait().ifPresent(result -> {
-            widthSpinner
-                .getValueFactory()
-                .setValue(recommendedSize);
-            heightSpinner
-                .getValueFactory()
-                .setValue(recommendedSize);
-        });
+                recommendedSize))
+            .build()
+            .showAndWait()
+            .ifPresent(result -> {
+                widthSpinner
+                    .getValueFactory()
+                    .setValue(recommendedSize);
+                heightSpinner
+                    .getValueFactory()
+                    .setValue(recommendedSize);
+            });
     }
 
     // <editor-fold desc="Configuration import and export">
