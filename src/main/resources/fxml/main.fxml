@@ -88,6 +88,11 @@
                 text="%tab.overview.tournaments.text">
                 <TableView fx:id="tournamentTableView">
                   <columns>
+                    <TableColumn text="%overview.tournament.table.columns.id.text">
+                      <cellValueFactory>
+                        <PropertyValueFactory property="tournamentId"/>
+                      </cellValueFactory>
+                    </TableColumn>
                     <TableColumn text="%overview.tournament.table.columns.name.text">
                       <cellValueFactory>
                         <PropertyValueFactory property="name"/>
