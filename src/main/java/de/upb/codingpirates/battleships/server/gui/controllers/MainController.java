@@ -14,12 +14,13 @@ import javax.inject.Inject;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.MapChangeListener.Change;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.input.*;
 
 import org.apache.logging.log4j.LogManager;
@@ -35,17 +36,15 @@ import de.upb.codingpirates.battleships.network.Properties;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
-import de.upb.codingpirates.battleships.server.TournamentManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
-import de.upb.codingpirates.battleships.server.game.TournamentHandler;
 import de.upb.codingpirates.battleships.server.gui.util.AlertBuilder;
 import de.upb.codingpirates.battleships.server.util.ServerProperties;
 
 /**
  * The controller associated with the {@code main.fxml} file.
  *
- * Its main task is updating the {@link #gameTableView}, {@link #tournamentTableView}, and {@link #playerTableView}
- * when updates from the backing {@link GameManager}, {@link TournamentManager}, and {@link ClientManager} arrive.
+ * Its main task is updating the {@link #gameTableView} and {@link #playerTableView} when updates from the backing
+ * {@link GameManager} and {@link ClientManager} arrive.
  *
  * @author Andre Blanke
  */
@@ -62,14 +61,16 @@ public final class MainController extends AbstractController<Parent> {
     @FXML
     private TableView<GameHandler> gameTableView;
     @FXML
-    private TableView<TournamentHandler> tournamentTableView;
+    private TableColumn<GameHandler, Boolean> isTournamentColumn;
 
     @FXML
     private TableView<Client> playerTableView;
 
-    private final ClientManager     clientManager;
-    private final GameManager       gameManager;
-    private final TournamentManager tournamentManager;
+    @Nonnull
+    private final ClientManager clientManager;
+
+    @Nonnull
+    private final GameManager gameManager;
 
     private final ExecutorService aiExecutorService = Executors.newCachedThreadPool();
 
@@ -84,13 +85,9 @@ public final class MainController extends AbstractController<Parent> {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Inject
-    public MainController(
-            @Nonnull final ClientManager clientManager,
-            @Nonnull final GameManager gameManager,
-            @Nonnull final TournamentManager tournamentManager) {
-        this.clientManager     = clientManager;
-        this.gameManager       = gameManager;
-        this.tournamentManager = tournamentManager;
+    public MainController(@Nonnull final ClientManager clientManager, @Nonnull final GameManager gameManager) {
+        this.clientManager = clientManager;
+        this.gameManager   = gameManager;
     }
 
     // <editor-fold desc="Initialization">
@@ -104,9 +101,6 @@ public final class MainController extends AbstractController<Parent> {
         gameManager
             .getGameMappings()
             .addListener(this::onGameMappingsChange);
-        tournamentManager
-            .getTournamentMappings()
-            .addListener(this::onTournamentMappingsChange);
 
         initializeTableViews();
     }
@@ -130,20 +124,10 @@ public final class MainController extends AbstractController<Parent> {
      * @param change The change which occurred to the {@link javafx.collections.ObservableMap}.
      */
     private void onGameMappingsChange(@Nonnull final Change<? extends Integer, ? extends GameHandler> change) {
-        if (change.wasAdded()) {
-            final GameHandler addedHandler = change.getValueAdded();
-            if (!addedHandler.getGame().isTournament())
-                gameTableView.getItems().add(addedHandler);
-        } else if (change.wasRemoved()) {
-            gameTableView.getItems().remove(change.getValueRemoved());
-        }
-    }
-
-    private void onTournamentMappingsChange(@Nonnull final Change<? extends Integer, ? extends TournamentHandler> change) {
         if (change.wasAdded())
-            tournamentTableView.getItems().add(change.getValueAdded());
+            gameTableView.getItems().add(change.getValueAdded());
         else if (change.wasRemoved())
-            tournamentTableView.getItems().remove(change.getValueRemoved());
+            gameTableView.getItems().remove(change.getValueRemoved());
     }
     // </editor-fold>
 
@@ -249,22 +233,21 @@ public final class MainController extends AbstractController<Parent> {
     }
 
     private void initializeTableViews() {
-        final EventHandler<? super DragEvent> clientDragOverHandler = event -> {
-            final Dragboard dragboard = event.getDragboard();
-            final TableRow<?> row = (TableRow<?>) event.getGestureSource();
-
-            if (!row.isEmpty() && dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
-                event.acceptTransferModes(TransferMode.LINK);
-                event.consume();
-            }
-        };
-
+        isTournamentColumn.setCellValueFactory(column -> new SimpleBooleanProperty(column.getValue().getGame().isTournament()));
+        isTournamentColumn.setCellFactory(column -> new CheckBoxTableCell<>());
         gameTableView.setRowFactory(tableView -> {
             final TableRow<GameHandler> row = new TableRow<>();
 
             row.setContextMenu(newGameHandlerTableRowContextMenu(row));
+            row.setOnDragOver(event -> {
+                final Dragboard   dragboard = event.getDragboard();
+                final TableRow<?> source    = (TableRow<?>) event.getGestureSource();
 
-            row.setOnDragOver(clientDragOverHandler);
+                if (!source.isEmpty() && dragboard.hasContent(SERIALIZED_MIME_TYPE)) {
+                    event.acceptTransferModes(TransferMode.LINK);
+                    event.consume();
+                }
+            });
             row.setOnDragDropped(event -> {
                 final Object content = event.getDragboard().getContent(SERIALIZED_MIME_TYPE);
 
@@ -279,12 +262,6 @@ public final class MainController extends AbstractController<Parent> {
                     LOGGER.error(exception);
                 }
             });
-            return row;
-        });
-        tournamentTableView.setRowFactory(tableView -> {
-            final TableRow<TournamentHandler> row = new TableRow<>();
-
-            row.setOnDragOver(clientDragOverHandler);
             return row;
         });
         playerTableView.setRowFactory(tableView -> {

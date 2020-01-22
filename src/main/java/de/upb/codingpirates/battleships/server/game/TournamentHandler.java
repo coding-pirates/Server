@@ -74,10 +74,10 @@ public class TournamentHandler implements Runnable, GameListener {
         return configuration.get(roundCount % configuration.size());
     }
 
-    private void newGame(){
-        GameHandler handler = gameManager.createGame(getConfiguration(),name+"_"+roundCount, this);
+    private void newGame() {
+        GameHandler handler = gameManager.createGame(getConfiguration(), name + "_" + roundCount, this);
         this.games.add(handler.getGame());
-        if(gameHandler != null) {
+        if (gameHandler != null) {
             gameHandler.getPlayers().forEach(player -> {
                 try {
                     handler.addClient(player);
