@@ -70,7 +70,7 @@ public class TournamentHandler implements Runnable, GameListener {
         this.timer = System.currentTimeMillis();
     }
 
-    private Configuration getConfiguration(){
+    private Configuration getConfiguration() {
         return configuration.get(roundCount % configuration.size());
     }
 
@@ -98,23 +98,23 @@ public class TournamentHandler implements Runnable, GameListener {
 
     @Override
     public void run() {
-        switch (tournamentState){
+        switch (tournamentState) {
             case PREGAME:
                 this.newGame();
                 this.tournamentState = TournamentState.INPROGRESS;
                 this.timer = System.currentTimeMillis();
                 break;
             case INPROGRESS:
-                if(this.gameHandler.getStage().equals(GameStage.START) && timer < System.currentTimeMillis() - ServerProperties.AUTO_GAME_START){
+                if (this.gameHandler.getStage().equals(GameStage.START) && timer < System.currentTimeMillis() - ServerProperties.AUTO_GAME_START){
                     this.gameHandler.launchGame();
                 }
                 break;
             case POSTGAME:
-                if(roundCount + 1< rounds ){
+                if (roundCount + 1< rounds ){
                     this.tournamentState = TournamentState.FINISHED;
                     return;
                 }
-                if(timer > System.currentTimeMillis() + ServerProperties.TOURNAMENT_GAMEFINISH_TIME){
+                if (timer > System.currentTimeMillis() + ServerProperties.TOURNAMENT_GAMEFINISH_TIME){
                     this.roundCount++;
                     this.tournamentState = TournamentState.PREGAME;
                 }
@@ -127,7 +127,7 @@ public class TournamentHandler implements Runnable, GameListener {
     private void finishTournament(){
         OptionalInt winnerScore = score.values().stream().mapToInt(value -> value).max();
         Collection<Integer> winner;
-        if(winnerScore.isPresent())
+        if (winnerScore.isPresent())
             winner = score.entrySet().stream().filter(entry -> entry.getValue() == winnerScore.getAsInt()).map(Map.Entry::getKey).collect(Collectors.toList());
         else
             winner = Lists.newArrayList();
@@ -138,5 +138,10 @@ public class TournamentHandler implements Runnable, GameListener {
     @Nonnull
     public Map<Integer, Integer> getScore(){
         return score;
+    }
+
+    @Nonnull
+    public String getName() {
+        return name;
     }
 }

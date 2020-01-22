@@ -130,10 +130,13 @@ public final class MainController extends AbstractController<Parent> {
      * @param change The change which occurred to the {@link javafx.collections.ObservableMap}.
      */
     private void onGameMappingsChange(@Nonnull final Change<? extends Integer, ? extends GameHandler> change) {
-        if (change.wasAdded())
-            gameTableView.getItems().add(change.getValueAdded());
-        else if (change.wasRemoved())
+        if (change.wasAdded()) {
+            final GameHandler addedHandler = change.getValueAdded();
+            if (!addedHandler.getGame().isTournament())
+                gameTableView.getItems().add(addedHandler);
+        } else if (change.wasRemoved()) {
             gameTableView.getItems().remove(change.getValueRemoved());
+        }
     }
 
     private void onTournamentMappingsChange(@Nonnull final Change<? extends Integer, ? extends TournamentHandler> change) {
