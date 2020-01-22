@@ -8,6 +8,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Region;
 import javafx.util.Builder;
 
 import com.google.common.base.Throwables;
@@ -49,6 +50,7 @@ public class AlertBuilder implements Builder<Alert> {
 
         alert.setTitle(title);
         alert.setHeaderText(headerText);
+        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
 
         return alert;
     }
