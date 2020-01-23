@@ -214,7 +214,7 @@ public class GameHandler implements Runnable, Translator {
             case SPECTATOR:
                 if (spectatorsById.size() >= MAX_SPECTATOR_COUNT)
                     throw new GameFullExeption();
-                spectatorsById.putIfAbsent(client.getId(), (Spectator) client);
+                spectatorsById.putIfAbsent(client.getId(), client);
                 break;
         }
     }
@@ -453,6 +453,7 @@ public class GameHandler implements Runnable, Translator {
                     this.timeStamp = System.currentTimeMillis();
 
                     this.deadPlayer.forEach(this::removeDeadPlayer);
+                    this.testGameFinished();
                 }
                 break;
             case SHOTS:
@@ -466,10 +467,10 @@ public class GameHandler implements Runnable, Translator {
             case FINISHED:
                 LOGGER.debug("Game {} has finished",game.getId());
                 this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, getWinner()), getAllClients());
-                this.game.setState(GameState.FINISHED);
                 if(this.gameListener != null)
                     this.gameListener.onGameFinished();
                 this.gameManager.gameFinished(this.game.getId());
+                this.setState(GameState.FINISHED);
                 break;
             default:
                 break;
@@ -708,9 +709,9 @@ public class GameHandler implements Runnable, Translator {
         switch (stage) {
             case PLACESHIPS:
             case SHOTS:
-                return System.currentTimeMillis() - this.timeStamp - getConfiguration().getRoundTime();
+                return getConfiguration().getRoundTime() - (System.currentTimeMillis() - this.timeStamp) ;
             case VISUALIZATION:
-                return System.currentTimeMillis() - this.timeStamp - getConfiguration().getVisualizationTime();
+                return getConfiguration().getVisualizationTime() - (System.currentTimeMillis() - this.timeStamp);
             default:
                 throw new InvalidActionException("game.noTimerActive");
         }
