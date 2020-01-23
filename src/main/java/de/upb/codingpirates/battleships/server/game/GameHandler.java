@@ -453,6 +453,7 @@ public class GameHandler implements Runnable, Translator {
                     this.timeStamp = System.currentTimeMillis();
 
                     this.deadPlayer.forEach(this::removeDeadPlayer);
+                    this.testGameFinished();
                 }
                 break;
             case SHOTS:
