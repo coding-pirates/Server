@@ -467,10 +467,10 @@ public class GameHandler implements Runnable, Translator {
             case FINISHED:
                 LOGGER.debug("Game {} has finished",game.getId());
                 this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, getWinner()), getAllClients());
-                this.game.setState(GameState.FINISHED);
                 if(this.gameListener != null)
                     this.gameListener.onGameFinished();
                 this.gameManager.gameFinished(this.game.getId());
+                this.setState(GameState.FINISHED);
                 break;
             default:
                 break;
