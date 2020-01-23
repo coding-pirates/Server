@@ -1,7 +1,7 @@
 apply plugin: "java" //enables java settings for gradle
 apply plugin: "application" //adds a run task for this project
 
-apply from: "${rootProject.rootDir}/gradle/javadoc.gradle"
+apply from: "${rootProject.rootDir}/gradle/java.gradle"
 
 dependencies {
     //adds maven dependencies for gradle to download
@@ -27,7 +27,6 @@ dependencies {
     //test dependencies
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.5.2'
     testImplementation project(":client")
-    compile project(path: ':ai')
 }
 
 //set java version for the resulting java bytecode & java version of the dev environment
@@ -68,5 +67,7 @@ jar{
                 'Implementation-Version': "${project.server_version}",
                 'Main-Class': 'de.upb.codingpirates.battleships.server.BattleshipsServerApplication'
     }
-    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    from ( configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } ) {
+        exclude 'log4j2.xml'
+    }
 }

@@ -1,9 +1,7 @@
 package de.upb.codingpirates.battleships.server.test;
-/*
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import de.upb.codingpirates.battleships.client.ListenerHandler;
 import de.upb.codingpirates.battleships.client.listener.*;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
@@ -11,24 +9,23 @@ import de.upb.codingpirates.battleships.client.network.ClientConnector;
 import de.upb.codingpirates.battleships.client.network.ClientModule;
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.Properties;
-import de.upb.codingpirates.battleships.network.dispatcher.MessageDispatcher;
 import de.upb.codingpirates.battleships.network.exceptions.BattleshipException;
 import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.request.RequestBuilder;
 import de.upb.codingpirates.battleships.network.message.response.LobbyResponse;
 import de.upb.codingpirates.battleships.network.message.response.ServerJoinResponse;
-import de.upb.codingpirates.battleships.server.GameManager;
-import de.upb.codingpirates.battleships.server.ServerModule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ServerTests {
-    public static final Configuration TEST_CONFIG = new Configuration(TestProperties.playerCount, 10, 10, 4, 1, 1, 5000, 100, new HashMap<Integer, ShipType>(){{put(0,new ShipType(Lists.newArrayList(new Point2D(1,1),new Point2D(2,1),new Point2D(1,2))));}}, 1, PenaltyType.POINTLOSS);
+public class GameTest extends ServerTest{
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Random RANDOM = new Random();
@@ -44,20 +41,8 @@ public class ServerTests {
     private static final AtomicBoolean finished = new AtomicBoolean(true);
 
     @Test
-    public void test() throws IOException {
-        if(!TestProperties.isServerOnline) {
-            new Thread(() -> {
-                Injector injector = Guice.createInjector(new ServerModule());
-                injector.getInstance(MessageDispatcher.class);
-                GameManager manager = injector.getInstance(GameManager.class);
-                manager.createGame(TEST_CONFIG, "test", false);
-                long timer = System.currentTimeMillis();
-                while (timer > System.currentTimeMillis() - 20000) {
-
-                }
-            }).start();
-        }
-
+    public void gameTest() throws IOException {
+        serverStart();
 
         long timer = System.currentTimeMillis();
         while (timer > System.currentTimeMillis() - 1000){
@@ -99,17 +84,21 @@ public class ServerTests {
 
         while (timer > System.currentTimeMillis() - 10000){
         }
-        while (!finished.get()){
+        while (!finished.get() && !serverHasFailed()){
         }
+
+        checkServer();
 
         LOGGER.debug("finished connection test");
     }
 
-    public static class TestClientModule extends ClientModule<ClientConnector> {
+    public static class TestClientModule extends ClientModule {
+
+        private static MessageHandler d = new MessageHandler();
 
         public TestClientModule() {
-            super(ClientConnector.class);
-            ListenerHandler.registerListener(new MessageHandler());
+            super(ClientConnector.class,null);
+            ListenerHandler.registerListener(d);
         }
     }
 
@@ -121,21 +110,13 @@ public class ServerTests {
                 finished.set(false);
             }
             configuration = message.getConfiguration();
-            try {
-                connectors.get(clientId).sendMessageToServer(RequestBuilder.placeShipsRequest(getPlacement(message.getConfiguration())));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            connectors.get(clientId).sendMessageToServer(RequestBuilder.placeShipsRequest(getPlacement(message.getConfiguration())));
         }
 
         @Override
         public void onGameStartNotification(GameStartNotification message, int clientId) {
             LOGGER.info("GameStartNotification");
-            try {
-                connectors.get(clientId).sendMessageToServer(RequestBuilder.shotsRequest(getShots(configuration)));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            connectors.get(clientId).sendMessageToServer(RequestBuilder.shotsRequest(getShots(configuration)));
         }
 
         @Override
@@ -176,11 +157,7 @@ public class ServerTests {
         @Override
         public void onRoundStartNotification(RoundStartNotification message, int clientId) {
             LOGGER.info("RoundStartNotification");
-            try {
-                connectors.get(clientId).sendMessageToServer(RequestBuilder.shotsRequest(getShots(configuration)));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            connectors.get(clientId).sendMessageToServer(RequestBuilder.shotsRequest(getShots(configuration)));
         }
     }
 
@@ -233,5 +210,3 @@ public class ServerTests {
         return shots;
     }
 }
-
- */

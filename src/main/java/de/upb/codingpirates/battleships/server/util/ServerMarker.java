@@ -10,6 +10,7 @@ public final class ServerMarker {
     public static final Marker GAME = MarkerManager.getMarker("Game Handling");
     public static final Marker INGAME = MarkerManager.getMarker("In Game");
     public static final Marker HANDLER = MarkerManager.getMarker("Message Handler");
+    public static final Marker TOURNAMENT = MarkerManager.getMarker("Tournament Handling");
 
     private ServerMarker() {
     }

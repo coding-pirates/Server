@@ -23,7 +23,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
@@ -41,6 +41,8 @@ import org.jetbrains.annotations.Contract;
 
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.server.GameManager;
+import de.upb.codingpirates.battleships.server.TournamentManager;
+import de.upb.codingpirates.battleships.server.game.GameType;
 import de.upb.codingpirates.battleships.server.gui.controllers.ConfigurationValidator.InsufficientFieldSizeException;
 import de.upb.codingpirates.battleships.server.gui.util.AlertBuilder;
 
@@ -104,12 +106,18 @@ public final class ConfigurationController extends AbstractController<Parent> {
     private GridPane shipConfigurationGrid;
     // </editor-fold>
 
+    // <editor-fold desc="Launch game controls"
+    @FXML
+    private ComboBox<GameType> gameTypeComboBox;
+
     @FXML
     private TextField gameNameTextField;
+    // </editor-fold>
 
     private final Gson gson;
 
-    private final GameManager gameManager;
+    private final GameManager       gameManager;
+    private final TournamentManager tournamentManager;
 
     private final ConfigurationValidator validator;
 
@@ -119,10 +127,12 @@ public final class ConfigurationController extends AbstractController<Parent> {
     private ConfigurationController(
             @Nonnull final Gson gson,
             @Nonnull final GameManager gameManager,
+            @Nonnull final TournamentManager tournamentManager,
             @Nonnull final ConfigurationValidator validator) {
-        this.gson        = gson;
-        this.gameManager = gameManager;
-        this.validator   = validator;
+        this.gson              = gson;
+        this.gameManager       = gameManager;
+        this.tournamentManager = tournamentManager;
+        this.validator         = validator;
     }
 
     // <editor-fold desc="toShipTypeLabel">
@@ -355,7 +365,6 @@ public final class ConfigurationController extends AbstractController<Parent> {
             resourceBundle.getString("configuration.fileExtension.glob")
         );
 
-        //setupSpinners();
         setupShipTypeConfigurationControls();
         setupPenaltyMinusPointsControls();
     }
@@ -386,27 +395,23 @@ public final class ConfigurationController extends AbstractController<Parent> {
     }
 
     private void displayInsufficientFieldSizeAlert(final int recommendedSize) {
-        final Alert alert = new Alert(AlertType.WARNING);
-
-        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
-
-        alert.setTitle(
-            resourceBundle.getString("configuration.insufficientFieldSizeAlert.title"));
-        alert.setHeaderText(
-            resourceBundle.getString("configuration.insufficientFieldSizeAlert.headerText"));
-        alert.setContentText(
-            String.format(
+        AlertBuilder
+            .of(AlertType.WARNING)
+            .title(resourceBundle.getString("configuration.insufficientFieldSizeAlert.title"))
+            .headerText(resourceBundle.getString("configuration.insufficientFieldSizeAlert.headerText"))
+            .contentText(String.format(
                 resourceBundle.getString("configuration.insufficientFieldSizeAlert.contentText"),
-                recommendedSize));
-
-        alert.showAndWait().ifPresent(result -> {
-            widthSpinner
-                .getValueFactory()
-                .setValue(recommendedSize);
-            heightSpinner
-                .getValueFactory()
-                .setValue(recommendedSize);
-        });
+                recommendedSize))
+            .build()
+            .showAndWait()
+            .ifPresent(result -> {
+                widthSpinner
+                    .getValueFactory()
+                    .setValue(recommendedSize);
+                heightSpinner
+                    .getValueFactory()
+                    .setValue(recommendedSize);
+            });
     }
 
     // <editor-fold desc="Configuration import and export">
@@ -608,34 +613,61 @@ public final class ConfigurationController extends AbstractController<Parent> {
     // </editor-fold>
 
     private void displayInvalidNameAlert(final String invalidName) {
-        final Alert alert = new Alert(AlertType.ERROR);
+        AlertBuilder
+            .of(AlertType.ERROR)
+            .title(resourceBundle.getString("game.name.invalidNameAlert.title"))
+            .headerText(String.format(resourceBundle.getString("game.name.invalidNameAlert.header"), invalidName))
+            .contentText(resourceBundle.getString("game.name.invalidNameAlert.contentText"))
+            .build()
+            .showAndWait();
+    }
 
-        alert.setContentText(resourceBundle.getString("game.name.invalidNameAlert.contentText"));
-        alert.setTitle(resourceBundle.getString("game.name.invalidNameAlert.title"));
-        alert.setHeaderText(String.format(resourceBundle.getString("game.name.invalidNameAlert.header"), invalidName));
+    private Optional<Integer> displayTournamentRoundCountPrompt() {
+        final int hBoxSpacing = 10;
 
-        alert.showAndWait();
+        final Label roundCountSpinnerLabel =
+            new Label(resourceBundle.getString("game.tournament.roundCountPrompt.label"));
+        final Spinner<Integer> roundCountSpinner = new Spinner<>(1, Integer.MAX_VALUE, 1);
+
+        return AlertBuilder
+            .of(AlertType.INFORMATION)
+            .title(resourceBundle.getString("game.tournament.roundCountPrompt.title"))
+            .headerText(resourceBundle.getString("game.tournament.roundCountPrompt.headerText"))
+            .buttonTypes(ButtonType.OK, ButtonType.CANCEL)
+            .dialogPaneContent(new HBox(hBoxSpacing, roundCountSpinnerLabel, roundCountSpinner))
+            .build()
+            .showAndWait()
+            .map(buttonType -> roundCountSpinner.getValue());
     }
 
     @FXML
-    @SuppressWarnings("unused")
     private void onStartNewGameButtonAction() {
-        final Configuration configuration;
-
         final String gameName = gameNameTextField.getText().trim();
         if (gameName.isEmpty()) {
             displayInvalidNameAlert(gameName);
             return;
         }
 
+        final Configuration configuration;
         try {
             configuration = getConfigurationFromControls();
-
-            gameManager.createGame(configuration,gameNameTextField.getText(),false);
         } catch (final InvalidShipTypeConfigurationException exception) {
             displayInvalidShipTypeConfigurationAlert(exception.getInvalidConfiguration());
+            return;
         } catch (final InsufficientFieldSizeException exception) {
             displayInsufficientFieldSizeAlert(exception.getRecommendedSize());
+            return;
+        }
+
+        switch (gameTypeComboBox.getValue()) {
+        case GAME:
+            gameManager.createGame(configuration, gameName);
+            break;
+        case TOURNAMENT:
+            displayTournamentRoundCountPrompt()
+                .ifPresent(roundCount ->
+                    tournamentManager.createTournament(Collections.singletonList(configuration), gameName, roundCount));
+            break;
         }
     }
 
