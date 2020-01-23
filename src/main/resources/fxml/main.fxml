@@ -16,6 +16,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
+<?import de.upb.codingpirates.battleships.server.gui.control.cell.AdvancedPropertyValueFactory?>
 <ScrollPane
     xmlns:fx="http://javafx.com/fxml"
     fx:controller="de.upb.codingpirates.battleships.server.gui.controllers.MainController"
@@ -57,12 +58,12 @@
               <columns>
                 <TableColumn text="%overview.game.table.columns.id.text">
                   <cellValueFactory>
-                    <PropertyValueFactory property="id"/>
+                    <AdvancedPropertyValueFactory propertyAccessor="game.id"/>
                   </cellValueFactory>
                 </TableColumn>
                 <TableColumn text="%overview.game.table.columns.name.text">
                   <cellValueFactory>
-                    <PropertyValueFactory property="name"/>
+                    <AdvancedPropertyValueFactory propertyAccessor="game.name"/>
                   </cellValueFactory>
                 </TableColumn>
                 <TableColumn fx:id="isTournamentColumn" text="%overview.game.table.columns.isTournament">
@@ -82,7 +83,7 @@
                 </TableColumn>
                 <TableColumn text="%overview.game.table.columns.maxPlayerCount">
                   <cellValueFactory>
-                    <PropertyValueFactory property="maxPlayerCount"/>
+                    <AdvancedPropertyValueFactory propertyAccessor="game.maxPlayerCount"/>
                   </cellValueFactory>
                 </TableColumn>
               </columns>

@@ -212,7 +212,7 @@ public final class MainController extends AbstractController<Parent> {
                 .disableProperty()
                 .bind(
                     handler.stateProperty().isNotEqualTo(GameState.LOBBY)
-                        .or(handler.currentPlayerCountProperty().isEqualTo(handler.getMaxPlayerCount())));
+                        .or(handler.currentPlayerCountProperty().isEqualTo(handler.getGame().getMaxPlayerCount())));
             addAiItem
                 .setOnAction(event -> aiExecutorService.submit(() -> {
                     final AI ai = new AI(UUID.randomUUID().toString(), 1);
@@ -257,7 +257,7 @@ public final class MainController extends AbstractController<Parent> {
                     return;
 
                 try {
-                    gameManager.addClientToGame(row.getItem().getId(), (Client) content);
+                    gameManager.addClientToGame(row.getItem().getGame().getId(), (Client) content);
                 } catch (final GameException exception) {
                     LOGGER.error(exception);
                 }

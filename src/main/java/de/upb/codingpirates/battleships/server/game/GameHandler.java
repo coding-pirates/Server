@@ -181,23 +181,6 @@ public class GameHandler implements Runnable, Translator {
     }
     // </editor-fold>
 
-    /*
-     * TODO: Remove these three "synthetic" properties and replace them with a better implementation of
-     *  PropertyValueFactory which allows usage of the ".".
-     */
-
-    public int getId() {
-        return getGame().getId();
-    }
-
-    public String getName() {
-        return getGame().getName();
-    }
-
-    public int getMaxPlayerCount() {
-        return getGame().getConfig().getMaxPlayerCount();
-    }
-
     /**
      * adds the client as the spectator or player to the game
      * @throws GameFullExeption if game is full
