@@ -214,7 +214,7 @@ public class GameHandler implements Runnable, Translator {
             case SPECTATOR:
                 if (spectatorsById.size() >= MAX_SPECTATOR_COUNT)
                     throw new GameFullExeption();
-                spectatorsById.putIfAbsent(client.getId(), (Spectator) client);
+                spectatorsById.putIfAbsent(client.getId(), client);
                 break;
         }
     }
