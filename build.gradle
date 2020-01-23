@@ -69,7 +69,6 @@ jar{
                 'Main-Class': 'de.upb.codingpirates.battleships.server.BattleshipsServerApplication'
     }
     from ( configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } ) {
-        exclude 'META-INF/**'
         exclude 'log4j2.xml'
     }
 }

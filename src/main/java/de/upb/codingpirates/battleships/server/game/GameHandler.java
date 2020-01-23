@@ -709,9 +709,9 @@ public class GameHandler implements Runnable, Translator {
         switch (stage) {
             case PLACESHIPS:
             case SHOTS:
-                return System.currentTimeMillis() - this.timeStamp - getConfiguration().getRoundTime();
+                return getConfiguration().getRoundTime() - (System.currentTimeMillis() - this.timeStamp) ;
             case VISUALIZATION:
-                return System.currentTimeMillis() - this.timeStamp - getConfiguration().getVisualizationTime();
+                return getConfiguration().getVisualizationTime() - (System.currentTimeMillis() - this.timeStamp);
             default:
                 throw new InvalidActionException("game.noTimerActive");
         }
