@@ -58,6 +58,8 @@ public final class MainController extends AbstractController<Parent> {
 
     @FXML
     private TableView<GameHandler> gameTableView;
+    @FXML
+    private TableColumn<GameHandler, String> playerCountTableColumn;
 
     @FXML
     private TableView<Client> playerTableView;
@@ -229,6 +231,20 @@ public final class MainController extends AbstractController<Parent> {
     }
 
     private void initializeTableViews() {
+        playerCountTableColumn.setCellValueFactory(cellDataFeatures ->
+            Bindings.concat(
+                cellDataFeatures
+                    .getValue()
+                    .currentPlayerCountProperty()
+                    .asString(),
+                "/",
+                cellDataFeatures
+                    .getValue()
+                    .getGame()
+                    .getConfig()
+                    .getMaxPlayerCount()
+            ));
+
         gameTableView.setRowFactory(tableView -> {
             final TableRow<GameHandler> row = new TableRow<>();
 

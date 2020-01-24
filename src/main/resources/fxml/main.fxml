@@ -82,16 +82,7 @@
                       <PropertyValueFactory property="state"/>
                     </cellValueFactory>
                   </TableColumn>
-                  <TableColumn text="%overview.game.table.columns.currentPlayerCount">
-                    <cellValueFactory>
-                      <PropertyValueFactory property="currentPlayerCount"/>
-                    </cellValueFactory>
-                  </TableColumn>
-                  <TableColumn text="%overview.game.table.columns.maxPlayerCount">
-                    <cellValueFactory>
-                      <AdvancedPropertyValueFactory propertyAccessor="game.maxPlayerCount"/>
-                    </cellValueFactory>
-                  </TableColumn>
+                  <TableColumn fx:id="playerCountTableColumn" text="%overview.game.table.columns.playerCount"/>
                 </columns>
                 <placeholder>
                   <Label text="%overview.game.table.placeholder"/>
