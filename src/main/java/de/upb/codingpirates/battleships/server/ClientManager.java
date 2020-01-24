@@ -125,7 +125,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      * @param clients
      */
     public void sendMessageToClients(Message message, Collection<? extends AbstractClient> clients) {
-        if(clients.size()<=0)return;
+        if (clients.size() <= 0) return;
         this.sendMessage(message, clients.toArray(new AbstractClient[0]));
     }
 
@@ -137,7 +137,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      */
     @SafeVarargs
     public final <T extends AbstractClient> void sendMessage(Message message, T... clients) {
-        if(clients == null || clients.length == 0) {
+        if (clients == null || clients.length == 0) {
             LOGGER.debug(ServerMarker.CLIENT, "Didn't send {} to clients. Clients are empty", message);
             return;
         }
@@ -153,7 +153,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      * @param clients
      */
     public void sendMessage(Message message, int... clients) {
-        if(clients == null || clients.length == 0) {
+        if (clients == null || clients.length == 0) {
             LOGGER.debug(ServerMarker.CLIENT, "Didn't send {} to clients. Clients are empty", message);
             return;
         }
@@ -169,7 +169,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      * @param clients
      */
     public void sendMessage(Message message, Id... clients) {
-        if(clients == null || clients.length == 0) {
+        if (clients == null || clients.length == 0) {
             LOGGER.debug(ServerMarker.CLIENT, "Didn't send {} to clients. Clients are empty", message);
             return;
         }
@@ -178,7 +178,7 @@ public class ClientManager implements ConnectionHandler, Translator {
         }
     }
 
-    private void send(Message message, Id id){
+    private void send(Message message, Id id) {
         try {
             this.connectionManager.send(id, message);
         } catch (IOException e) {
@@ -193,7 +193,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      */
     @Nonnull
     public ClientType getClientTypeFromID(int id) throws InvalidActionException {
-        if(clients.containsKey(id))
+        if (clients.containsKey(id))
             return clients.get(id).getClientType();
         throw new InvalidActionException("game.clientManager.clientNotExist");
     }
@@ -203,7 +203,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      */
     @Nonnull
     public AbstractClient getClient(int id) throws InvalidActionException {
-        if(clients.containsKey(id))
+        if (clients.containsKey(id))
             return this.clients.get(id);
         throw new InvalidActionException("game.clientManager.clientNotExist");
     }

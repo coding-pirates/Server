@@ -346,12 +346,13 @@ public class GameHandler implements Runnable, Translator {
 
     /**
      * adds a ship placement configuration for a player
+     *
      * @param clientId id of the player
-     * @param ships map from ship id to placementinfo
+     * @param ships    map from ship id to placementinfo
      * @throws GameException if to many ships have been placed or the ships for the player has already been placed
      */
     public void addShipPlacement(int clientId, @Nonnull Map<Integer, PlacementInfo> ships) throws GameException {
-        if(this.getStage().equals(GameStage.PLACESHIPS)) {
+        if (this.getStage().equals(GameStage.PLACESHIPS)) {
             if (ships.size() > getConfiguration().getShips().size()) {
                 LOGGER.debug("Client {} would have set to many ships", clientId);
                 applyPenalty(clientId);
@@ -363,17 +364,17 @@ public class GameHandler implements Runnable, Translator {
                 throw new InvalidActionException("game.player.toLessShips");
             }
             LOGGER.debug("Ships placed successful for player {}", clientId);
-        }else {
+        } else {
             throw new InvalidActionException("Its not the time to place ships");
         }
     }
 
-    private void applyPenalty(int clientId){
-        switch (getConfiguration().getPenaltyKind()){
+    private void applyPenalty(int clientId) {
+        switch (getConfiguration().getPenaltyKind()) {
             case KICK:
                 this.removeInactivePlayer(clientId);
             case POINTLOSS:
-                this.score.compute(clientId, (clientId1, score) -> score == null?-getConfiguration().getPenaltyMinusPoints():score - getConfiguration().getPenaltyMinusPoints());
+                this.score.compute(clientId, (clientId1, score) -> score == null ? -getConfiguration().getPenaltyMinusPoints() : score - getConfiguration().getPenaltyMinusPoints());
                 break;
             default:
                 break;
@@ -382,17 +383,18 @@ public class GameHandler implements Runnable, Translator {
 
     /**
      * adds shots placement for a player
+     *
      * @param clientId id of the player
-     * @param shots all shots from the player
+     * @param shots    all shots from the player
      * @throws GameException if to many shots have been placed or the shots for the player has already been placed
      */
-    public void addShotPlacement(int clientId,@Nonnull Collection<Shot> shots) throws GameException {
+    public void addShotPlacement(int clientId, @Nonnull Collection<Shot> shots) throws GameException {
         if (shots.size() > getConfiguration().getShotCount()) {
             applyPenalty(clientId);
             throw new NotAllowedException("game.player.toManyShots");
         }
-        for (Shot shot: shots){
-            if(!playersById.containsKey(shot.getClientId())) {
+        for (Shot shot : shots) {
+            if (!playersById.containsKey(shot.getClientId())) {
                 shots.remove(shot);
                 LOGGER.warn("Player {} for shot from {} does not exist", shot.getClientId(), clientId);
             }
@@ -487,16 +489,17 @@ public class GameHandler implements Runnable, Translator {
         }
     }
 
-    public Collection<Integer> getWinner(){
+    public Collection<Integer> getWinner() {
         OptionalInt winnerScore = score.values().stream().mapToInt(value -> value).max();
         Collection<Integer> winner = Lists.newArrayList();
-        if(winnerScore.isPresent())
+        if (winnerScore.isPresent())
             winner.addAll(score.entrySet().stream().filter(entry -> entry.getValue() == winnerScore.getAsInt()).map(Map.Entry::getKey).collect(Collectors.toList()));
         return winner;
     }
 
     /**
      * set games state to {@link GameState#IN_PROGRESS} & stage to {@link GameStage#START}
+     *
      * @return {@code false} if player count is under 2
      */
     public boolean launchGame() {
@@ -532,7 +535,7 @@ public class GameHandler implements Runnable, Translator {
         LOGGER.debug(ServerMarker.GAME, "paused game {}, {}", this.game.getId(), this.game.getName());
         if (getState() == GameState.IN_PROGRESS) {
             this.setState(GameState.PAUSED);
-            switch (stage){
+            switch (stage) {
                 case VISUALIZATION:
                     this.pauseTimeCache = getConfiguration().getVisualizationTime() - (System.currentTimeMillis() - timeStamp);
                     break;
@@ -586,7 +589,7 @@ public class GameHandler implements Runnable, Translator {
             Field field = this.fieldsByPlayerId.get(clientEntry.getKey());
             for (Map.Entry<Integer, PlacementInfo> shipEntry : clientEntry.getValue().entrySet()) {
                 Ship ship = field.placeShip(ships.get(shipEntry.getKey()), shipEntry.getValue());
-                if(ship != null) {//TODO ship can't be placed
+                if (ship != null) {//TODO ship can't be placed
                     this.ships.computeIfAbsent(clientEntry.getKey(), id -> Maps.newHashMap()).put(shipEntry.getKey(), ship);
                 }
             }
@@ -601,12 +604,12 @@ public class GameHandler implements Runnable, Translator {
     private void performShots() {
         this.newHits.clear();
         List<Ship> sunkShips = Lists.newArrayList();
-        Map<Shot,List<Integer>> shotListMap = Maps.newHashMap();
+        Map<Shot, List<Integer>> shotListMap = Maps.newHashMap();
         Map<HitType, List<Shot>> hitToPoint = Maps.newHashMap();
         for (Map.Entry<Integer, Collection<Shot>> entry : shots.entrySet()) {
             for (Shot shot : entry.getValue()) {
-                shotListMap.compute(shot, (shot1, list) ->{
-                    if(list != null){
+                shotListMap.compute(shot, (shot1, list) -> {
+                    if (list != null) {
                         list.add(entry.getKey());
                         return list;
                     }
@@ -647,23 +650,23 @@ public class GameHandler implements Runnable, Translator {
             }
         }
         //add points for each hit to the player who shot a Shot at a position
-        if(hitToPoint.containsKey(HitType.HIT)){
-            for(Shot shot : hitToPoint.get(HitType.HIT)) {
+        if (hitToPoint.containsKey(HitType.HIT)) {
+            for (Shot shot : hitToPoint.get(HitType.HIT)) {
                 int points = getConfiguration().getHitPoints() / shotListMap.get(shot).size();
-                shotListMap.get(shot).forEach( client ->
-                score.compute(client, (id, point) -> {
-                    if (point == null) {
-                        return points;
-                    } else {
-                        return point + points;
-                    }
-                }));
+                shotListMap.get(shot).forEach(client ->
+                        score.compute(client, (id, point) -> {
+                            if (point == null) {
+                                return points;
+                            } else {
+                                return point + points;
+                            }
+                        }));
             }
         }
-        if(hitToPoint.containsKey(HitType.SUNK)){
-            for(Shot shot : hitToPoint.get(HitType.SUNK)) {
+        if (hitToPoint.containsKey(HitType.SUNK)) {
+            for (Shot shot : hitToPoint.get(HitType.SUNK)) {
                 int points = getConfiguration().getSunkPoints() / shotListMap.get(shot).size();
-                shotListMap.get(shot).forEach( client ->
+                shotListMap.get(shot).forEach(client ->
                         score.compute(client, (id, point) -> {
                             if (point == null) {
                                 return points;
@@ -686,19 +689,20 @@ public class GameHandler implements Runnable, Translator {
 
     /**
      * removed dead player
+     *
      * @param client
      */
-    private void removeDeadPlayer(Client client){
-        LOGGER.info(ServerMarker.GAME, "{} has lost",client);
+    private void removeDeadPlayer(Client client) {
+        LOGGER.info(ServerMarker.GAME, "{} has lost", client);
         this.ships.remove(client.getId());
         client.setDead(true);
         this.testGameFinished();
     }
 
-    private void testGameFinished(){
-        if(ships.size() <= 1){
+    private void testGameFinished() {
+        if (ships.size() <= 1) {
             this.stage = GameStage.FINISHED;
-        }else {
+        } else {
             clientManager.sendMessageToClients(NotificationBuilder.roundStartNotification(), getAllClients());
         }
     }
@@ -708,7 +712,7 @@ public class GameHandler implements Runnable, Translator {
      */
     private void removeInactivePlayer(int... clients) {
         clientManager.sendMessage(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, PlaceShipsRequest.MESSAGE_ID, translate("game.player.noPlacedShips")), clients);
-        for(Integer clientId: clients){
+        for (Integer clientId : clients) {
             this.removeClient(clientId);
         }
     }
@@ -717,7 +721,7 @@ public class GameHandler implements Runnable, Translator {
      * @return remaining round time
      * @throws InvalidActionException if there is no round running
      */
-    public long getRemainingTime() throws InvalidActionException{
+    public long getRemainingTime() throws InvalidActionException {
         if (getState() != GameState.IN_PROGRESS && getState() != GameState.PAUSED)
             throw new InvalidActionException("game.noTimerActive");
         if (getState() == GameState.PAUSED)

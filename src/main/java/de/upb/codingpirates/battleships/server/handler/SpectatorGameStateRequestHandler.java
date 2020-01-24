@@ -32,7 +32,7 @@ public final class SpectatorGameStateRequestHandler extends AbstractServerMessag
     public void handleMessage(@Nonnull final SpectatorGameStateRequest message, @Nonnull final Id connectionId) throws GameException {
         AbstractClient client = clientManager.getClient(connectionId.getInt());
 
-        switch (client.handleClientAs()){
+        switch (client.handleClientAs()) {
             case PLAYER:
                 throw new NotAllowedException("game.handler.spectatorGameStateRequest.noSpectator");
             case SPECTATOR:
@@ -46,7 +46,7 @@ public final class SpectatorGameStateRequestHandler extends AbstractServerMessag
                                 .gameState(handler.getState())
                                 .build(),
                         connectionId);
-                if(handler.getState().equals(GameState.FINISHED)){
+                if (handler.getState().equals(GameState.FINISHED)) {
                     clientManager.sendMessage(NotificationBuilder.finishNotification(handler.getScore(), handler.getWinner()), connectionId);
                 }
         }

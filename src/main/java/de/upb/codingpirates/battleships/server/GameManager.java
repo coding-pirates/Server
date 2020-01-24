@@ -93,9 +93,9 @@ public class GameManager {
             return;
         }
         if(this.clientToGame.containsKey(client.getId())){
-            if(client.getClientType().equals(ClientType.PLAYER) && client.handleClientAs().equals(ClientType.PLAYER)) {
+            if (client.getClientType().equals(ClientType.PLAYER) && client.handleClientAs().equals(ClientType.PLAYER)) {
                 GameHandler handler = this.gameHandlersById.get(this.clientToGame.get(client.getId()));
-                if(handler.getState().equals(GameState.FINISHED)){
+                if (handler.getState().equals(GameState.FINISHED)) {
                     this.clientToGame.remove(client.getId());
                 }
                 throw new NotAllowedException("game.gameManager.alreadyIngame");
@@ -111,7 +111,7 @@ public class GameManager {
             throw new InvalidActionException("game.gameManager.noGame");
         }
         //Todo remove call
-        if (this.getGameHandler(gameId).getGame().getCurrentPlayerCount() >= this.getGameHandler(gameId).getGame().getMaxPlayerCount()){
+        if (this.getGameHandler(gameId).getGame().getCurrentPlayerCount() >= this.getGameHandler(gameId).getGame().getMaxPlayerCount()) {
             launchGame(gameId);
         }
     }

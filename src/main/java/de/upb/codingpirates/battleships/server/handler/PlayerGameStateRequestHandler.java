@@ -27,9 +27,9 @@ public final class PlayerGameStateRequestHandler extends AbstractServerMessageHa
 
         AbstractClient client = clientManager.getClient(connectionId.getInt());
 
-        switch (client.handleClientAs()){
+        switch (client.handleClientAs()) {
             case PLAYER:
-                if(!((Client)client).isDead()){
+                if (!((Client) client).isDead()) {
                     final GameHandler handler = gameManager.getGameHandlerForClientId(connectionId.getInt());
 
                     clientManager.sendMessage(

@@ -34,22 +34,25 @@ public class AlertBuilder implements Builder<Alert> {
     private AlertBuilder() {
     }
 
-    public static @Nonnull AlertBuilder of(@Nonnull final AlertType alertType) {
+    public static @Nonnull
+    AlertBuilder of(@Nonnull final AlertType alertType) {
         return new AlertBuilder().alertType(alertType);
     }
 
-    public static @Nonnull AlertBuilder ofThrowable(@Nonnull final Throwable throwable,
-                                                    @Nonnull final String stacktraceLabelText) {
+    public static @Nonnull
+    AlertBuilder ofThrowable(@Nonnull final Throwable throwable,
+                             @Nonnull final String stacktraceLabelText) {
         return new ExceptionAlertBuilder()
-            .throwable(throwable)
-            .stacktraceLabelText(stacktraceLabelText)
-            .alertType(AlertType.ERROR)
-            .buttonTypes(ButtonType.OK);
+                .throwable(throwable)
+                .stacktraceLabelText(stacktraceLabelText)
+                .alertType(AlertType.ERROR)
+                .buttonTypes(ButtonType.OK);
     }
 
     @Override
     @Contract(pure = true)
-    public @Nonnull Alert build() {
+    public @Nonnull
+    Alert build() {
         final Alert alert = new Alert(alertType, contentText, buttonTypes);
 
         alert.setTitle(title);
@@ -60,27 +63,32 @@ public class AlertBuilder implements Builder<Alert> {
         return alert;
     }
 
-    public @Nonnull AlertBuilder title(@Nonnull final String title) {
+    public @Nonnull
+    AlertBuilder title(@Nonnull final String title) {
         this.title = title;
         return this;
     }
 
-    public @Nonnull AlertBuilder headerText(@Nonnull final String headerText) {
+    public @Nonnull
+    AlertBuilder headerText(@Nonnull final String headerText) {
         this.headerText = headerText;
         return this;
     }
 
-    public @Nonnull AlertBuilder contentText(@Nonnull final String contentText) {
+    public @Nonnull
+    AlertBuilder contentText(@Nonnull final String contentText) {
         this.contentText = contentText;
         return this;
     }
 
-    public @Nonnull AlertBuilder alertType(@Nonnull final AlertType alertType) {
+    public @Nonnull
+    AlertBuilder alertType(@Nonnull final AlertType alertType) {
         this.alertType = alertType;
         return this;
     }
 
-    public @Nonnull AlertBuilder buttonTypes(@Nonnull final ButtonType... buttonTypes) {
+    public @Nonnull
+    AlertBuilder buttonTypes(@Nonnull final ButtonType... buttonTypes) {
         this.buttonTypes = buttonTypes;
         return this;
     }
@@ -97,11 +105,12 @@ public class AlertBuilder implements Builder<Alert> {
         private String stacktraceLabelText;
 
         @Override
-        public @Nonnull Alert build() {
+        public @Nonnull
+        Alert build() {
             final Alert alert = super.build();
 
-            final GridPane root     = new GridPane();
-            final Label    label    = new Label();
+            final GridPane root = new GridPane();
+            final Label label = new Label();
             final TextArea textArea = new TextArea(Throwables.getStackTraceAsString(throwable));
 
             root.addRow(0, label);
@@ -117,12 +126,14 @@ public class AlertBuilder implements Builder<Alert> {
             return alert;
         }
 
-        private @Nonnull ExceptionAlertBuilder stacktraceLabelText(@Nonnull final String stacktraceLabelText) {
+        private @Nonnull
+        ExceptionAlertBuilder stacktraceLabelText(@Nonnull final String stacktraceLabelText) {
             this.stacktraceLabelText = stacktraceLabelText;
             return this;
         }
 
-        private @Nonnull ExceptionAlertBuilder throwable(@Nonnull final Throwable throwable) {
+        private @Nonnull
+        ExceptionAlertBuilder throwable(@Nonnull final Throwable throwable) {
             this.throwable = throwable;
             return this;
         }
