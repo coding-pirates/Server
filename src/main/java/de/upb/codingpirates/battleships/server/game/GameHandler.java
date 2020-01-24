@@ -647,6 +647,13 @@ public class GameHandler implements Runnable, Translator {
             }
         }
         this.ships.values().forEach(map -> map.values().removeIf(sunkShips::contains));
+        this.ships.forEach((clientId, ships)->{
+            if(ships.isEmpty()){
+                Client player = this.playersById.get(clientId);
+                this.deadPlayer.add(player);
+                this.livingPlayer.remove(player);
+            }
+        });
         this.shots.clear();
     }
 
