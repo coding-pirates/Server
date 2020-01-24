@@ -312,7 +312,7 @@ public class GameHandler implements Runnable, Translator {
      * @return all player that were part of this game
      */
     @Nonnull
-    public List<Client> getAllPlayer(){
+    public Collection<Client> getAllPlayer(){
         List<Client> player = Lists.newArrayList(leftPlayer);
         player.addAll(getPlayers());
         return player;
