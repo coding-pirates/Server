@@ -37,6 +37,10 @@
             text="%menuBar.menu.file.importConfiguration.text"/>
           <SeparatorMenuItem/>
           <MenuItem
+            onAction="#displayShotPlacementStrategyPrompt"
+            text="%menuBar.menu.file.addAi.text"/>
+          <SeparatorMenuItem/>
+          <MenuItem
             onAction="#onExitMenuItemAction"
             text="%menuBar.menu.file.exit.text"/>
         </Menu>

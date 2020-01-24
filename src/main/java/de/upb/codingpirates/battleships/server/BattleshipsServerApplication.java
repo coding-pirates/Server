@@ -84,7 +84,5 @@ public final class BattleshipsServerApplication extends Application {
 
         stage.centerOnScreen();
         stage.show();
-
-        stage.setResizable(false);
     }
 }
