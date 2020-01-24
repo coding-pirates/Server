@@ -14,13 +14,11 @@ import javax.inject.Inject;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.MapChangeListener.Change;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.input.*;
 
 import org.apache.logging.log4j.LogManager;
@@ -61,7 +59,7 @@ public final class MainController extends AbstractController<Parent> {
     @FXML
     private TableView<GameHandler> gameTableView;
     @FXML
-    private TableColumn<GameHandler, Boolean> isTournamentColumn;
+    private TableColumn<GameHandler, String> playerCountTableColumn;
 
     @FXML
     private TableView<Client> playerTableView;
@@ -233,8 +231,20 @@ public final class MainController extends AbstractController<Parent> {
     }
 
     private void initializeTableViews() {
-        isTournamentColumn.setCellValueFactory(column -> new SimpleBooleanProperty(column.getValue().getGame().isTournament()));
-        isTournamentColumn.setCellFactory(column -> new CheckBoxTableCell<>());
+        playerCountTableColumn.setCellValueFactory(cellDataFeatures ->
+            Bindings.concat(
+                cellDataFeatures
+                    .getValue()
+                    .currentPlayerCountProperty()
+                    .asString(),
+                "/",
+                cellDataFeatures
+                    .getValue()
+                    .getGame()
+                    .getConfig()
+                    .getMaxPlayerCount()
+            ));
+
         gameTableView.setRowFactory(tableView -> {
             final TableRow<GameHandler> row = new TableRow<>();
 

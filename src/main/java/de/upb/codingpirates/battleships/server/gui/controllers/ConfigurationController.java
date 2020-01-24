@@ -365,6 +365,19 @@ public final class ConfigurationController extends AbstractController<Parent> {
             resourceBundle.getString("configuration.fileExtension.glob")
         );
 
+        widthSpinner
+            .valueProperty()
+            .addListener((observable, oldValue, newValue) -> {
+                if (newValue < shipTypeWidthSpinner.getValue())
+                    shipTypeWidthSpinner.getValueFactory().setValue(newValue);
+            });
+        heightSpinner
+            .valueProperty()
+            .addListener((observable, oldValue, newValue) -> {
+                if (newValue < shipTypeHeightSpinner.getValue())
+                    shipTypeHeightSpinner.getValueFactory().setValue(newValue);
+            });
+
         setupShipTypeConfigurationControls();
         setupPenaltyMinusPointsControls();
     }
