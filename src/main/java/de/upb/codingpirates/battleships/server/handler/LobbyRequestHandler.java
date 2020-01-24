@@ -38,11 +38,11 @@ public final class LobbyRequestHandler extends AbstractServerMessageHandler<Lobb
             throw new NotAllowedException("game.handler.lobbyRequestHandler.notRegistered");
 
         final List<Game> games =
-            this.gameManager
-                .getGameHandlers()
-                .stream()
-                .map(GameHandler::getGame)
-                .collect(Collectors.toList());
+                this.gameManager
+                        .getGameHandlers()
+                        .stream()
+                        .map(GameHandler::getGame)
+                        .collect(Collectors.toList());
 
         this.clientManager.sendMessage(ResponseBuilder.lobbyResponse(games), connectionId);
     }

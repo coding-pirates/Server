@@ -28,9 +28,9 @@ public final class ShotsRequestHandler extends AbstractServerMessageHandler<Shot
 
         AbstractClient client = clientManager.getClient(connectionId.getInt());
 
-        switch (client.handleClientAs()){
+        switch (client.handleClientAs()) {
             case PLAYER:
-                if(!((Client)client).isDead()){
+                if (!((Client) client).isDead()) {
                     gameManager
                             .getGameHandlerForClientId(connectionId.getInt())
                             .addShotPlacement(connectionId.getInt(), message.getShots());

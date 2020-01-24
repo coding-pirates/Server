@@ -48,8 +48,8 @@ public final class GameJoinPlayerRequestHandler extends AbstractServerMessageHan
 
         final AbstractClient client = clientManager.getClient(connectionId.getInt());
 
-        if(client.getClientType().equals(ClientType.PLAYER)){
-            ((Client)client).setSpectator(false);
+        if (client.getClientType().equals(ClientType.PLAYER)) {
+            ((Client) client).setSpectator(false);
         }
 
         final int gameId = message.getGameId();

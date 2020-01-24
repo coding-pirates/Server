@@ -1,11 +1,9 @@
 package de.upb.codingpirates.battleships.server;
 
-import java.io.IOException;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
-
-import javax.annotation.Nonnull;
-
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import de.upb.codingpirates.battleships.network.dispatcher.MessageDispatcher;
+import de.upb.codingpirates.battleships.server.gui.util.ResourceBundleWrapper;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -13,11 +11,10 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-
-import de.upb.codingpirates.battleships.network.dispatcher.MessageDispatcher;
-import de.upb.codingpirates.battleships.server.gui.util.ResourceBundleWrapper;
+import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 /**
  * The entry point of the server.

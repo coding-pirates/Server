@@ -27,7 +27,7 @@ public final class GameLeaveRequestHandler extends AbstractServerMessageHandler<
     @Override
     protected void handleMessage(GameLeaveRequest message, Id connectionId) throws GameException {
         AbstractClient client = this.clientManager.getClient(connectionId.getInt());
-        switch (client.handleClientAs()){
+        switch (client.handleClientAs()) {
             case PLAYER:
                 Collection<Client> players = this.gameManager.getGameHandlerForClientId(connectionId.getInt()).getPlayers();
                 players.removeIf(player -> connectionId.getInt() == player.getId());

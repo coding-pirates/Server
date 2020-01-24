@@ -23,7 +23,7 @@ public final class GameJoinSpectatorRequestHandler extends AbstractServerMessage
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Inject
-    public GameJoinSpectatorRequestHandler(@Nonnull final ClientManager clientManager, @Nonnull final GameManager   gameManager) {
+    public GameJoinSpectatorRequestHandler(@Nonnull final ClientManager clientManager, @Nonnull final GameManager gameManager) {
         super(clientManager, gameManager, GameJoinSpectatorRequest.class);
     }
 
@@ -33,7 +33,7 @@ public final class GameJoinSpectatorRequestHandler extends AbstractServerMessage
 
         AbstractClient client = clientManager.getClient(connectionId.getInt());
         if (client.getClientType().equals(ClientType.PLAYER)) {
-            ((Client)client).setSpectator(true);
+            ((Client) client).setSpectator(true);
         }
 
         gameManager.addClientToGame(message.getGameId(), client);
