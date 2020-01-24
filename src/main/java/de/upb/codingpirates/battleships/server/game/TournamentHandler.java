@@ -63,6 +63,11 @@ public class TournamentHandler implements Runnable, GameListener {
     }
 
     @Override
+    public void onGameAborted() {
+        onGameFinished();
+    }
+
+    @Override
     public void onGameFinished() {
         Map<Integer, Integer> score = this.gameHandler.getScore();
         score.forEach((client, score1)-> this.score.compute(client,(client1, score2)->score2 == null ? score1 : score1+score2));
@@ -124,7 +129,7 @@ public class TournamentHandler implements Runnable, GameListener {
         }
     }
 
-    private void finishTournament(){
+    private void finishTournament() {
         OptionalInt winnerScore = score.values().stream().mapToInt(value -> value).max();
         Collection<Integer> winner;
         if (winnerScore.isPresent())
