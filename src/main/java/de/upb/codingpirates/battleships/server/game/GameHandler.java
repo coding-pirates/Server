@@ -706,10 +706,11 @@ public class GameHandler implements Runnable, Translator {
      * @param client player to remove
      */
     private void removeDeadPlayer(Client client) {
-        LOGGER.info(ServerMarker.GAME, "{} has lost", client);
-        this.ships.remove(client.getId());
-        client.setDead(true);
-        this.testGameFinished();
+        if(!client.isDead()) {
+            LOGGER.info(ServerMarker.GAME, "{} has lost", client);
+            this.ships.remove(client.getId());
+            client.setDead(true);
+        }
     }
 
     /**
