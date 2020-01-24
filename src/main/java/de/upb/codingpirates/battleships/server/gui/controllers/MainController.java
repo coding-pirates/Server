@@ -11,6 +11,7 @@ import java.util.concurrent.Executors;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
+import de.upb.codingpirates.battleships.ai.gameplay.StandardShotPlacementStrategy;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -213,7 +214,7 @@ public final class MainController extends AbstractController<Parent> {
                         .or(handler.currentPlayerCountProperty().isEqualTo(handler.getGame().getMaxPlayerCount())));
             addAiItem
                 .setOnAction(event -> aiExecutorService.submit(() -> {
-                    final AI ai = new AI(UUID.randomUUID().toString(), 1);
+                    final AI ai = new AI(UUID.randomUUID().toString(), StandardShotPlacementStrategy.HEAT_MAP);
 
                     try {
                         ai.connect(InetAddress.getLocalHost().getHostName(), Properties.PORT);
