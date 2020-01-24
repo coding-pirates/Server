@@ -399,6 +399,9 @@ public class GameHandler implements Runnable, Translator {
      * @throws GameException if to many shots have been placed or the shots for the player has already been placed
      */
     public void addShotPlacement(int clientId, @Nonnull Collection<Shot> shots) throws GameException {
+        if(playersById.get(clientId).isDead()){
+            throw new NotAllowedException("You are dead");
+        }
         if (shots.size() > getConfiguration().getShotCount()) {
             applyPenalty(clientId);
             throw new NotAllowedException("game.player.toManyShots");
