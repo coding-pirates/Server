@@ -40,7 +40,7 @@ public final class SpectatorGameStateRequestHandler extends AbstractServerMessag
 
                 clientManager.sendMessage(
                         ResponseBuilder.spectatorGameStateResponse()
-                                .players(handler.getPlayers())
+                                .players(handler.getAllPlayer())
                                 .shots(handler.getShots())
                                 .ships(handler.getStage().equals(GameStage.PLACESHIPS) || handler.getStage().equals(GameStage.START) ? EMPTY : handler.getStartShip())
                                 .gameState(handler.getState())

@@ -61,6 +61,12 @@ public class GameHandler implements Runnable, Translator {
     private final Map<Integer, Client> playersById = Collections.synchronizedMap(Maps.newHashMap());
 
     /**
+     * Lists of Player left during the game
+     */
+    @Nonnull
+    private final List<Client> leftPlayer = Collections.synchronizedList(Lists.newArrayList());
+
+    /**
      * Maps IDs of {@link Client}s whose {@link ClientType} is {@link ClientType#SPECTATOR} to their respective object
      * instances.
      *
@@ -211,13 +217,16 @@ public class GameHandler implements Runnable, Translator {
      */
     public void removeClient(final int clientId) {
         if (this.playersById.containsKey(clientId)) {
+            this.leftPlayer.add(playersById.get(clientId));
             this.playersById.remove(clientId);
             this.fieldsByPlayerId.remove(clientId);
             this.ships.remove(clientId);
             this.startShip.remove(clientId);
 
             this.testGameFinished();
-            currentPlayerCountProperty.set(getCurrentPlayerCount() - 1);
+            if(!this.getState().equals(GameState.FINISHED)) {
+                currentPlayerCountProperty.set(currentPlayerCountProperty.get() - 1);
+            }
             clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(clientId), getAllClients());
         }
         this.spectatorsById.remove(clientId);
@@ -289,6 +298,24 @@ public class GameHandler implements Runnable, Translator {
     @Nonnull
     public List<Shot> getSunkShots(){
         return sunkShots;
+    }
+
+    /**
+     * @return all player that left during the game
+     */
+    @Nonnull
+    public List<Client> getLeftPlayer() {
+        return leftPlayer;
+    }
+
+    /**
+     * @return all player that were part of this game
+     */
+    @Nonnull
+    public List<Client> getAllPlayer(){
+        List<Client> player = Lists.newArrayList(leftPlayer);
+        player.addAll(getPlayers());
+        return player;
     }
 
     /**
