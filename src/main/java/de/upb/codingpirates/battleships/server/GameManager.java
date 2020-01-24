@@ -88,10 +88,6 @@ public class GameManager {
      */
     public void addClientToGame(int gameId, @Nonnull AbstractClient client) throws GameException {
         LOGGER.debug(ServerMarker.GAME, "Adding client {}, with type {}, to game {}", client.getId(), client.getClientType(), gameId);
-        if(this.gameHandlersById.get(gameId).getState().equals(GameState.FINISHED)){
-            LOGGER.warn(ServerMarker.GAME, "The game is already finished");
-            return;
-        }
         if(this.clientToGame.containsKey(client.getId())){
             if(client.getClientType().equals(ClientType.PLAYER) && client.handleClientAs().equals(ClientType.PLAYER)) {
                 GameHandler handler = this.gameHandlersById.get(this.clientToGame.get(client.getId()));

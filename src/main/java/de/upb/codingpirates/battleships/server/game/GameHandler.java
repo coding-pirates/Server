@@ -194,6 +194,10 @@ public class GameHandler implements Runnable, Translator {
     public void addClient(@Nonnull AbstractClient client) throws InvalidActionException {
         switch (client.handleClientAs()) {
             case PLAYER:
+                if(this.getState().equals(GameState.FINISHED)){
+                    LOGGER.warn(ServerMarker.GAME, "The game is already finished");
+                    return;
+                }
                 if (playersById.size() >= game.getConfig().getMaxPlayerCount())
                     throw new GameFullExeption();
                 playersById.put(client.getId(), (Client) client);
