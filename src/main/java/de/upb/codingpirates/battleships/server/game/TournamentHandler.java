@@ -43,6 +43,7 @@ public class TournamentHandler implements Runnable, GameListener {
     private GameHandler gameHandler;
     private int roundCount;
     private long timer;
+    private boolean finished;
 
     public TournamentHandler(@Nonnull String name, @Nonnull ClientManager clientManager, @Nonnull GameManager gameManager, @Nonnull List<Configuration> configuration, int id, int rounds) {
         this.clientManager = clientManager;
@@ -92,12 +93,14 @@ public class TournamentHandler implements Runnable, GameListener {
                     LOGGER.error(ServerMarker.TOURNAMENT, "Could not add spectator {} to next game ({})", spectator.getId(), roundCount);
                 }
             });
+            gameHandler.launchGame();
         }
         gameHandler = handler;
     }
 
     @Override
     public void run() {
+        LOGGER.info(tournamentState);
         switch (tournamentState) {
             case PREGAME:
                 this.newGame();
@@ -110,17 +113,20 @@ public class TournamentHandler implements Runnable, GameListener {
                 }
                 break;
             case POSTGAME:
-                if (roundCount + 1< rounds ){
+                if (roundCount + 1> rounds ){
                     this.tournamentState = TournamentState.FINISHED;
                     return;
                 }
-                if (timer > System.currentTimeMillis() + ServerProperties.TOURNAMENT_GAMEFINISH_TIME){
+                if (timer < System.currentTimeMillis() - ServerProperties.TOURNAMENT_GAMEFINISH_TIME){
                     this.roundCount++;
                     this.tournamentState = TournamentState.PREGAME;
                 }
                 break;
             default:
-                finishTournament();
+                if(!finished) {
+                    finished = true;
+                    finishTournament();
+                }
         }
     }
 

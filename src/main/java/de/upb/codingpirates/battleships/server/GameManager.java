@@ -70,7 +70,7 @@ public class GameManager {
     public GameHandler createGame(@Nonnull Configuration configuration, @Nonnull String name, @Nullable TournamentHandler tournamentHandler) {
         int id = this.idManager.generate().getInt();
         LOGGER.debug(ServerMarker.GAME, "Create game: {} with id: {}", name, id);
-        GameHandler gameHandler = new GameHandler(name, id, configuration, tournamentHandler != null, clientManager, this);
+        GameHandler gameHandler = new GameHandler(name, id, configuration, tournamentHandler != null, clientManager, this, tournamentHandler);
         this.gameHandlersById.put(id, gameHandler);
         return gameHandler;
     }

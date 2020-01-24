@@ -91,10 +91,7 @@ public class GameTest extends ServerTest{
 
         LOGGER.debug("finished connection test");
 
-        for (Thread t : Thread.getAllStackTraces().keySet())
-        {  if (t.getState()==Thread.State.RUNNABLE)
-            t.interrupt();
-        }
+        System.exit(0);
     }
 
     public static class TestClientModule extends ClientModule {
