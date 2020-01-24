@@ -17,120 +17,119 @@
 <?import javafx.scene.text.Text?>
 
 <?import de.upb.codingpirates.battleships.server.gui.control.cell.AdvancedPropertyValueFactory?>
-<ScrollPane
-    xmlns:fx="http://javafx.com/fxml"
-    fx:controller="de.upb.codingpirates.battleships.server.gui.controllers.MainController"
-    fx:id="root"
-    id="root"
-    stylesheets="@/css/main.css">
-  <VBox>
-    <MenuBar>
-      <Menu text="%menuBar.menu.file.text">
-        <MenuItem
-          onAction="#onExportConfigurationMenuItemAction"
-          text="%menuBar.menu.file.exportConfiguration.text"/>
-        <MenuItem
-          onAction="#onImportConfigurationMenuItemAction"
-          text="%menuBar.menu.file.importConfiguration.text"/>
-        <SeparatorMenuItem/>
-        <MenuItem
-          onAction="#onExitMenuItemAction"
-          text="%menuBar.menu.file.exit.text"/>
-      </Menu>
-    </MenuBar>
-    <TabPane>
-      <Tab
-        closable="false"
-        text="%tab.overview.text">
-        <VBox>
+<?import de.upb.codingpirates.battleships.server.gui.control.cell.CheckBoxTableCellFactory?>
+
+<HBox
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="de.upb.codingpirates.battleships.server.gui.controllers.MainController"
+      fx:id="root"
+      id="root"
+      stylesheets="@/css/main.css">
+  <ScrollPane HBox.hgrow="ALWAYS" fitToWidth="true" fitToHeight="true">
+    <VBox>
+      <MenuBar>
+        <Menu text="%menuBar.menu.file.text">
+          <MenuItem
+            onAction="#onExportConfigurationMenuItemAction"
+            text="%menuBar.menu.file.exportConfiguration.text"/>
+          <MenuItem
+            onAction="#onImportConfigurationMenuItemAction"
+            text="%menuBar.menu.file.importConfiguration.text"/>
+          <SeparatorMenuItem/>
+          <MenuItem
+            onAction="#onExitMenuItemAction"
+            text="%menuBar.menu.file.exit.text"/>
+        </Menu>
+      </MenuBar>
+      <TabPane>
+        <Tab
+            closable="false"
+            text="%tab.overview.text">
           <VBox>
-            <VBox.margin>
-              <Insets topRightBottomLeft="5"/>
-            </VBox.margin>
-            <Label
-              styleClass="table-header"
-              text="%overview.game.table.header">
+            <VBox>
               <VBox.margin>
-                <Insets bottom="5"/>
+                <Insets topRightBottomLeft="5"/>
               </VBox.margin>
-            </Label>
-            <TableView fx:id="gameTableView">
-              <columns>
-                <TableColumn text="%overview.game.table.columns.id.text">
-                  <cellValueFactory>
-                    <AdvancedPropertyValueFactory propertyAccessor="game.id"/>
-                  </cellValueFactory>
-                </TableColumn>
-                <TableColumn text="%overview.game.table.columns.name.text">
-                  <cellValueFactory>
-                    <AdvancedPropertyValueFactory propertyAccessor="game.name"/>
-                  </cellValueFactory>
-                </TableColumn>
-                <TableColumn fx:id="isTournamentColumn" text="%overview.game.table.columns.isTournament">
-                  <cellValueFactory>
-                    <PropertyValueFactory property="tournament"/>
-                  </cellValueFactory>
-                </TableColumn>
-                <TableColumn text="%overview.game.table.columns.state.text">
-                  <cellValueFactory>
-                    <PropertyValueFactory property="state"/>
-                  </cellValueFactory>
-                </TableColumn>
-                <TableColumn text="%overview.game.table.columns.currentPlayerCount">
-                  <cellValueFactory>
-                    <PropertyValueFactory property="currentPlayerCount"/>
-                  </cellValueFactory>
-                </TableColumn>
-                <TableColumn text="%overview.game.table.columns.maxPlayerCount">
-                  <cellValueFactory>
-                    <AdvancedPropertyValueFactory propertyAccessor="game.maxPlayerCount"/>
-                  </cellValueFactory>
-                </TableColumn>
-              </columns>
-              <placeholder>
-                <Label text="%overview.game.table.placeholder"/>
-              </placeholder>
-            </TableView>
-          </VBox>
-          <VBox>
-            <VBox.margin>
-              <Insets topRightBottomLeft="5"/>
-            </VBox.margin>
-            <Label
-              styleClass="table-header"
-              text="%overview.player.table.header">
+              <Label
+                  styleClass="table-header"
+                  text="%overview.game.table.header">
+                <VBox.margin>
+                  <Insets bottom="5"/>
+                </VBox.margin>
+              </Label>
+              <TableView fx:id="gameTableView">
+                <columns>
+                  <TableColumn text="%overview.game.table.columns.id.text">
+                    <cellValueFactory>
+                      <AdvancedPropertyValueFactory propertyAccessor="game.id"/>
+                    </cellValueFactory>
+                  </TableColumn>
+                  <TableColumn text="%overview.game.table.columns.name.text">
+                    <cellValueFactory>
+                      <AdvancedPropertyValueFactory propertyAccessor="game.name"/>
+                    </cellValueFactory>
+                  </TableColumn>
+                  <TableColumn text="%overview.game.table.columns.isTournament">
+                    <cellFactory>
+                      <CheckBoxTableCellFactory/>
+                    </cellFactory>
+                    <cellValueFactory>
+                      <AdvancedPropertyValueFactory propertyAccessor="game.tournament"/>
+                    </cellValueFactory>
+                  </TableColumn>
+                  <TableColumn text="%overview.game.table.columns.state.text">
+                    <cellValueFactory>
+                      <PropertyValueFactory property="state"/>
+                    </cellValueFactory>
+                  </TableColumn>
+                  <TableColumn fx:id="playerCountTableColumn" text="%overview.game.table.columns.playerCount"/>
+                </columns>
+                <placeholder>
+                  <Label text="%overview.game.table.placeholder"/>
+                </placeholder>
+              </TableView>
+            </VBox>
+            <VBox>
               <VBox.margin>
-                <Insets bottom="5"/>
+                <Insets topRightBottomLeft="5"/>
               </VBox.margin>
-            </Label>
-            <TableView fx:id="playerTableView">
-              <columns>
-                <TableColumn text="%overview.player.table.columns.id.text">
-                  <cellValueFactory>
-                    <PropertyValueFactory property="id"/>
-                  </cellValueFactory>
-                </TableColumn>
-                <TableColumn text="%overview.player.table.columns.name.text">
-                  <cellValueFactory>
-                    <PropertyValueFactory property="name"/>
-                  </cellValueFactory>
-                </TableColumn>
-              </columns>
-              <placeholder>
-                <Label text="%overview.player.table.placeholder"/>
-              </placeholder>
-            </TableView>
-            <HBox alignment="CENTER">
-              <Text text="%overview.player.text.dragAndDropHint"/>
-            </HBox>
+              <Label
+                styleClass="table-header"
+                text="%overview.player.table.header">
+                <VBox.margin>
+                  <Insets bottom="5"/>
+                </VBox.margin>
+              </Label>
+              <TableView fx:id="playerTableView">
+                <columns>
+                  <TableColumn text="%overview.player.table.columns.id.text">
+                    <cellValueFactory>
+                      <PropertyValueFactory property="id"/>
+                    </cellValueFactory>
+                  </TableColumn>
+                  <TableColumn text="%overview.player.table.columns.name.text">
+                    <cellValueFactory>
+                      <PropertyValueFactory property="name"/>
+                    </cellValueFactory>
+                  </TableColumn>
+                </columns>
+                <placeholder>
+                  <Label text="%overview.player.table.placeholder"/>
+                </placeholder>
+              </TableView>
+              <HBox alignment="CENTER">
+                <Text text="%overview.player.text.dragAndDropHint"/>
+              </HBox>
+            </VBox>
           </VBox>
-        </VBox>
-      </Tab>
-      <Tab
-          closable="false"
-          text="%tab.configuration.text">
-        <fx:include fx:id="configuration" resources="lang.configuration" source="configuration.fxml"/>
-      </Tab>
-    </TabPane>
-  </VBox>
-</ScrollPane>
+        </Tab>
+        <Tab
+            closable="false"
+            text="%tab.configuration.text">
+          <fx:include fx:id="configuration" resources="lang.configuration" source="configuration.fxml"/>
+        </Tab>
+      </TabPane>
+    </VBox>
+  </ScrollPane>
+</HBox>
+
