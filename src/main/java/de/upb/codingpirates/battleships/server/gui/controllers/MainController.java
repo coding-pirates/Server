@@ -12,9 +12,6 @@ import java.util.concurrent.Executors;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
-import de.upb.codingpirates.battleships.ai.gameplay.StandardShotPlacementStrategy;
-import de.upb.codingpirates.battleships.logic.AbstractClient;
-import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -28,20 +25,24 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.input.*;
-
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import org.jetbrains.annotations.Contract;
 
 import de.upb.codingpirates.battleships.ai.AI;
+import de.upb.codingpirates.battleships.ai.gameplay.StandardShotPlacementStrategy;
+import de.upb.codingpirates.battleships.logic.AbstractClient;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Game;
 import de.upb.codingpirates.battleships.logic.GameState;
 import de.upb.codingpirates.battleships.network.Properties;
 import de.upb.codingpirates.battleships.network.exceptions.game.GameException;
+import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
+import de.upb.codingpirates.battleships.server.BattleshipsServerApplication;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.game.GameHandler;
@@ -166,6 +167,7 @@ public final class MainController extends AbstractController<Parent> {
 
         scoreView.getItems().addAll(handler.getScore().entrySet());
 
+        scoreStage.getIcons().add(BattleshipsServerApplication.APPLICATION_ICON);
         scoreStage.setScene(new Scene(scoreView));
         scoreStage.setTitle(String.format(resourceBundle.getString("score.stage.title"), handler.getGame().getName()));
         scoreStage.showAndWait();

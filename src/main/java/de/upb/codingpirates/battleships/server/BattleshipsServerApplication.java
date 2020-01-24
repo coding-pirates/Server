@@ -9,6 +9,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import javax.annotation.Nonnull;
@@ -32,6 +33,9 @@ public final class BattleshipsServerApplication extends Application {
      * @see #start(Stage)
      */
     private static final String TITLE = "Battleships Server";
+
+    public static final Image APPLICATION_ICON =
+        new Image(BattleshipsServerApplication.class.getResourceAsStream("/icon/application.png"));
 
     public static void main(final String... args) {
         launch(args);
@@ -79,6 +83,7 @@ public final class BattleshipsServerApplication extends Application {
             Platform.exit();
             System.exit(0);
         });
+        stage.getIcons().add(APPLICATION_ICON);
         stage.setScene(new Scene(loadView("main")));
         stage.setTitle(TITLE);
 
