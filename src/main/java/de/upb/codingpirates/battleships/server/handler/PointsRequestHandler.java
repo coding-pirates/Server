@@ -11,6 +11,9 @@ import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import java.util.Map;
 
+/**
+ * MessageHandler for {@link PointsRequest}
+ */
 public final class PointsRequestHandler extends AbstractServerMessageHandler<PointsRequest> {
 
     @Inject

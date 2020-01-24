@@ -13,6 +13,9 @@ import de.upb.codingpirates.battleships.server.GameManager;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
+/**
+ * MessageHandler for {@link ShotsRequest}
+ */
 public final class ShotsRequestHandler extends AbstractServerMessageHandler<ShotsRequest> {
 
     @Inject

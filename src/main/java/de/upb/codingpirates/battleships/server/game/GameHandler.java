@@ -88,7 +88,7 @@ public class GameHandler implements Runnable, Translator {
     private final Map<Integer, Collection<Shot>> shots = Collections.synchronizedMap(Maps.newHashMap());
 
     /**
-     * maps player id to players ships
+     * maps player id to players ships (exclude sunk)
      */
     @Nonnull
     private final Map<Integer, Map<Integer, Ship>> ships = Collections.synchronizedMap(Maps.newHashMap());
@@ -254,11 +254,17 @@ public class GameHandler implements Runnable, Translator {
         return playersById.values();
     }
 
+    /**
+     * @return all spectator
+     */
     @Nonnull
     public Collection<AbstractClient> getSpectators() {
         return spectatorsById.values();
     }
 
+    /**
+     * @return all still existing ships (excluding sunk)
+     */
     @Nonnull
     public Map<Integer, Map<Integer, Ship>> getShips() {
         return ships;
@@ -348,7 +354,7 @@ public class GameHandler implements Runnable, Translator {
      * adds a ship placement configuration for a player
      *
      * @param clientId id of the player
-     * @param ships    map from ship id to placementinfo
+     * @param ships map from ship id to placementinfo
      * @throws GameException if to many ships have been placed or the ships for the player has already been placed
      */
     public void addShipPlacement(int clientId, @Nonnull Map<Integer, PlacementInfo> ships) throws GameException {
@@ -385,7 +391,7 @@ public class GameHandler implements Runnable, Translator {
      * adds shots placement for a player
      *
      * @param clientId id of the player
-     * @param shots    all shots from the player
+     * @param shots all shots from the player
      * @throws GameException if to many shots have been placed or the shots for the player has already been placed
      */
     public void addShotPlacement(int clientId, @Nonnull Collection<Shot> shots) throws GameException {
@@ -489,6 +495,9 @@ public class GameHandler implements Runnable, Translator {
         }
     }
 
+    /**
+     * @return a {@link Collection} of all winners based on {@link #score}
+     */
     public Collection<Integer> getWinner() {
         OptionalInt winnerScore = score.values().stream().mapToInt(value -> value).max();
         Collection<Integer> winner = Lists.newArrayList();
@@ -690,7 +699,7 @@ public class GameHandler implements Runnable, Translator {
     /**
      * removed dead player
      *
-     * @param client
+     * @param client player to remove
      */
     private void removeDeadPlayer(Client client) {
         LOGGER.info(ServerMarker.GAME, "{} has lost", client);
@@ -699,6 +708,9 @@ public class GameHandler implements Runnable, Translator {
         this.testGameFinished();
     }
 
+    /**
+     * checks if the game is finished
+     */
     private void testGameFinished() {
         if (ships.size() <= 1) {
             this.stage = GameStage.FINISHED;
@@ -748,11 +760,17 @@ public class GameHandler implements Runnable, Translator {
         this.clientManager.sendMessageToClients(spectatorUpdateNotification, this.deadPlayer);
     }
 
-    private void createEmptyScore(){
+    /**
+     * clear the score
+     */
+    private void createEmptyScore() {
         this.score.clear();
         this.playersById.forEach((id, client)->score.put(id,0));
     }
 
+    /**
+     * @return {@link GameStage} of the game
+     */
     public GameStage getStage() {
         return stage;
     }

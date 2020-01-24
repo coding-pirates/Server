@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 class TestProperties {
     //you can edit following attributes for testing
-    static final int playerCount = 2;
+    static final int playerCount = 3;
     static final boolean simple = true;
     static final int testCase = 1;
     static final int tournamentPlayer =8;

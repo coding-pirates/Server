@@ -14,6 +14,9 @@ import de.upb.codingpirates.battleships.server.game.GameHandler;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
+/**
+ * MessageHandler for {@link PlayerGameStateRequest}
+ */
 public final class PlayerGameStateRequestHandler extends AbstractServerMessageHandler<PlayerGameStateRequest> {
 
     @Inject

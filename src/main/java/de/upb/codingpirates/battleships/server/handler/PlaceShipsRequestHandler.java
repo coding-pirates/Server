@@ -16,6 +16,9 @@ import org.apache.logging.log4j.Logger;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
+/**
+ * MessageHandler for {@link PlaceShipsRequest}
+ */
 public final class PlaceShipsRequestHandler extends AbstractServerMessageHandler<PlaceShipsRequest> {
     private static final Logger LOGGER = LogManager.getLogger();
 

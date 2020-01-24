@@ -12,6 +12,9 @@ import de.upb.codingpirates.battleships.server.game.TournamentHandler;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
+/**
+ * MessageHandler for {@link TournamentGamesRequest}
+ */
 public final class TournamentGamesRequestHandler extends AbstractServerMessageHandler<TournamentGamesRequest> {
 
     @Nonnull

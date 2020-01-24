@@ -12,6 +12,9 @@ import org.apache.logging.log4j.Logger;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
+/**
+ * MessageHandler for {@link ServerJoinRequest}
+ */
 public final class ServerJoinRequestHandler extends AbstractServerMessageHandler<ServerJoinRequest> {
     private static final Logger LOGGER = LogManager.getLogger();
 

@@ -14,6 +14,9 @@ import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import java.util.Collection;
 
+/**
+ * MessageHandler for {@link GameLeaveRequest}
+ */
 public final class GameLeaveRequestHandler extends AbstractServerMessageHandler<GameLeaveRequest> {
 
     @Inject

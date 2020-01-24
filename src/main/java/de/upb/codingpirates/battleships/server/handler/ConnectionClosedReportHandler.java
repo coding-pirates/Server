@@ -15,6 +15,9 @@ import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import java.util.Collection;
 
+/**
+ * MessageHandler for {@link ConnectionClosedReport}
+ */
 public final class ConnectionClosedReportHandler extends AbstractServerMessageHandler<ConnectionClosedReport> {
     private static final Logger LOGGER = LogManager.getLogger();
 
