@@ -1,5 +1,7 @@
 package de.upb.codingpirates.battleships.server.util;
 
+import de.upb.codingpirates.battleships.logic.AbstractClient;
+
 public class ServerProperties {
 
     /**
@@ -8,7 +10,7 @@ public class ServerProperties {
      *
      * @see de.upb.codingpirates.battleships.server.GameManager#removeGames()
      */
-    public static final long MAX_FINISHED_GAME_EXIST_TIME = 120000;
+    public static final long MAX_FINISHED_GAME_EXIST_TIME = 300000;
 
     /**
      * The minimum amount of {@link de.upb.codingpirates.battleships.logic.Client}s with {@link de.upb.codingpirates.battleships.logic.ClientType#PLAYER} required in order to launch a game using
@@ -21,7 +23,7 @@ public class ServerProperties {
     /**
      * The maximum amount of {@link de.upb.codingpirates.battleships.logic.Client}s with {@link de.upb.codingpirates.battleships.logic.ClientType#SPECTATOR} which can spectate a {@link de.upb.codingpirates.battleships.logic.Game}.
      *
-     * @see de.upb.codingpirates.battleships.server.game.GameHandler#addClient(de.upb.codingpirates.battleships.logic.ClientType, de.upb.codingpirates.battleships.logic.Client)
+     * @see de.upb.codingpirates.battleships.server.game.GameHandler#addClient(AbstractClient)
      */
     public static final int MAX_SPECTATOR_COUNT = Integer.MAX_VALUE;
 
