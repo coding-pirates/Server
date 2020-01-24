@@ -136,7 +136,6 @@ public class GameTest extends ServerTest{
 
         @Override
         public void onFinishNotification(FinishNotification message, int clientId) {
-            if(clientId == TestProperties.playerCount-1)return;
             LOGGER.info("FinishNotification");
             synchronized (finished) {
                 finished.set(true);
