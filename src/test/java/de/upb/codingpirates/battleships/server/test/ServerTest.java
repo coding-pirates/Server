@@ -10,13 +10,13 @@ import de.upb.codingpirates.battleships.logic.ShipType;
 import de.upb.codingpirates.battleships.network.dispatcher.MessageDispatcher;
 import de.upb.codingpirates.battleships.server.ClientManager;
 import de.upb.codingpirates.battleships.server.GameManager;
-import de.upb.codingpirates.battleships.server.TournamentManager;
 import de.upb.codingpirates.battleships.server.ServerModule;
+import de.upb.codingpirates.battleships.server.TournamentManager;
 
 import java.util.HashMap;
 
 public abstract class ServerTest {
-    public static final Configuration TEST_CONFIG = new Configuration(TestProperties.playerCount, 10, 10, 4, 1, 1, 5000, 100, new HashMap<Integer, ShipType>(){{put(0,new ShipType(Lists.newArrayList(new Point2D(1,1),new Point2D(2,1),new Point2D(1,2))));}}, 1, PenaltyType.POINTLOSS);
+    public static final Configuration TEST_CONFIG = new Configuration(TestProperties.playerCount, 10, 10, 3, 1, 1, 5000, 100, new HashMap<Integer, ShipType>(){{put(0,new ShipType(Lists.newArrayList(new Point2D(1,1),new Point2D(2,1),new Point2D(1,2))));}}, 1, PenaltyType.POINTLOSS);
 
 
     private Thread serverThread;
@@ -43,6 +43,7 @@ public abstract class ServerTest {
                 clientManager = injector.getInstance(ClientManager.class);
                 tournamentManager = injector.getInstance(TournamentManager.class);
                 gameManager.createGame(TEST_CONFIG, "test");
+                gameManager.createGame(TEST_CONFIG, "test2");
                 while (true) {
 
                 }
