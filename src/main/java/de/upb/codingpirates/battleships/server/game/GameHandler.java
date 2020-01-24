@@ -225,7 +225,6 @@ public class GameHandler implements Runnable, Translator {
             this.playersById.remove(clientId);
             this.fieldsByPlayerId.remove(clientId);
             this.ships.remove(clientId);
-            this.startShip.remove(clientId);
 
             this.testGameFinished();
             if(!this.getState().equals(GameState.FINISHED)) {
