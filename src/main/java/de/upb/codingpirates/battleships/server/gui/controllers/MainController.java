@@ -60,8 +60,6 @@ public final class MainController extends AbstractController<Parent> {
 
     @FXML
     private TableView<GameHandler> gameTableView;
-    @FXML
-    private TableColumn<GameHandler, Boolean> isTournamentColumn;
 
     @FXML
     private TableView<Client> playerTableView;
@@ -233,8 +231,6 @@ public final class MainController extends AbstractController<Parent> {
     }
 
     private void initializeTableViews() {
-        isTournamentColumn.setCellValueFactory(column -> new SimpleBooleanProperty(column.getValue().getGame().isTournament()));
-        isTournamentColumn.setCellFactory(column -> new CheckBoxTableCell<>());
         gameTableView.setRowFactory(tableView -> {
             final TableRow<GameHandler> row = new TableRow<>();
 
