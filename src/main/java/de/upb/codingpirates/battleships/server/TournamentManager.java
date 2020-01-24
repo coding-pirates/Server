@@ -26,7 +26,9 @@ public class TournamentManager {
     private final IdManager idManager;
 
     @Nonnull
-    private final ObservableMap<Integer, TournamentHandler> tournamentHandlerByInt = FXCollections.synchronizedObservableMap(FXCollections.observableHashMap());
+    private final ObservableMap<Integer, TournamentHandler> tournamentHandlerByInt =
+        FXCollections.synchronizedObservableMap(FXCollections.observableHashMap());
+
     @Nonnull
     private final Map<Integer, Integer> clientToTournament = Collections.synchronizedMap(Maps.newHashMap());
 
