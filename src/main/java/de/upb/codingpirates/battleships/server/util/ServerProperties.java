@@ -2,6 +2,9 @@ package de.upb.codingpirates.battleships.server.util;
 
 import de.upb.codingpirates.battleships.logic.AbstractClient;
 
+/**
+ * Settings used by the server
+ */
 public class ServerProperties {
 
     /**

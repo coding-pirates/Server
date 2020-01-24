@@ -19,6 +19,9 @@ import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import java.util.Map;
 
+/**
+ * MessageHandler for {@link SpectatorGameStateRequest}
+ */
 public final class SpectatorGameStateRequestHandler extends AbstractServerMessageHandler<SpectatorGameStateRequest> {
 
     private static final Map<Integer, Map<Integer, PlacementInfo>> EMPTY = ImmutableMap.of();

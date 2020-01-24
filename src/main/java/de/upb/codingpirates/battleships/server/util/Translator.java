@@ -4,8 +4,11 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+/**
+ * implement this class to translate text
+ */
 public interface Translator {
-    ResourceBundle resourceBundle = ResourceBundle.getBundle(String.format("lang.%s", "game"), Locale.US);//TODO language
+    ResourceBundle resourceBundle = ResourceBundle.getBundle(String.format("lang.%s", "game"), Locale.GERMAN);//TODO language
 
     default String translate(String string){
         try {

@@ -10,6 +10,9 @@ import de.upb.codingpirates.battleships.server.GameManager;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
+/**
+ * MessageHandler for {@link RemainingTimeRequest}
+ */
 public final class RemainingTimeRequestHandler extends AbstractServerMessageHandler<RemainingTimeRequest> {
 
     @Inject

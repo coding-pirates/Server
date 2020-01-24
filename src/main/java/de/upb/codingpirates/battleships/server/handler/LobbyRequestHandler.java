@@ -17,6 +17,9 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * MessageHandler for {@link LobbyRequest}
+ */
 public final class LobbyRequestHandler extends AbstractServerMessageHandler<LobbyRequest> {
 
     private static final Logger LOGGER = LogManager.getLogger();

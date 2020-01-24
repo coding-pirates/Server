@@ -18,6 +18,9 @@ import org.apache.logging.log4j.Logger;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
+/**
+ * MessageHandler for {@link GameJoinPlayerRequest}
+ */
 public final class GameJoinPlayerRequestHandler extends AbstractServerMessageHandler<GameJoinPlayerRequest> {
     private static final Logger LOGGER = LogManager.getLogger();
 

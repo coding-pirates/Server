@@ -2,17 +2,19 @@ package de.upb.codingpirates.battleships.server;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
+import de.upb.codingpirates.battleships.network.message.request.TournamentParticipantsRequest;
 import de.upb.codingpirates.battleships.network.network.module.ServerNetworkModule;
 import de.upb.codingpirates.battleships.server.gui.controllers.BoundingBoxConfigurationValidator;
 import de.upb.codingpirates.battleships.server.gui.controllers.ConfigurationValidator;
 import de.upb.codingpirates.battleships.server.handler.*;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+/**
+ * Network Module for guice for inserting mostly the same Object into every MessageHandler
+ */
 public final class ServerModule extends AbstractModule {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -42,5 +44,9 @@ public final class ServerModule extends AbstractModule {
         bind(ServerJoinRequestHandler.class).in(Singleton.class);
         bind(ShotsRequestHandler.class).in(Singleton.class);
         bind(SpectatorGameStateRequestHandler.class).in(Singleton.class);
+        bind(TournamentGamesRequestHandler.class).in(Singleton.class);
+        bind(TournamentParticipantsRequest.class).in(Singleton.class);
+        bind(TournamentPointsRequestHandler.class).in(Singleton.class);
+        bind(GameLeaveRequestHandler.class).in(Singleton.class);
     }
 }
