@@ -645,7 +645,7 @@ public final class ConfigurationController extends AbstractController<Parent> {
             .dialogPaneContent(new HBox(hBoxSpacing, roundCountSpinnerLabel, roundCountSpinner))
             .build()
             .showAndWait()
-            .map(buttonType -> roundCountSpinner.getValue());
+            .map(buttonType -> (buttonType == ButtonType.OK) ? roundCountSpinner.getValue() : null);
     }
 
     @FXML

@@ -492,7 +492,7 @@ public class GameHandler implements Runnable, Translator {
             case FINISHED:
                 LOGGER.debug("Game {} has finished",game.getId());
                 this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, getWinner()), getAllClients());
-                if(this.gameListener != null)
+                if (this.gameListener != null)
                     this.gameListener.onGameFinished();
                 this.gameManager.gameFinished(this.game.getId());
                 this.setState(GameState.FINISHED);
@@ -592,6 +592,8 @@ public class GameHandler implements Runnable, Translator {
             this.sendUpdateNotification(EMPTY);
             this.clientManager.sendMessageToClients(NotificationBuilder.finishNotification(this.score, this.getWinner()),this.getAllClients());
         }
+        if (gameListener != null)
+            gameListener.onGameAborted();
     }
 
     /**

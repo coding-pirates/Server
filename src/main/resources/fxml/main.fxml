@@ -37,6 +37,10 @@
             text="%menuBar.menu.file.importConfiguration.text"/>
           <SeparatorMenuItem/>
           <MenuItem
+            onAction="#displayShotPlacementStrategyPrompt"
+            text="%menuBar.menu.file.addAi.text"/>
+          <SeparatorMenuItem/>
+          <MenuItem
             onAction="#onExitMenuItemAction"
             text="%menuBar.menu.file.exit.text"/>
         </Menu>
@@ -88,6 +92,9 @@
                   <Label text="%overview.game.table.placeholder"/>
                 </placeholder>
               </TableView>
+              <HBox alignment="CENTER">
+                <Text text="%overview.game.text.scoreHint"/>
+              </HBox>
             </VBox>
             <VBox>
               <VBox.margin>

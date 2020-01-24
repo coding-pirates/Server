@@ -3,6 +3,7 @@ package de.upb.codingpirates.battleships.server.gui.controllers;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
+import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -12,16 +13,24 @@ import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
 import de.upb.codingpirates.battleships.ai.gameplay.StandardShotPlacementStrategy;
+import de.upb.codingpirates.battleships.logic.AbstractClient;
+import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionException;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener.Change;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.input.*;
 
+import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -130,6 +139,39 @@ public final class MainController extends AbstractController<Parent> {
     }
     // </editor-fold>
 
+    @SuppressWarnings("unchecked")
+    private void displayScoreStage(@Nonnull final GameHandler handler) {
+        final Stage scoreStage = new Stage();
+        final TableView<Entry<Integer, Integer>> scoreView = new TableView<>();
+
+        final TableColumn<Entry<Integer, Integer>, String> nameColumn =
+            new TableColumn<>(resourceBundle.getString("score.table.columns.name.text"));
+        nameColumn.setCellValueFactory(cellDataFeatures -> {
+            try {
+                final AbstractClient client = clientManager.getClient(cellDataFeatures.getValue().getKey());
+
+                return new ReadOnlyStringWrapper(client.getName());
+            } catch (final InvalidActionException exception) {
+                LOGGER.error(exception);
+                return null;
+            }
+        });
+
+        final TableColumn<Entry<Integer, Integer>, Integer> scoreColumn =
+            new TableColumn<>(resourceBundle.getString("score.table.columns.score.text"));
+        scoreColumn.setCellValueFactory(cellDataFeatures ->
+            new ReadOnlyObjectWrapper<>(cellDataFeatures.getValue().getValue()));
+
+        scoreView.getColumns().addAll(nameColumn, scoreColumn);
+
+        scoreView.getItems().addAll(handler.getScore().entrySet());
+
+        scoreStage.setScene(new Scene(scoreView));
+        scoreStage.setTitle(String.format(resourceBundle.getString("score.stage.title"), handler.getGame().getName()));
+        scoreStage.showAndWait();
+        scoreStage.setWidth(360);
+    }
+
     /**
      * Factory method for instantiating a new {@link ContextMenu} for the provided {@link TableRow}.
      *
@@ -148,8 +190,12 @@ public final class MainController extends AbstractController<Parent> {
         final MenuItem launchItem      = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.launch.text"));
         final MenuItem pauseResumeItem = new MenuItem();
         final MenuItem abortItem       = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.abort.text"));
-        final MenuItem addAiItem       = new MenuItem(resourceBundle.getString("overview.game.table.contextMenu.addAi.text"));
 
+        row.setOnMouseClicked(event -> {
+            if ((event.getClickCount() != 2) || (row.getItem() == null))
+                return;
+            displayScoreStage(row.getItem());
+        });
         row.itemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue == null)
                 return;
@@ -207,28 +253,43 @@ public final class MainController extends AbstractController<Parent> {
                             LOGGER.trace(CONTROLLER_MARKER, "Attempting to abort game '{}'.", handler.getGame().getName());
                             gameManager.abortGame(handler.getGame().getId(), alertResult == ButtonType.YES);
                         }));
-            addAiItem
-                .disableProperty()
-                .bind(
-                    handler.stateProperty().isNotEqualTo(GameState.LOBBY)
-                        .or(handler.currentPlayerCountProperty().isEqualTo(handler.getGame().getMaxPlayerCount())));
-            addAiItem
-                .setOnAction(event -> aiExecutorService.submit(() -> {
-                    final AI ai = new AI(UUID.randomUUID().toString(), StandardShotPlacementStrategy.HEAT_MAP);
+        });
+        return new ContextMenu(launchItem, pauseResumeItem, abortItem);
+    }
+
+    @FXML
+    private void displayShotPlacementStrategyPrompt() {
+        final int hBoxSpacing = 10;
+
+        final Label shotPlacementStrategyLabel =
+                new Label(resourceBundle.getString("overview.player.table.contextMenu.selectAiShotPlacementStrategyAlert.labelText"));
+        final ComboBox<StandardShotPlacementStrategy> shotPlacementStrategyComboBox =
+                new ComboBox<>(FXCollections.observableArrayList(StandardShotPlacementStrategy.values()));
+
+        shotPlacementStrategyComboBox.setValue(StandardShotPlacementStrategy.HEAT_MAP);
+
+        AlertBuilder
+            .of(AlertType.CONFIRMATION)
+            .title(resourceBundle.getString("overview.player.table.contextMenu.selectAiShotPlacementStrategyAlert.title"))
+            .headerText(resourceBundle.getString("overview.player.table.contextMenu.selectAiShotPlacementStrategyAlert.headerText"))
+            .buttonTypes(ButtonType.OK, ButtonType.CANCEL)
+            .dialogPaneContent(new HBox(hBoxSpacing, shotPlacementStrategyLabel, shotPlacementStrategyComboBox))
+            .build()
+            .showAndWait()
+            .ifPresent(buttonType -> {
+                if (buttonType != ButtonType.OK)
+                    return;
+
+                aiExecutorService.submit(() -> {
+                    final AI ai = new AI(UUID.randomUUID().toString(), shotPlacementStrategyComboBox.getValue());
 
                     try {
                         ai.connect(InetAddress.getLocalHost().getHostName(), Properties.PORT);
                     } catch (final IOException exception) {
                         LOGGER.error(exception);
                     }
-                }));
-        });
-        return new ContextMenu(
-            launchItem,
-            pauseResumeItem,
-            abortItem,
-            new SeparatorMenuItem(),
-            addAiItem);
+                });
+            });
     }
 
     private void initializeTableViews() {
