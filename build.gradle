@@ -1,58 +1,79 @@
-apply plugin: "java" //enables java settings for gradle
-apply plugin: "application" //adds a run task for this project
+plugins {
+    id 'java'
+    id 'idea'
+    id 'maven-publish'
+    id 'application'
+}
 
-apply from: "${rootProject.rootDir}/gradle/java.gradle"
+repositories{
+    mavenCentral()
+    maven {
+        name = "Coding Pirates Network"
+        url = "https://maven.pkg.github.com/coding-pirates/network"
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+            password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_PACKAGE_READ_TOKEN")
+        }
+    }
+    maven {
+        name = "Coding Pirates Logic"
+        url = "https://maven.pkg.github.com/coding-pirates/logic"
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+            password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_PACKAGE_READ_TOKEN")
+        }
+    }
+    maven {
+        name = "Coding Pirates Ai"
+        url = "https://maven.pkg.github.com/coding-pirates/ai"
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+            password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_PACKAGE_READ_TOKEN")
+        }
+    }
+    maven {
+        name = "Coding Pirates Client"
+        url = "https://maven.pkg.github.com/coding-pirates/client"
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+            password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_PACKAGE_READ_TOKEN")
+        }
+    }
+}
 
 dependencies {
-    //adds maven dependencies for gradle to download
-    //implementation means the files will be compiled into the jar
-    //testImplementation means the files will only compiled for testing purpose and not served in the final programm
+    implementation group: 'de.upb.codingpirates.battleships', name: 'ai', version: project.ai_version
+    implementation group: 'de.upb.codingpirates.battleships', name: 'network', version: project.network_version
+    implementation group: 'de.upb.codingpirates.battleships', name: 'logic', version: project.logic_version
+    implementation group: 'de.upb.codingpirates.battleships', name: 'client', version: project.client_version
 
-    //adds local network & logic files as dependencies
-    implementation project(":ai")
-    implementation project(":network")
-    implementation project(":logic")
 
     implementation group: 'org.jetbrains', name: 'annotations', version: '18.0.0'
 
-    implementation group: 'com.google.inject', name: 'guice', version: '4.2.2'
+    implementation group: 'com.google.inject', name: 'guice', version: '4.2.0'
 
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.3'
-    runtime group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.3'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.13.0'
+    runtime group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.0'
 
-    implementation group: 'com.google.guava', name: 'guava', version: '28.1-jre'
+    implementation group: 'com.google.guava', name: 'guava', version: '28.2-jre'
 
     implementation group: 'com.google.code.gson', name: 'gson', version: '2.7'
 
-    //test dependencies
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.5.2'
-    testImplementation project(":client")
 }
 
-//set java version for the resulting java bytecode & java version of the dev environment
-targetCompatibility = '1.8'
-sourceCompatibility = '1.8'
-
-mainClassName = 'de.upb.codingpirates.battleships.server.BattleshipsServerApplication' //mainClass must be specified for the application plugin
-
-//sets sourceSets for the project
-sourceSets {
-    main {
-        java {
-            srcDirs = ["src/main/java"]
-        }
-        resources {
-            srcDirs = ["src/main/resources"]
-        }
-    }
-    test {
-        java {
-            srcDirs = ["src/test/java"]
-        }
-    }
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-//enable Junit as testing platform for gradle to use for gradle task "test"
+task sourceJar(type: Jar){
+    classifier 'sources'
+    from sourceSets.main.allJava
+}
+
+mainClassName = 'de.upb.codingpirates.battleships.server.BattleshipsServerApplication'
+
 test {
     useJUnitPlatform()
     testLogging {
@@ -61,13 +82,46 @@ test {
 }
 
 jar {
-    baseName = "server_${project.server_version}"
     manifest {
         attributes 'Implementation-Title': 'Battleships Server',
-                'Implementation-Version': "${project.server_version}",
+                'Implementation-Version': "${project.version}",
                 'Main-Class': 'de.upb.codingpirates.battleships.server.BattleshipsServerApplication'
     }
+    from ( configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } )
+}
+
+task fatJar(type: Jar) {
+    manifest.from jar.manifest
+    archiveClassifier.set 'all'
     from ( configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } ) {
+        exclude 'META-INF/**/*'
         exclude 'log4j2.xml'
+    }
+    with jar
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/coding-pirates/server")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_PACKAGE_PUBLISH_TOKEN")
+            }
+        }
+    }
+    publications{
+        gpr(MavenPublication){
+            from(components.java)
+            artifact tasks.sourceJar
+            artifact tasks.fatJar
+        }
+    }
+}
+
+idea.module {
+    for (String excludeDirName in ["run", "build", "out", "logs", ".gradle", ".github"]) {
+        excludeDirs += new File(project.projectDir, excludeDirName)
     }
 }
