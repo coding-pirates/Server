@@ -96,17 +96,17 @@ uploadArchives {
             name project.archivesBaseName
             packaging 'jar'
             description 'server component of battleships'
-            url 'https://github.com/coding-pirates/server'
+            url 'https://github.com/Cheaterpaul/Battleships-Server'
 
             scm {
-                url 'https://github.com/coding-pirates/server'
-                connection 'scm:git:git://github.com/coding-pirates/server.git'
-                developerConnection 'scm:git:git@github.com:coding-pirates/server.git'
+                url 'https://github.com/Cheaterpaul/Battleships-Server'
+                connection 'scm:git:git://github.com/Cheaterpaul/Battleships-Server.git'
+                developerConnection 'scm:git:git@github.com:Cheaterpaul/Battleships-Server.git'
             }
 
             issueManagement {
                 system 'github'
-                url 'https://github.com/coding-pirates/server/issues'
+                url 'https://github.com/Cheaterpaul/Battleships-Server/issues'
             }
 
             developers {
