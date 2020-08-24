@@ -2,7 +2,6 @@ plugins {
     id 'java'
     id 'idea'
     id 'maven'
-    id 'application'
 }
 
 repositories{
@@ -43,8 +42,6 @@ task sourceJar(type: Jar){
     from sourceSets.main.allJava
 }
 
-mainClassName = 'de.upb.codingpirates.battleships.server.BattleshipsServerApplication'
-
 test {
     useJUnitPlatform()
     testLogging {
@@ -55,8 +52,7 @@ test {
 jar {
     manifest {
         attributes 'Implementation-Title': 'Battleships Server',
-                'Implementation-Version': "${project.version}",
-                'Main-Class': 'de.upb.codingpirates.battleships.server.BattleshipsServerApplication'
+                'Implementation-Version': "${project.version}"
     }
     from ( configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } )
 }
