@@ -10,17 +10,13 @@ repositories{
         url = "https://maven.paube.de"
     }
 }
-
 dependencies {
-    implementation group: 'de.upb.codingpirates.battleships', name: 'ai', version: project.ai_version
-    implementation group: 'de.upb.codingpirates.battleships', name: 'network', version: project.network_version
-    implementation group: 'de.upb.codingpirates.battleships', name: 'logic', version: project.logic_version
-    implementation group: 'de.upb.codingpirates.battleships', name: 'client', version: project.client_version
+    compile group: 'de.upb.codingpirates.battleships', name: 'ai', version: project.ai_version
+    compile group: 'de.upb.codingpirates.battleships', name: 'network', version: project.network_version
+    compile group: 'de.upb.codingpirates.battleships', name: 'logic', version: project.logic_version
+    compile group: 'de.upb.codingpirates.battleships', name: 'client', version: project.client_version
 
-
-    implementation group: 'org.jetbrains', name: 'annotations', version: '18.0.0'
-
-    implementation group: 'com.google.inject', name: 'guice', version: '4.2.0'
+    compile group: 'com.google.inject', name: 'guice', version: '4.2.0'
 
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.13.0'
     runtime group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.0'
@@ -37,9 +33,19 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-task sourceJar(type: Jar){
+task sourceJar(type: Jar, dependsOn: classes){
     classifier 'sources'
-    from sourceSets.main.allJava
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourceJar
+    archives javadocJar
 }
 
 test {
@@ -50,11 +56,15 @@ test {
 }
 
 jar {
+
+    includeEmptyDirs = false
+    from sourceSets.main.output.classesDirs
+    from sourceSets.main.output.resourcesDir
+
     manifest {
         attributes 'Implementation-Title': 'Battleships Server',
                 'Implementation-Version': "${project.version}"
     }
-    from ( configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } )
 }
 
 task fatJar(type: Jar) {

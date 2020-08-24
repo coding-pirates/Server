@@ -415,13 +415,13 @@ public class GameHandler implements Runnable, Translator {
      * does everything which should be done beforehand.
      * pauses for 1 sec<p>
      * {@link GameStage#PLACESHIPS}:
-     * waits for round timer & waits for {@link PlaceShipsRequest}'s <p>
+     * waits for round timer and waits for {@link PlaceShipsRequest}'s <p>
      * {@link GameStage#SHOTS}:
-     * waits for round timer & waits for {@link de.upb.codingpirates.battleships.network.message.request.ShotsRequest}'s.
+     * waits for round timer and waits for {@link de.upb.codingpirates.battleships.network.message.request.ShotsRequest}'s.
      * then calculates all shots <p>
      * {@link GameStage#VISUALIZATION}:
      * waits for visualization round timer.
-     * and send {@link PlayerUpdateNotification} & {@link SpectatorUpdateNotification}.
+     * and send {@link PlayerUpdateNotification} and {@link SpectatorUpdateNotification}.
      * then checks is more than one player has ships left<p>
      * {@link GameStage#FINISHED}:
      * sends {@link FinishNotification} and sets gameState to {@link GameState#FINISHED}
@@ -491,7 +491,7 @@ public class GameHandler implements Runnable, Translator {
     }
 
     /**
-     * set games state to {@link GameState#IN_PROGRESS} & stage to {@link GameStage#START}
+     * set games state to {@link GameState#IN_PROGRESS} and stage to {@link GameStage#START}
      *
      * @return {@code false} if player count is under 2
      */
