@@ -15,7 +15,6 @@ import de.upb.codingpirates.battleships.server.GameManager;
 import de.upb.codingpirates.battleships.server.exceptions.GameFullExeption;
 import de.upb.codingpirates.battleships.server.util.GameListener;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
-import de.upb.codingpirates.battleships.server.util.Translator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,7 +29,7 @@ import static de.upb.codingpirates.battleships.server.util.ServerProperties.MIN_
 /**
  * @author Paul Becker
  */
-public class GameHandler implements Runnable, Translator {
+public class GameHandler implements Runnable {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -611,7 +610,7 @@ public class GameHandler implements Runnable, Translator {
                     return Lists.newArrayList(entry.getKey());
                 });
                 if (shot.getClientId() == entry.getKey()) {
-                    this.clientManager.sendMessage(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.shotOwnShip")), entry.getKey());
+                    this.clientManager.sendMessage(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, "game.gameManager.shotOwnShip"), entry.getKey());
                     continue;
                 }
                 ShotHit hit = this.fieldsByPlayerId.get(shot.getClientId()).hit(shot);
@@ -634,7 +633,7 @@ public class GameHandler implements Runnable, Translator {
                     case NONE:
                         for (Shot shot1 : this.hitShots) {
                             if (shot1.equals(shot)) {
-                                this.clientManager.sendMessage(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, translate("game.gameManager.alreadyHit")), entry.getKey());
+                                this.clientManager.sendMessage(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, ShotsRequest.MESSAGE_ID, "game.gameManager.alreadyHit"), entry.getKey());
                                 break;
                             }
                         }
@@ -710,7 +709,7 @@ public class GameHandler implements Runnable, Translator {
      * removes player that didn't placed their ships
      */
     private void removeInactivePlayer(int... clients) {
-        clientManager.sendMessage(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, PlaceShipsRequest.MESSAGE_ID, translate("game.player.noPlacedShips")), clients);
+        clientManager.sendMessage(NotificationBuilder.errorNotification(ErrorType.INVALID_ACTION, PlaceShipsRequest.MESSAGE_ID, "game.player.noPlacedShips"), clients);
         for (Integer clientId : clients) {
             this.removeClient(clientId);
         }

@@ -13,7 +13,6 @@ import de.upb.codingpirates.battleships.network.id.Id;
 import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.notification.NotificationBuilder;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
-import de.upb.codingpirates.battleships.server.util.Translator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,7 +29,7 @@ import java.util.Map;
  *
  * @author Paul Becker
  */
-public class ClientManager implements ConnectionHandler, Translator {
+public class ClientManager implements ConnectionHandler {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Nonnull
@@ -216,7 +215,7 @@ public class ClientManager implements ConnectionHandler, Translator {
     @Override
     public void handleBattleshipException(@Nonnull final BattleshipException exception) {
         if (exception.getConnectionId() != null) {
-            this.sendMessage(NotificationBuilder.errorNotification(exception.getErrorType(), exception.getMessageId(), this.translate(exception.getMessage())), exception.getConnectionId());
+            this.sendMessage(NotificationBuilder.errorNotification(exception.getErrorType(), exception.getMessageId(), exception.getMessage()), exception.getConnectionId());
         } else {
             LOGGER.warn(ServerMarker.CLIENT, "could not send ErrorNotification. Could not identify source client");
         }
