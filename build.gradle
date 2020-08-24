@@ -84,8 +84,12 @@ uploadArchives {
         configuration = configurations.deployerJars
 
         logger.info('Publishing to files server')
-        repository(url: System.getProperty("MAVEN_URL")) {
-            authentication(userName: System.getProperty("MAVEN_USER"), password: System.getProperty("MAVEN_TOKEN"))
+        if (project.hasProperty("maven_url")) {
+            repository(url: project.getProperty("maven_url")) {
+                authentication(userName: project.getProperty("maven_user"), password: project.getProperty("maven_password"))
+            }
+        } else {
+            repository(url: 'file://localhost/' + project.file('../../../.m2/repository').getAbsolutePath())
         }
         pom {
             groupId = project.group
