@@ -16,10 +16,6 @@ import de.upb.codingpirates.battleships.server.exceptions.GameFullExeption;
 import de.upb.codingpirates.battleships.server.util.GameListener;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import de.upb.codingpirates.battleships.server.util.Translator;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -134,55 +130,37 @@ public class GameHandler implements Runnable, Translator {
         this.clientManager = clientManager;
         this.gameManager   = gameManager;
         this.gameListener  = gameListener;
-
-        currentPlayerCountProperty
-            .addListener((observable, oldValue, newValue) -> game.setCurrentPlayerCount(newValue.intValue()));
-        stateProperty
-            .addListener((observable, oldValue, newValue) -> game.setState(newValue));
     }
 
     public GameHandler(@Nonnull final String name, final int id, @Nonnull final Configuration config, final boolean tournament, @Nonnull final ClientManager clientManager, @Nonnull GameManager gameManager) {
         this(name, id, config, tournament, clientManager, gameManager, null);
     }
 
-    /*
-     * Usually these properties would be part of the Game class, however, this is not possible because the Game class
-     * is common to all platforms and not all the platforms it is used on, Android in particular, implement JavaFX,
-     * which is why the currentPlayerCountProperty and stateProperty are now part of the GameHandler rather than the
-     * Game class.
-     *
-     * Listeners are set up on these properties which mirror any changes occurring to the currentPlayerCountProperty
-     * an stateProperty to the fields of the Game object wrapped by this GameHandler to keep the values synchronized.
-     */
-
-    // <editor-fold desc="currentPlayerCountProperty">
-    private final IntegerProperty currentPlayerCountProperty = new SimpleIntegerProperty();
+    private int currentPlayerCountProperty;
 
     public int getCurrentPlayerCount() {
-        return currentPlayerCountProperty.get();
+        return currentPlayerCountProperty;
     }
 
     public void setCurrentPlayerCount(final int currentPlayerCount) {
-        currentPlayerCountProperty.set(currentPlayerCount);
+        currentPlayerCountProperty = currentPlayerCount;
     }
 
-    public IntegerProperty currentPlayerCountProperty() {
+    public int currentPlayerCountProperty() {
         return currentPlayerCountProperty;
     }
-    // </editor-fold>
 
-    // <editor-fold desc="stateProperty">
-    private final ObjectProperty<GameState> stateProperty = new SimpleObjectProperty<>(GameState.LOBBY);
+    private GameState stateProperty = GameState.LOBBY;
 
     public GameState getState() {
-        return stateProperty.get();
+        return stateProperty;
     }
 
     public void setState(@Nonnull final GameState state) {
-        stateProperty.set(state);
+        stateProperty = state;
     }
 
-    public ObjectProperty<GameState> stateProperty() {
+    public GameState stateProperty() {
         return stateProperty;
     }
     // </editor-fold>
@@ -202,7 +180,7 @@ public class GameHandler implements Runnable, Translator {
                     throw new GameFullExeption();
                 playersById.put(client.getId(), (Client) client);
                 fieldsByPlayerId.put(client.getId(), new Field(getGame().getConfig().getHeight(), getGame().getConfig().getWidth(),client.getId()));
-                currentPlayerCountProperty.set(currentPlayerCountProperty.get() + 1);
+                currentPlayerCountProperty += 1;
                 break;
             case SPECTATOR:
                 if (spectatorsById.size() >= MAX_SPECTATOR_COUNT)
@@ -228,7 +206,7 @@ public class GameHandler implements Runnable, Translator {
 
             this.testGameFinished();
             if(!this.getState().equals(GameState.FINISHED)) {
-                currentPlayerCountProperty.set(currentPlayerCountProperty.get() - 1);
+                currentPlayerCountProperty -= 1;
             }
             clientManager.sendMessageToClients(NotificationBuilder.leaveNotification(clientId), getAllClients());
         }

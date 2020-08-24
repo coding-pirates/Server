@@ -6,8 +6,6 @@ import de.upb.codingpirates.battleships.network.exceptions.game.InvalidActionExc
 import de.upb.codingpirates.battleships.network.id.IdManager;
 import de.upb.codingpirates.battleships.server.game.TournamentHandler;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,8 +24,7 @@ public class TournamentManager {
     private final IdManager idManager;
 
     @Nonnull
-    private final ObservableMap<Integer, TournamentHandler> tournamentHandlerByInt =
-        FXCollections.synchronizedObservableMap(FXCollections.observableHashMap());
+    private final Map<Integer, TournamentHandler> tournamentHandlerByInt = new HashMap<>();
 
     @Nonnull
     private final Map<Integer, Integer> clientToTournament = Collections.synchronizedMap(Maps.newHashMap());
@@ -78,7 +75,7 @@ public class TournamentManager {
         this.tournamentHandlerByInt.values().forEach(TournamentHandler::run);
     }
 
-    public ObservableMap<Integer, TournamentHandler> getTournamentMappings() {
+    public Map<Integer, TournamentHandler> getTournamentMappings() {
         return tournamentHandlerByInt;
     }
 }

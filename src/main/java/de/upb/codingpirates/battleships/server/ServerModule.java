@@ -5,8 +5,6 @@ import com.google.inject.Singleton;
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
 import de.upb.codingpirates.battleships.network.message.request.TournamentParticipantsRequest;
 import de.upb.codingpirates.battleships.network.network.module.ServerNetworkModule;
-import de.upb.codingpirates.battleships.server.gui.controllers.BoundingBoxConfigurationValidator;
-import de.upb.codingpirates.battleships.server.gui.controllers.ConfigurationValidator;
 import de.upb.codingpirates.battleships.server.handler.*;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import org.apache.logging.log4j.LogManager;
@@ -24,8 +22,6 @@ public final class ServerModule extends AbstractModule {
         this.install(new ServerNetworkModule());
 
         LOGGER.info(ServerMarker.CONNECTION, "Binding server classes");
-
-        bind(ConfigurationValidator.class).to(BoundingBoxConfigurationValidator.class);
 
         bind(ConnectionHandler.class).to(ClientManager.class).in(Singleton.class);
         bind(ClientManager.class).in(Singleton.class);

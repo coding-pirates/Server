@@ -12,8 +12,6 @@ import de.upb.codingpirates.battleships.server.game.GameHandler;
 import de.upb.codingpirates.battleships.server.game.TournamentHandler;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import de.upb.codingpirates.battleships.server.util.ServerProperties;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,8 +36,7 @@ public class GameManager {
     /**
      * maps game id to gamehandler
      */
-    private final ObservableMap<Integer, GameHandler> gameHandlersById =
-        FXCollections.synchronizedObservableMap(FXCollections.observableHashMap());
+    private final Map<Integer, GameHandler> gameHandlersById = new HashMap<>();
     /**
      * maps client id to gameid
      */
@@ -235,7 +232,7 @@ public class GameManager {
             removeGames();
     }
 
-    public ObservableMap<Integer, GameHandler> getGameMappings() {
+    public Map<Integer, GameHandler> getGameMappings() {
         return gameHandlersById;
     }
 }

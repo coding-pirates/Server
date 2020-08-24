@@ -14,8 +14,6 @@ import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.notification.NotificationBuilder;
 import de.upb.codingpirates.battleships.server.util.ServerMarker;
 import de.upb.codingpirates.battleships.server.util.Translator;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,6 +22,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -47,8 +46,7 @@ public class ClientManager implements ConnectionHandler, Translator {
      * maps client id to player
      */
     @Nonnull
-    private final ObservableMap<Integer, Client> player =
-        FXCollections.synchronizedObservableMap(FXCollections.observableHashMap());
+    private final Map<Integer, Client> player = new HashMap<>();
 
     /**
      * maps client id to spectator
@@ -224,7 +222,7 @@ public class ClientManager implements ConnectionHandler, Translator {
         }
     }
 
-    public ObservableMap<Integer, Client> getPlayerMappings() {
+    public Map<Integer, Client> getPlayerMappings() {
         return player;
     }
 }
