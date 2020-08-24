@@ -1,43 +1,14 @@
 plugins {
     id 'java'
     id 'idea'
-    id 'maven-publish'
+    id 'maven'
     id 'application'
 }
 
 repositories{
     mavenCentral()
     maven {
-        name = "Coding Pirates Network"
-        url = "https://maven.pkg.github.com/coding-pirates/network"
-        credentials {
-            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
-            password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_PACKAGE_READ_TOKEN")
-        }
-    }
-    maven {
-        name = "Coding Pirates Logic"
-        url = "https://maven.pkg.github.com/coding-pirates/logic"
-        credentials {
-            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
-            password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_PACKAGE_READ_TOKEN")
-        }
-    }
-    maven {
-        name = "Coding Pirates Ai"
-        url = "https://maven.pkg.github.com/coding-pirates/ai"
-        credentials {
-            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
-            password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_PACKAGE_READ_TOKEN")
-        }
-    }
-    maven {
-        name = "Coding Pirates Client"
-        url = "https://maven.pkg.github.com/coding-pirates/client"
-        credentials {
-            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
-            password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_PACKAGE_READ_TOKEN")
-        }
+        url = "https://maven.paube.de"
     }
 }
 
@@ -100,22 +71,55 @@ task fatJar(type: Jar) {
     with jar
 }
 
-publishing {
+configurations {
+    deployerJars
+}
+
+dependencies {
+    deployerJars "org.apache.maven.wagon:wagon-ftp:2.9"
+}
+
+uploadArchives {
     repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/coding-pirates/server")
-            credentials {
-                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
-                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_PACKAGE_PUBLISH_TOKEN")
-            }
-        }
+        add getProject().repositories.mavenLocal()
     }
-    publications{
-        gpr(MavenPublication){
-            from(components.java)
-            artifact tasks.sourceJar
-            artifact tasks.fatJar
+
+    repositories.mavenDeployer {
+        configuration = configurations.deployerJars
+
+        logger.info('Publishing to files server')
+        repository(url: System.getProperty("MAVEN_URL")) {
+            authentication(userName: System.getProperty("MAVEN_USER"), password: System.getProperty("MAVEN_TOKEN"))
+        }
+        pom {
+            groupId = project.group
+            version = project.version
+            artifactId = project.artifact
+        }
+        pom.project {
+            name project.archivesBaseName
+            packaging 'jar'
+            description 'server component of battleships'
+            url 'https://github.com/coding-pirates/server'
+
+            scm {
+                url 'https://github.com/coding-pirates/server'
+                connection 'scm:git:git://github.com/coding-pirates/server.git'
+                developerConnection 'scm:git:git@github.com:coding-pirates/server.git'
+            }
+
+            issueManagement {
+                system 'github'
+                url 'https://github.com/coding-pirates/server/issues'
+            }
+
+            developers {
+                developer {
+                    id 'cheaterpaul'
+                    name 'cheaterpaul'
+                    roles { role 'developer' }
+                }
+            }
         }
     }
 }
