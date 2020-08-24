@@ -6,6 +6,7 @@ plugins {
 
 repositories{
     mavenCentral()
+    mavenLocal()
     maven {
         url = "https://maven.paube.de"
     }
@@ -99,7 +100,7 @@ uploadArchives {
                 authentication(userName: project.getProperty("maven_user"), password: project.getProperty("maven_password"))
             }
         } else {
-            repository(url: 'file://localhost/' + project.file('../../../.m2/repository').getAbsolutePath())
+            repository(url: 'file://localhost/' + project.file('../../.m2/repository').getAbsolutePath())
         }
         pom {
             groupId = project.group
